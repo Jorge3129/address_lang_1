@@ -5,6 +5,6 @@ import Lib
 main :: IO ()
 main = do
   s <- getContents
-  let ast = parseCalc (scanTokens s)
+  let ast = getAst s
   print ast
   print (run ast)

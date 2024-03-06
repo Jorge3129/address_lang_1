@@ -11,10 +11,8 @@ tokens :-
 
   $white+                       ;
   "--".*                        ;
-  let                           { \s -> TokenLet }
-  in                            { \s -> TokenIn }
   $digit+                       { \s -> TokenInt (read s) }
-  \=                            { \s -> TokenEq }
+  \=                            { \s -> TokenAssign }
   \+                            { \s -> TokenPlus }
   \-                            { \s -> TokenMinus }
   \*                            { \s -> TokenTimes }
@@ -25,19 +23,34 @@ tokens :-
 
 {
 
--- The token type:
-data Token = TokenLet
-           | TokenIn
-           | TokenInt Int
-           | TokenSym String
-           | TokenEq
-           | TokenPlus
-           | TokenMinus
-           | TokenTimes
-           | TokenDiv
-           | TokenLParen
-           | TokenRParen
-           deriving (Eq,Show)
+data Token = 
+    TokenNewLine
+  | TokenSlash
+  | TokenStar
+  | TokenLeftParen
+  | TokenRightParen
+  | TokenLeftCurly
+  | TokenRightCurly
+  | TokenHorizontal
+  | TokenBang
+  | TokenBangEqual
+  | TokenEqual
+  | TokenEqualEqual
+  | TokenGreater
+  | TokenMinusGreater
+  | TokenGreaterEqual
+  | TokenLess
+  | TokenLessEqual
+  | TokenSingleQuote
+  | TokenEqualGreater
+  | TokenDots3
+  | TokenLessEqualGreater
+  | TokenIdentifier String
+  | TokenKeyword String
+  | TokenNumber Int
+  | TokenError
+  deriving (Show, Eq)
+
 
 scanTokens = alexScanTokens
 

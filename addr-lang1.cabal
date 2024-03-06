@@ -18,8 +18,8 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
-    Tokens.x
-    Grammar.y
+    src/Tokens.x
+    src/Grammar.y
 
 source-repository head
   type: git
@@ -38,7 +38,8 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      array
+    , base >=4.7 && <5
   default-language: Haskell2010
 
 executable addr-lang1-exe
@@ -52,6 +53,7 @@ executable addr-lang1-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       addr-lang1
+    , array
     , base >=4.7 && <5
   default-language: Haskell2010
 
@@ -67,5 +69,6 @@ test-suite addr-lang1-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       addr-lang1
+    , array
     , base >=4.7 && <5
   default-language: Haskell2010

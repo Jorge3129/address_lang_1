@@ -1,4 +1,4 @@
-module Main where
+module Lib where
 
 import Grammar
 import Tokens
@@ -25,3 +25,5 @@ eval (Let s e1 e2) env = eval e2 env'
 
 run :: Exp -> Int
 run e = eval e emptyEnv
+
+getAst s = parseCalc (scanTokens s)

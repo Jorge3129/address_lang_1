@@ -1,2 +1,6 @@
+import Tokens
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+  ast <- scanTokens <$> readFile "./test.adpl"
+  print ast
