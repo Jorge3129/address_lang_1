@@ -1,29 +1,29 @@
 module Lib where
 
-import Grammar
-import Tokens
+-- import Grammar
+-- import Tokens
 
-type Env = String -> Exp
+-- type Env = String -> Exp
 
-emptyEnv = error "Not found"
+-- emptyEnv = error "Not found"
 
-envLookup s env = env s
+-- envLookup s env = env s
 
-envBind s v env = (\s' -> if s == s' then v else env s)
+-- envBind s v env = (\s' -> if s == s' then v else env s)
 
-eval :: Exp -> Env -> Int
-eval (Int v) _ = v
-eval (Plus e1 e2) env = (eval e1 env) + (eval e2 env)
-eval (Minus e1 e2) env = (eval e1 env) - (eval e2 env)
-eval (Times e1 e2) env = (eval e1 env) * (eval e2 env)
-eval (Div e1 e2) env = (eval e1 env) `div` (eval e2 env)
-eval (Negate e) env = -(eval e env)
-eval (Var s) env = eval (envLookup s env) env
-eval (Let s e1 e2) env = eval e2 env'
-  where
-    env' = envBind s e1 env
+-- eval :: Exp -> Env -> Int
+-- eval (Int v) _ = v
+-- eval (Plus e1 e2) env = (eval e1 env) + (eval e2 env)
+-- eval (Minus e1 e2) env = (eval e1 env) - (eval e2 env)
+-- eval (Times e1 e2) env = (eval e1 env) * (eval e2 env)
+-- eval (Div e1 e2) env = (eval e1 env) `div` (eval e2 env)
+-- eval (Negate e) env = -(eval e env)
+-- eval (Var s) env = eval (envLookup s env) env
+-- eval (Let s e1 e2) env = eval e2 env'
+--   where
+--     env' = envBind s e1 env
 
-run :: Exp -> Int
-run e = eval e emptyEnv
+-- run :: Exp -> Int
+-- run e = eval e emptyEnv
 
-getAst s = parseCalc (scanTokens s)
+-- getAst s = parseCalc (scanTokens s)

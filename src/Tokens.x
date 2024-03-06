@@ -4,29 +4,54 @@ module Tokens where
 
 %wrapper "basic"
 
-$digit = 0-9
-$alpha = [a-zA-Z]
+$letter    = [a-zA-Z]
+$digit     = 0-9
 
 tokens :-
-
-  $white+                       ;
-  "--".*                        ;
-  $digit+                       { \s -> TokenInt (read s) }
-  \=                            { \s -> TokenAssign }
-  \+                            { \s -> TokenPlus }
-  \-                            { \s -> TokenMinus }
-  \*                            { \s -> TokenTimes }
-  \/                            { \s -> TokenDiv }
-  \(                            { \s -> TokenLParen }
-  \)                            { \s -> TokenRParen }
-  $alpha [$alpha $digit \_ \']* { \s -> TokenSym s }
+  $white+ ;
+  "\n"      { \_ -> TokenNewLine }
+  "|"      { \_ -> TokenVerticalBar }
+  ";"       { \_ -> TokenSemi }
+  "+"       { \_ -> TokenPlus }
+  "-"       { \_ -> TokenMinus }
+  "*"       { \_ -> TokenStar }
+  "/"       { \_ -> TokenSlash }
+  "("       { \_ -> TokenLeftParen }
+  ")"       { \_ -> TokenRightParen }
+  "{"       { \_ -> TokenLeftCurly }
+  "}"       { \_ -> TokenRightCurly }
+  ","       { \_ -> TokenHorizontal }
+  "!"       { \_ -> TokenBang }
+  "!="      { \_ -> TokenBangEqual }
+  "="       { \_ -> TokenEqual }
+  "=="      { \_ -> TokenEqualEqual }
+  ">"       { \_ -> TokenGreater }
+  "->"      { \_ -> TokenMinusGreater }
+  ">="      { \_ -> TokenGreaterEqual }
+  "<"       { \_ -> TokenLess }
+  "<="      { \_ -> TokenLessEqual }
+  "'"       { \_ -> TokenSingleQuote }
+  "`"       { \_ -> TokenBackTick }
+  "=>"      { \_ -> TokenEqualGreater }
+  "..."     { \_ -> TokenEllipsis }
+  "<=>"     { \_ -> TokenLessEqualGreater }
+  $letter ($letter | $digit)* { \s -> 
+      let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "print", "printList"] 
+      in if elem s keywords then TokenKeyword s else TokenIdentifier s 
+    }
+  $digit+ { \s -> TokenNumber (read s) }
+  _         { \_ -> TokenError }
 
 {
 
 data Token = 
     TokenNewLine
-  | TokenSlash
+  | TokenVerticalBar
+  | TokenSemi
+  | TokenPlus
+  | TokenMinus
   | TokenStar
+  | TokenSlash
   | TokenLeftParen
   | TokenRightParen
   | TokenLeftCurly
@@ -42,8 +67,9 @@ data Token =
   | TokenLess
   | TokenLessEqual
   | TokenSingleQuote
+  | TokenBackTick
   | TokenEqualGreater
-  | TokenDots3
+  | TokenEllipsis
   | TokenLessEqualGreater
   | TokenIdentifier String
   | TokenKeyword String
