@@ -6,10 +6,14 @@ module Tokens where
 
 $letter    = [a-zA-Z]
 $digit     = 0-9
+$white_no_nl = [\ \t]
+$lf = \n
+$cr = \r
+@eol_pattern = $lf | $cr $lf | $cr $lf
 
 tokens :-
-  $white+ ;
-  "\n"      { \_ -> TokenNewLine }
+  $white_no_nl+ ;
+  @eol_pattern      { \_ -> TokenNewLine }
   "|"      { \_ -> TokenVerticalBar }
   ";"       { \_ -> TokenSemi }
   "+"       { \_ -> TokenPlus }
