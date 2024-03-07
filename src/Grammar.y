@@ -55,6 +55,7 @@ stmts : stmts ';' stmt          { $1 ++ [$3] }
 
 stmt : '!' { Stop }
     | ret { Ret }
+    | Exp { ExpSt $1 }
     | var '=' Exp { Assignment (Var $1) $3 }
 
 Exp : Exp '+' Exp            { BinOpApp Add $1 $3 }
@@ -105,6 +106,7 @@ data Statement
   | CompJump Expr
   | Ret
   | Stop
+  | ExpSt Expr
   deriving (Eq, Show)
 
 data ProgLine = ProgLine [String] [Statement] deriving (Eq, Show)
