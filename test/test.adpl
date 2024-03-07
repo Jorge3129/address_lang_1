@@ -1,7 +1,9 @@
-Pg f {a, delta}
-Pg f {b, delta1}
-Pg f {'delta + 'delta1, delta}
+@l1 ... b = 1; a = 2
+
+
+    c = 0
+@l2, l3 ... !
 !
-f ... Nil => phi; Nil => psi
-    P { 'phi < 0 } ('phi - 1 => 'psi | 'phi*'phi => 'psi)
+
+    !
     Ret

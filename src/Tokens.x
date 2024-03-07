@@ -14,8 +14,10 @@ $cr = \r
 tokens :-
   $white_no_nl+ ;
   @eol_pattern      { \_ -> TokenNewLine }
+  "@"      { \_ -> TokenAt }
   "|"      { \_ -> TokenVerticalBar }
   ";"       { \_ -> TokenSemi }
+  ","       { \_ -> TokenComma }
   "+"       { \_ -> TokenPlus }
   "-"       { \_ -> TokenMinus }
   "*"       { \_ -> TokenStar }
@@ -50,8 +52,10 @@ tokens :-
 
 data Token = 
     TokenNewLine
+  | TokenAt
   | TokenVerticalBar
   | TokenSemi
+  | TokenComma
   | TokenPlus
   | TokenMinus
   | TokenStar
