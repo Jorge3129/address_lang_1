@@ -30,6 +30,7 @@ library
       Grammar
       Lib
       Tokens
+      Vm
   other-modules:
       Paths_addr_lang1
   autogen-modules:
@@ -40,6 +41,7 @@ library
   build-depends:
       array
     , base >=4.7 && <5
+    , monad-loops
   default-language: Haskell2010
 
 executable addr-lang1-exe
@@ -55,6 +57,7 @@ executable addr-lang1-exe
       addr-lang1
     , array
     , base >=4.7 && <5
+    , monad-loops
   default-language: Haskell2010
 
 test-suite addr-lang1-test
@@ -71,4 +74,5 @@ test-suite addr-lang1-test
       addr-lang1
     , array
     , base >=4.7 && <5
+    , monad-loops
   default-language: Haskell2010
