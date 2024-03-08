@@ -3,52 +3,48 @@
 
 module Vm where
 
-import Control.Monad.Loops
+import ByteCode
+import Data.Maybe (isJust)
+import MyUtils
 
-data OpCode = OP_RETURN deriving (Eq, Show, Enum)
+data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)
 
-newtype Chunk = Chunk
-  { code :: [Int]
+data VM = VM
+  { chunk :: Chunk,
+    ip :: Int
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
-initChunk :: Chunk
-initChunk = Chunk {code = []}
+initVM :: Chunk -> VM
+initVM ch = VM {chunk = ch, ip = 0}
 
-writeChunk :: Chunk -> Int -> Chunk
-writeChunk ch@(Chunk {code}) byte = ch {code = code ++ [byte]}
+run :: VM -> IO InterpretResult
+run vm = do
+  (_, Just intRes) <- untilM (\(_, res) -> isJust res) runStep (vm, Nothing)
+  return intRes
 
-disassembleChunk :: Chunk -> String -> IO ()
-disassembleChunk chunk name = do
-  putStrLn $ "== " ++ name ++ " =="
-  disassembleInstructions chunk 0
+readByte :: VM -> (Int, VM)
+readByte vm@(VM {ip, chunk}) =
+  let (Chunk {code}) = chunk
+      instruction = code !! ip
+      newVm = vm {ip = ip + 1}
+   in (instruction, newVm)
 
-opcodeToString :: OpCode -> String
-opcodeToString OP_RETURN = "OP_RETURN"
+readConst :: VM -> (Value, VM)
+readConst vm@(VM {chunk}) =
+  let (Chunk {constants}) = chunk
+      (constPos, newVm) = readByte vm
+   in (constants !! constPos, newVm)
 
-disassembleInstructions :: Chunk -> Int -> IO ()
-disassembleInstructions chunk offset
-  | offset < length (code chunk) = do
-      newOffset <- disassembleInstruction chunk offset
-      disassembleInstructions chunk newOffset
-  | otherwise = return ()
+runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
+runStep (vm, _) =
+  let (instruction, newVm) = readByte vm
+   in execInstruction (toEnum instruction) newVm
 
-lpad :: a -> Int -> [a] -> [a]
-lpad pad m xs = replicate (m - length ys) pad ++ ys
-  where
-    ys = take m xs
-
-disassembleInstruction :: Chunk -> Int -> IO Int
-disassembleInstruction chunk offset = do
-  putStr $ lpad '0' 4 (show offset) ++ " "
-  let instruction = code chunk !! offset
-  case toEnum instruction :: OpCode of
-    OP_RETURN -> simpleInstruction "OP_RETURN" offset
-    _ -> do
-      putStrLn $ "Unknown opcode " ++ show instruction
-      return $ offset + 1
-
-simpleInstruction :: String -> Int -> IO Int
-simpleInstruction name offset = do
-  putStrLn name
-  return $ offset + 1
+execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
+execInstruction OP_RETURN vm = return (vm, Just OK)
+execInstruction OP_CONSTANT vm = do
+  let (val, newVm) = readConst vm
+  print val
+  return (newVm, Nothing)
+execInstruction _ _ = undefined

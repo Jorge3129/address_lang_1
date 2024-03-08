@@ -1,7 +1,7 @@
+import ByteCode
 import Grammar
 import Tokens
 import Vm
-import Vm (OpCode (OP_RETURN), initChunk)
 
 main :: IO ()
 main = do
@@ -11,5 +11,10 @@ main = do
   -- print ast
   -- print $ fromEnum OP_RETURN
   let ch = initChunk
-      ch1 = writeChunk ch (fromEnum OP_RETURN)
-  disassembleChunk ch1 "test chunk"
+      (ch1, constant) = addConstant ch (FloatVal 1.2)
+      ch2 = writeChunk ch1 (fromEnum OP_CONSTANT)
+      ch3 = writeChunk ch2 constant
+      ch4 = writeChunk ch3 (fromEnum OP_RETURN)
+  disassembleChunk ch4 "test chunk"
+  res <- run (initVM ch4)
+  print res
