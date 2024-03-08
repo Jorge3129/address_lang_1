@@ -1,11 +1,11 @@
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Vm where
 
 import ByteCode
 import Data.Maybe (isJust)
 import MyUtils
+import Value
 
 data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)
 
@@ -59,16 +59,25 @@ runStep (vm, _) =
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm = do
-  let (val, newVm) = pop vm
-  print val
-  return (newVm, Just OK)
+  return (vm, Just OK)
+--
 execInstruction OP_CONSTANT vm = do
   let (val, newVm) = readConst vm
       newVm1 = push newVm val
   return (newVm1, Nothing)
+--
 execInstruction OP_ADD vm = do
   let (b, newVm) = pop vm
       (a, newVm1) = pop newVm
       newVm2 = push newVm1 (addVals a b)
   return (newVm2, Nothing)
+--
+execInstruction OP_PRINT vm = do
+  let (val, newVm) = pop vm
+  print val
+  return (newVm, Nothing)
+--
+execInstruction OP_POP vm = do
+  let (_, newVm) = pop vm
+  return (newVm, Nothing)
 execInstruction _ _ = undefined

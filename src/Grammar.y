@@ -33,6 +33,8 @@ import Tokens
 
 %%
 
+program : progLines { Program $1 }
+
 progLines : progLines eol progLine  { $1 ++ [$3] }
       | progLines eol { $1 }
       | progLine { [$1] }

@@ -29,10 +29,12 @@ library
   exposed-modules:
       ByteCode
       Compiler
+      Debug
       Grammar
       Lib
       MyUtils
       Tokens
+      Value
       Vm
   other-modules:
       Paths_addr_lang1
