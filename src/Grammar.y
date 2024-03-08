@@ -11,9 +11,13 @@ import Tokens
     int { TokenNumber $$ }
     var { TokenIdentifier $$ }
     eol { TokenNewLine }
-    ret { TokenKeyword "Ret"}
+    Ret { TokenKeyword "Ret"}
+    P { TokenKeyword "P"}
+    L { TokenKeyword "L"}
+    Pg { TokenKeyword "Pg"}
     not { TokenKeyword "not"}
     builtin { TokenBuiltin $$ }
+
     '@' { TokenAt }
     '|' { TokenVerticalBar }
     ';' { TokenSemi }
@@ -72,9 +76,18 @@ stmts : stmts ';' stmt          { $1 ++ [$3] }
 
 stmt : '!' { Stop }
     | builtin Exp { BuiltinFunc $1 [$2] }
-    | ret { Ret }
+    | predicateSt { $1 }
+    | assignSt { $1 }
+    | Ret { Ret }
     | Exp { ExpSt $1 }
-    | var '=' Exp { Assignment (Var $1) $3 }
+
+predicateSt : P '{' Exp '}' stmts '|' stmts { Predicate $3 $5 $7}
+
+assignLhs : var { Var $1 }
+      | "'" Exp %prec DEREF { Deref $2 }
+      | "`" Exp "`" Exp %prec DEREF { MulDeref $2 $4 }
+
+assignSt : assignLhs '=' Exp { Assignment $1 $3 }
 
 Exp :  Exp "==" Exp           { BinOpApp Equal $1 $3 }
     | Exp "/=" Exp           { BinOpApp NotEqual $1 $3 }
@@ -125,7 +138,7 @@ data Statement
   = Assignment Expr Expr
   | Send Expr Expr
   | Exchange Expr Expr
-  | Conditional Expr Statement Statement
+  | Predicate Expr [Statement] [Statement]
   | SubprogramCall String [Expr] (Maybe String)
   | BuiltinFunc String [Expr]
   | Jump String
