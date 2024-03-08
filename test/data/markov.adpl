@@ -1,0 +1,9 @@
+Pg Markov1 { xi, eta, zeta}
+
+@Markov1 ... Nil => psi1, Nil => psi2, Nil => phi1
+    0 => 'phi1
+    L { 0 (1) `2`psi1 - `2`psi2 => pi } M4
+        L { 1 (1) `2`psi2 => l } M3
+    P { '('psi1 + 'pi + 'l) == '('psi2 + 'l) } | M2
+    @M3 ... 'pi + 1 => 'phi1
+    @M2 ... @M4 ... Ret
