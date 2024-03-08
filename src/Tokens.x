@@ -42,8 +42,11 @@ tokens :-
   "..."     { \_ -> TokenEllipsis }
   "<=>"     { \_ -> TokenLessEqualGreater }
   $letter ($letter | $digit)* { \s -> 
-      let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "print", "printList"] 
-      in if elem s keywords then TokenKeyword s else TokenIdentifier s 
+      let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj"]
+          builtins = ["print", "printList"]
+      in if elem s keywords then TokenKeyword s
+          else if elem s builtins then TokenBuiltin s 
+          else TokenIdentifier s 
     }
   $digit+ { \s -> TokenNumber (read s) }
   _         { \_ -> TokenError }
@@ -81,6 +84,7 @@ data Token =
   | TokenLessEqualGreater
   | TokenIdentifier String
   | TokenKeyword String
+  | TokenBuiltin String
   | TokenNumber Int
   | TokenError
   deriving (Show, Eq)

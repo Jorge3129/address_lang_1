@@ -12,7 +12,7 @@ import Tokens
     var { TokenIdentifier $$ }
     eol { TokenNewLine }
     ret { TokenKeyword "Ret"}
-    print { TokenKeyword "print"}
+    builtin { TokenBuiltin $$ }
     '@' { TokenAt }
     '!' { TokenBang }
     '=' { TokenEqual }
@@ -57,7 +57,7 @@ stmts : stmts ';' stmt          { $1 ++ [$3] }
       | {- empty -}		{ [] }
 
 stmt : '!' { Stop }
-    | print Exp { BuiltinFunc "print" [$2] }
+    | builtin Exp { BuiltinFunc $1 [$2] }
     | ret { Ret }
     | Exp { ExpSt $1 }
     | var '=' Exp { Assignment (Var $1) $3 }
