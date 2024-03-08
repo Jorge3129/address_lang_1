@@ -11,12 +11,28 @@ data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)
 
 data VM = VM
   { chunk :: Chunk,
-    ip :: Int
+    ip :: Int,
+    stack :: [Value]
   }
   deriving (Eq, Show)
 
 initVM :: Chunk -> VM
-initVM ch = VM {chunk = ch, ip = 0}
+initVM ch =
+  VM
+    { chunk = ch,
+      ip = 0,
+      stack = []
+    }
+
+push :: VM -> Value -> VM
+push vm@(VM {stack}) val =
+  vm {stack = val : stack}
+
+pop :: VM -> (Value, VM)
+pop vm@(VM {stack}) =
+  ( head stack,
+    vm {stack = tail stack}
+  )
 
 run :: VM -> IO InterpretResult
 run vm = do
@@ -42,9 +58,12 @@ runStep (vm, _) =
    in execInstruction (toEnum instruction) newVm
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
-execInstruction OP_RETURN vm = return (vm, Just OK)
+execInstruction OP_RETURN vm = do
+  let (val, newVm) = pop vm
+  print val
+  return (newVm, Just OK)
 execInstruction OP_CONSTANT vm = do
   let (val, newVm) = readConst vm
-  print val
-  return (newVm, Nothing)
+      newVm1 = push newVm val
+  return (newVm1, Nothing)
 execInstruction _ _ = undefined
