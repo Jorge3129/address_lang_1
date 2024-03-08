@@ -66,4 +66,9 @@ execInstruction OP_CONSTANT vm = do
   let (val, newVm) = readConst vm
       newVm1 = push newVm val
   return (newVm1, Nothing)
+execInstruction OP_ADD vm = do
+  let (b, newVm) = pop vm
+      (a, newVm1) = pop newVm
+      newVm2 = push newVm1 (addVals a b)
+  return (newVm2, Nothing)
 execInstruction _ _ = undefined

@@ -6,9 +6,16 @@ module ByteCode where
 data OpCode
   = OP_RETURN
   | OP_CONSTANT
+  | OP_ADD
   deriving (Eq, Show, Enum)
 
 data Value = IntVal Int | FloatVal Float deriving (Eq)
+
+addVals :: Value -> Value -> Value
+addVals (IntVal a) (IntVal b) = IntVal $ a + b
+addVals (IntVal a) (FloatVal b) = FloatVal $ (fromIntegral a :: Float) + b
+addVals (FloatVal a) (IntVal b) = FloatVal $ a + (fromIntegral b :: Float)
+addVals (FloatVal a) (FloatVal b) = FloatVal $ a + b
 
 instance Show Value where
   show (IntVal v) = show v
@@ -54,6 +61,7 @@ disassembleInstruction chunk offset = do
   let instruction = code chunk !! offset
   case toEnum instruction :: OpCode of
     OP_RETURN -> simpleInstruction "OP_RETURN" offset
+    OP_ADD -> simpleInstruction "OP_ADD" offset
     OP_CONSTANT -> constantInstruction "OP_CONSTANT" chunk offset
     _ -> do
       putStrLn $ "Unknown opcode " ++ show instruction

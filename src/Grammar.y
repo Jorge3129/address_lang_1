@@ -109,8 +109,11 @@ data Statement
   | ExpSt Expr
   deriving (Eq, Show)
 
-data ProgLine = ProgLine [String] [Statement] deriving (Eq, Show)
+data ProgLine = ProgLine {
+      labels :: [String],
+      stmts :: [Statement]
+} deriving (Eq, Show)
 
-newtype Program = Program [ProgLine] deriving (Eq, Show)
+data Program = Program { pLines :: [ProgLine] } deriving (Eq, Show)
 
 }
