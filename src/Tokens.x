@@ -26,23 +26,22 @@ tokens :-
   ")"       { \_ -> TokenRightParen }
   "{"       { \_ -> TokenLeftCurly }
   "}"       { \_ -> TokenRightCurly }
-  ","       { \_ -> TokenHorizontal }
   "!"       { \_ -> TokenBang }
-  "!="      { \_ -> TokenBangEqual }
   "="       { \_ -> TokenEqual }
   "=="      { \_ -> TokenEqualEqual }
+  "/="      { \_ -> TokenSlashEqual }
   ">"       { \_ -> TokenGreater }
-  "->"      { \_ -> TokenMinusGreater }
   ">="      { \_ -> TokenGreaterEqual }
   "<"       { \_ -> TokenLess }
   "<="      { \_ -> TokenLessEqual }
   "'"       { \_ -> TokenSingleQuote }
   "`"       { \_ -> TokenBackTick }
+  "->"      { \_ -> TokenMinusGreater }
   "=>"      { \_ -> TokenEqualGreater }
   "..."     { \_ -> TokenEllipsis }
   "<=>"     { \_ -> TokenLessEqualGreater }
   $letter ($letter | $digit)* { \s -> 
-      let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj"]
+      let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "not"]
           builtins = ["print", "printList"]
       in if elem s keywords then TokenKeyword s
           else if elem s builtins then TokenBuiltin s 
@@ -69,9 +68,9 @@ data Token =
   | TokenRightCurly
   | TokenHorizontal
   | TokenBang
-  | TokenBangEqual
   | TokenEqual
   | TokenEqualEqual
+  | TokenSlashEqual
   | TokenGreater
   | TokenMinusGreater
   | TokenGreaterEqual

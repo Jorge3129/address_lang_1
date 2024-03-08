@@ -12,25 +12,39 @@ import Tokens
     var { TokenIdentifier $$ }
     eol { TokenNewLine }
     ret { TokenKeyword "Ret"}
+    not { TokenKeyword "not"}
     builtin { TokenBuiltin $$ }
     '@' { TokenAt }
-    '!' { TokenBang }
-    '=' { TokenEqual }
+    '|' { TokenVerticalBar }
+    ';' { TokenSemi }
+    ',' { TokenComma }
     '+' { TokenPlus }
     '-' { TokenMinus }
     '*' { TokenStar }
     '/' { TokenSlash }
     '(' { TokenLeftParen }
     ')' { TokenRightParen }
-    ';' { TokenSemi }
-    ',' { TokenComma }
+    '{' { TokenLeftCurly }
+    '}' { TokenRightCurly }
+    '!' { TokenBang }
+    '=' { TokenEqual }
+    "==" { TokenEqualEqual }
+    "/=" { TokenSlashEqual }
+    '>' { TokenGreater }
+    ">=" { TokenGreaterEqual }
+    '<' { TokenLess }
+    "<=" { TokenLessEqual }
+    "'" { TokenSingleQuote }
+    "`" { TokenBackTick }
+    "=>" { TokenEqualGreater }
     "..." { TokenEllipsis }
 
-%right in
-%nonassoc '>' '<'
+%nonassoc "==" "/="
+%nonassoc '>' '<' "<=" ">="
 %left '+' '-'
 %left '*' '/'
 %left NEG
+%left DEREF
 
 %%
 
@@ -62,12 +76,20 @@ stmt : '!' { Stop }
     | Exp { ExpSt $1 }
     | var '=' Exp { Assignment (Var $1) $3 }
 
-Exp : Exp '+' Exp            { BinOpApp Add $1 $3 }
+Exp :  Exp "==" Exp           { BinOpApp Equal $1 $3 }
+    | Exp "/=" Exp           { BinOpApp NotEqual $1 $3 }
+    | Exp "<=" Exp           { BinOpApp LessEqual $1 $3 }
+    | Exp ">=" Exp           { BinOpApp GreaterEqual $1 $3 }
+    | Exp '<' Exp            { BinOpApp Less $1 $3 }
+    | Exp '>' Exp            { BinOpApp Greater $1 $3 }
+    | Exp '+' Exp            { BinOpApp Add $1 $3 }
     | Exp '-' Exp            { BinOpApp Sub $1 $3 }
     | Exp '*' Exp            { BinOpApp Mul $1 $3 }
     | Exp '/' Exp            { BinOpApp Div $1 $3 }
     | '(' Exp ')'            { $2 }
     -- | '-' Exp %prec NEG      { Negate $2 }
+    | "'" Exp %prec DEREF    { Deref $2 }
+    | "`" Exp "`" Exp %prec DEREF    { MulDeref $2 $4 }
     | int                    { Lit $1 }
     | var                    { Var $1 }
 

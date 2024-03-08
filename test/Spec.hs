@@ -7,11 +7,12 @@ import Vm
 
 main :: IO ()
 main = do
-  tokens <- scanTokens <$> readFile "D:/DiplomaFiles/addr-lang1/test/data/test1.adpl"
+  tokens <- scanTokens <$> readFile "D:/DiplomaFiles/addr-lang1/test/data/test2.adpl"
   print tokens
   let progAst = parseProg tokens
   print progAst
-  ch <- compileProg progAst
-  disassembleChunk ch "test chunk"
-  res <- run (initVM ch)
-  print res
+
+-- ch <- compileProg progAst
+-- disassembleChunk ch "test chunk"
+-- res <- run (initVM ch)
+-- print res
