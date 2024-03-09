@@ -59,15 +59,13 @@ progLines : progLines eol progLine  { $1 ++ [$3] }
       | progLine { [$1] }
       | {- empty -}		{ [] }
 
-progLine : lineLabelsList stmts { ProgLine $1 $2 }
+progLine : lineLabels stmts { ProgLine $1 $2 }
 
-lineLabelsList : '@' lineLabels "..." { $2 }
-      | {- empty -} { [] }
-
-lineLabels : lineLabels ',' lineLabel          { $1 ++ [$3] }
+lineLabels : lineLabels lineLabel          { $1 ++ [$2] }
       | lineLabel			{ [$1] }
+      | {- empty -}           { [] }
 
-lineLabel : var { $1 }
+lineLabel : '@' var "..." { $2 }
 
 stmts : stmts ';' stmt        { $1 ++ [$3] }
       | stmts ';'             { $1 }
