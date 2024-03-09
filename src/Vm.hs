@@ -78,7 +78,7 @@ execInstruction OP_PRINT vm = do
 --
 execInstruction OP_NOT vm = do
   let (val, newVm) = pop vm
-      newVal = FloatVal $ if asNum val == 0 then 1 else 0
+      newVal = DoubleVal $ if asNum val == 0 then 1 else 0
       newVm1 = push newVm $ newVal
   return (newVm1, Nothing)
 --
@@ -87,11 +87,9 @@ execInstruction OP_POP vm = do
   return (newVm, Nothing)
 execInstruction _ _ = undefined
 
-binaryInstr :: (Float -> Float -> Float) -> VM -> IO (VM, Maybe InterpretResult)
+binaryInstr :: (Value -> Value -> Value) -> VM -> IO (VM, Maybe InterpretResult)
 binaryInstr op vm = do
   let (b, newVm) = pop vm
       (a, newVm1) = pop newVm
-      numA = asNum a
-      numB = asNum b
-      newVm2 = push newVm1 $ FloatVal (op numA numB)
+      newVm2 = push newVm1 $ op a b
   return (newVm2, Nothing)
