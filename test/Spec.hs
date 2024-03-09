@@ -8,7 +8,7 @@ import Vm
 main :: IO ()
 main = do
   tokens <- scanTokens <$> readFile "D:/DiplomaFiles/addr-lang1/test/data/test2.adpl"
-  print tokens
+  -- print tokens
   let progAst = parseProg tokens
   print progAst
 

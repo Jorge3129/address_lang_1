@@ -7,3 +7,10 @@ a = 2
 ''a = 4
 `2 + 1`'h = 5
 '(a + 2 + 3) = 9
+Pg Markov1 { a, b, c, d} 
+Pg Markov1 { a, b, c, d} next
+a
+'a
+''a
+`2 + 1`'h
+'(a + 2 + 3)

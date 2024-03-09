@@ -69,13 +69,14 @@ lineLabels : lineLabels ',' lineLabel          { $1 ++ [$3] }
 
 lineLabel : var { $1 }
 
-stmts : stmts ';' stmt          { $1 ++ [$3] }
-      | stmts ';'               { $1 }
+stmts : stmts ';' stmt        { $1 ++ [$3] }
+      | stmts ';'             { $1 }
       | stmt			{ [$1] }
       | {- empty -}		{ [] }
 
 stmt : '!' { Stop }
     | builtin Exp { BuiltinFunc $1 [$2] }
+    | subprogCallSt { $1 }
     | predicateSt { $1 }
     | assignSt { $1 }
     | Ret { Ret }
@@ -89,7 +90,16 @@ assignLhs : var { Var $1 }
 
 assignSt : assignLhs '=' Exp { Assignment $1 $3 }
 
-Exp :  Exp "==" Exp           { BinOpApp Equal $1 $3 }
+subprogCallSt : Pg var '{' exprs '}' subProgNextLabel { SubprogramCall $2 $4 $6 }
+
+subProgNextLabel : var  { Just $1 }
+      | {- empty -}     { Nothing }
+
+exprs : exprs ',' Exp   { $1 ++ [$3] }
+      | Exp			{ [$1] }
+      | {- empty -}	{ [] }
+
+Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
     | Exp "/=" Exp           { BinOpApp NotEqual $1 $3 }
     | Exp "<=" Exp           { BinOpApp LessEqual $1 $3 }
     | Exp ">=" Exp           { BinOpApp GreaterEqual $1 $3 }
