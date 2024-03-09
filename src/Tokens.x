@@ -13,6 +13,7 @@ $cr = \r
 
 tokens :-
   $white_no_nl+ ;
+  "//".*        ;
   @eol_pattern      { \_ -> TokenNewLine }
   "@"      { \_ -> TokenAt }
   "|"      { \_ -> TokenVerticalBar }

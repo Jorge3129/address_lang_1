@@ -7,3 +7,5 @@
 
     !
     Ret
+a => b
+Nil => c, Nil => d

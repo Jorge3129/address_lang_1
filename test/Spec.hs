@@ -7,7 +7,9 @@ import Vm
 
 main :: IO ()
 main = do
-  tokens <- scanTokens <$> readFile "D:/DiplomaFiles/addr-lang1/test/data/test.adpl"
+  let basePath = "D:/DiplomaFiles/addr-lang1/test/data"
+      fileName = "markov"
+  tokens <- scanTokens <$> readFile (basePath ++ "/" ++ fileName ++ ".adpl")
   -- print tokens
   let progAst = parseProg tokens
   print progAst
