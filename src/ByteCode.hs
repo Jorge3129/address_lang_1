@@ -17,6 +17,7 @@ data OpCode
   | OP_LESS
   | OP_PRINT
   | OP_POP
+  | OP_JUMP
   deriving (Eq, Show, Enum)
 
 data Chunk = Chunk

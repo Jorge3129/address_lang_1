@@ -3,12 +3,21 @@
 module Compiler where
 
 import ByteCode
+import Data.Map (Map, fromList)
 import Grammar
+import Grammar (ProgLine, Statement (Jump))
 import Value
+
+getLabelMap :: [ProgLine] -> Map String Int
+getLabelMap pLines =
+  let lblIndexes = zip (map labels pLines) [0 :: Int ..]
+   in fromList $ concat $ [[(lbl, i) | lbl <- lbls] | (lbls, i) <- lblIndexes]
 
 compileProg :: Program -> IO Chunk
 compileProg (Program {pLines}) = do
-  let ch = initChunk
+  let labelMap = getLabelMap pLines
+      ch = initChunk
+  print labelMap
   ch1 <- compileLines pLines ch
   return $ writeChunk (fromEnum OP_RETURN) ch1
 
@@ -33,7 +42,12 @@ compileStmt (BuiltinFunc "print" [ex]) ch = do
 compileStmt (ExpSt ex) ch = do
   ch1 <- compileExpr ex ch
   return $ writeChunk (fromEnum OP_POP) ch1
-compileStmt _ _ = undefined
+--
+compileStmt (Jump label) ch = do
+  let ch1 = writeChunk (fromEnum OP_JUMP) ch
+  return $ writeChunk 0 ch1
+--
+compileStmt st _ = error $ "cannot compile " ++ show st ++ " yet"
 
 compileExpr :: Expr -> Chunk -> IO Chunk
 compileExpr (Lit val) ch = do

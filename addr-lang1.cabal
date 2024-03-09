@@ -46,6 +46,7 @@ library
   build-depends:
       array
     , base >=4.7 && <5
+    , containers
     , monad-loops
   default-language: Haskell2010
 
@@ -62,6 +63,7 @@ executable addr-lang1-exe
       addr-lang1
     , array
     , base >=4.7 && <5
+    , containers
     , monad-loops
   default-language: Haskell2010
 
@@ -79,5 +81,6 @@ test-suite addr-lang1-test
       addr-lang1
     , array
     , base >=4.7 && <5
+    , containers
     , monad-loops
   default-language: Haskell2010

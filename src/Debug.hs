@@ -34,6 +34,7 @@ disassembleInstruction chunk offset = do
     OP_NOT -> simpleInstruction "OP_NOT" offset
     OP_PRINT -> simpleInstruction "OP_PRINT" offset
     OP_POP -> simpleInstruction "OP_POP" offset
+    OP_JUMP -> jumpInstruction "OP_JUMP" chunk offset
     OP_CONSTANT -> constantInstruction "OP_CONSTANT" chunk offset
     _ -> do
       putStrLn $ "Unknown opcode " ++ show instruction
@@ -49,4 +50,10 @@ constantInstruction name (Chunk {code, constants}) offset = do
   let constant = code !! (offset + 1)
   putStr $ name ++ " " ++ show constant ++ " "
   print (constants !! constant)
+  return $ offset + 2
+
+jumpInstruction :: String -> Chunk -> Int -> IO Int
+jumpInstruction name (Chunk {code}) offset = do
+  let jumpOffset = code !! (offset + 1)
+  putStrLn $ name ++ " " ++ show jumpOffset ++ " "
   return $ offset + 2

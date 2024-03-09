@@ -34,10 +34,8 @@ pop vm@(VM {stack}) =
     vm {stack = tail stack}
   )
 
-run :: VM -> IO InterpretResult
-run vm = do
-  (_, Just intRes) <- untilM (\(_, res) -> isJust res) runStep (vm, Nothing)
-  return intRes
+addIp :: Int -> VM -> VM
+addIp ipOffset vm@(VM {ip}) = vm {ip = ip + ipOffset}
 
 readByte :: VM -> (Int, VM)
 readByte vm@(VM {ip, chunk}) =
@@ -51,6 +49,11 @@ readConst vm@(VM {chunk}) =
   let (Chunk {constants}) = chunk
       (constPos, newVm) = readByte vm
    in (constants !! constPos, newVm)
+
+run :: VM -> IO InterpretResult
+run vm = do
+  (_, Just intRes) <- untilM (\(_, res) -> isJust res) runStep (vm, Nothing)
+  return intRes
 
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) =
@@ -85,7 +88,12 @@ execInstruction OP_NOT vm = do
 execInstruction OP_POP vm = do
   let (_, newVm) = pop vm
   return (newVm, Nothing)
-execInstruction _ _ = undefined
+--
+execInstruction OP_JUMP vm = do
+  let (jumpOffset, newVm) = readByte vm
+  return (addIp jumpOffset newVm, Nothing)
+--
+execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 
 binaryInstr :: (Value -> Value -> Value) -> VM -> IO (VM, Maybe InterpretResult)
 binaryInstr op vm = do

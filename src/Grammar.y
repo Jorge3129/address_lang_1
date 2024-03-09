@@ -84,7 +84,8 @@ stmt : '!' { Stop }
     | assignSt { $1 }
     | sendSt { $1 }
     | Ret { Ret }
-    | Exp { ExpSt $1 }
+    | var { Jump $1 }
+--     | Exp { ExpSt $1 }
 
 predicateSt : P '{' Exp '}' stmts '|' stmts { Predicate $3 $5 $7}
 
