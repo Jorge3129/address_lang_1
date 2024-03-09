@@ -28,6 +28,10 @@ disassembleInstruction chunk offset = do
   case toEnum instruction :: OpCode of
     OP_RETURN -> simpleInstruction "OP_RETURN" offset
     OP_ADD -> simpleInstruction "OP_ADD" offset
+    OP_SUB -> simpleInstruction "OP_SUB" offset
+    OP_MUL -> simpleInstruction "OP_MUL" offset
+    OP_DIV -> simpleInstruction "OP_DIV" offset
+    OP_NOT -> simpleInstruction "OP_NOT" offset
     OP_PRINT -> simpleInstruction "OP_PRINT" offset
     OP_POP -> simpleInstruction "OP_POP" offset
     OP_CONSTANT -> constantInstruction "OP_CONSTANT" chunk offset

@@ -8,13 +8,12 @@ import Vm
 main :: IO ()
 main = do
   let basePath = "D:/DiplomaFiles/addr-lang1/test/data"
-      fileName = "markov"
+      fileName = "test1"
   tokens <- scanTokens <$> readFile (basePath ++ "/" ++ fileName ++ ".adpl")
   -- print tokens
   let progAst = parseProg tokens
   print progAst
-
--- ch <- compileProg progAst
--- disassembleChunk ch "test chunk"
--- res <- run (initVM ch)
--- print res
+  ch <- compileProg progAst
+  disassembleChunk ch "test chunk"
+  res <- run (initVM ch)
+  print res

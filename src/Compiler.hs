@@ -41,8 +41,18 @@ compileExpr (Lit val) ch = do
       ch2 = writeChunk (fromEnum OP_CONSTANT) ch1
   return $ writeChunk constant ch2
 --
-compileExpr (BinOpApp Add a b) ch = do
+compileExpr (BinOpApp op a b) ch = do
   ch1 <- compileExpr a ch
   ch2 <- compileExpr b ch1
-  return $ writeChunk (fromEnum OP_ADD) ch2
+  return $ writeChunk (fromEnum (binOpToOpCode op)) ch2
 compileExpr _ _ = undefined
+
+binOpToOpCode :: BinOp -> OpCode
+binOpToOpCode Add = OP_ADD
+binOpToOpCode Sub = OP_SUB
+binOpToOpCode Mul = OP_MUL
+binOpToOpCode Div = OP_DIV
+binOpToOpCode Equal = OP_EQUAL
+binOpToOpCode Greater = OP_GREATER
+binOpToOpCode Less = OP_LESS
+binOpToOpCode _ = undefined

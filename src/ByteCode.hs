@@ -7,7 +7,14 @@ import Value
 data OpCode
   = OP_RETURN
   | OP_CONSTANT
+  | OP_NOT
   | OP_ADD
+  | OP_SUB
+  | OP_MUL
+  | OP_DIV
+  | OP_EQUAL
+  | OP_GREATER
+  | OP_LESS
   | OP_PRINT
   | OP_POP
   deriving (Eq, Show, Enum)
