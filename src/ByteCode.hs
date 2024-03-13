@@ -27,7 +27,8 @@ data Chunk = Chunk
   { code :: [Int],
     codeLines :: [Int],
     constants :: [Value],
-    labelOffsetMap :: LabelOffsetMap
+    labelOffsetMap :: LabelOffsetMap,
+    labelJumpsToBackPatch :: [(Int, String)]
   }
   deriving (Eq, Show)
 
@@ -37,7 +38,8 @@ initChunk =
     { code = [],
       codeLines = [],
       constants = [],
-      labelOffsetMap = Data.Map.empty
+      labelOffsetMap = Data.Map.empty,
+      labelJumpsToBackPatch = []
     }
 
 writeChunk :: Int -> Int -> Chunk -> Chunk

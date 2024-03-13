@@ -12,7 +12,8 @@ compileProg (Program {pLines}) = do
   let numLines = zip pLines [0 :: Int ..]
       ch = initChunk
   ch1 <- compileLines numLines ch
-  return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
+  let ch2 = backPatchLabelJumps ch1
+  return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch2
 
 compileLines :: [(ProgLine, Int)] -> Chunk -> IO Chunk
 compileLines (l : ls) ch = compileLine l ch >>= compileLines ls
@@ -44,12 +45,11 @@ compileStmt (ExpSt ex) lineNum ch = do
   ch1 <- compileExpr ex lineNum ch
   return $ writeChunk (fromEnum OP_POP) lineNum ch1
 --
-compileStmt (Jump label) lineNum ch@(Chunk {labelOffsetMap, code}) = do
+compileStmt (Jump lbl) lineNum ch@(Chunk {code}) = do
   let curOffset = length code
-      jumpToInstr = labelOffsetMap ! label
-      jumpOffset = jumpToInstr - curOffset - 2
-  let ch1 = writeChunk (fromEnum OP_JUMP) lineNum ch
-  return $ writeChunk jumpOffset lineNum ch1
+      ch1 = pushLblToBackPatch curOffset lbl ch
+      ch2 = writeChunk (fromEnum OP_JUMP) lineNum ch1
+  return $ writeChunk 0 lineNum ch2
 --
 compileStmt st _ _ = error $ "cannot compile " ++ show st ++ " yet"
 
@@ -64,6 +64,26 @@ compileExpr (BinOpApp op a b) lineNum ch = do
   ch2 <- compileExpr b lineNum ch1
   return $ writeChunk (fromEnum (binOpToOpCode op)) lineNum ch2
 compileExpr _ _ _ = undefined
+
+pushLblToBackPatch :: Int -> String -> Chunk -> Chunk
+pushLblToBackPatch curOffset lbl ch@(Chunk {labelJumpsToBackPatch}) =
+  ch
+    { labelJumpsToBackPatch = labelJumpsToBackPatch ++ [(curOffset, lbl)]
+    }
+
+backPatchLabelJumps :: Chunk -> Chunk
+backPatchLabelJumps chunk@(Chunk {labelJumpsToBackPatch, labelOffsetMap}) =
+  foldl
+    ( \ch@(Chunk {code}) (curOffset, lbl) ->
+        let jumpToInstr = labelOffsetMap ! lbl
+            jumpOffset = jumpToInstr - curOffset - 2
+         in ch {code = replace (curOffset + 1) jumpOffset code}
+    )
+    chunk
+    labelJumpsToBackPatch
+
+replace :: Int -> a -> [a] -> [a]
+replace i val xs = [if xi == i then val else x | (x, xi) <- zip xs [0 :: Int ..]]
 
 binOpToOpCode :: BinOp -> OpCode
 binOpToOpCode Add = OP_ADD
