@@ -25,6 +25,7 @@ type LabelLineMap = Map String Int
 
 data Chunk = Chunk
   { code :: [Int],
+    codeLines :: [Int],
     constants :: [Value],
     labelLineMap :: LabelLineMap
   }
@@ -34,12 +35,17 @@ initChunk :: LabelLineMap -> Chunk
 initChunk labelLineMap =
   Chunk
     { code = [],
+      codeLines = [],
       constants = [],
       labelLineMap = labelLineMap
     }
 
-writeChunk :: Int -> Chunk -> Chunk
-writeChunk byte ch@(Chunk {code}) = ch {code = code ++ [byte]}
+writeChunk :: Int -> Int -> Chunk -> Chunk
+writeChunk byte codeLine ch@(Chunk {code, codeLines}) =
+  ch
+    { code = code ++ [byte],
+      codeLines = codeLines ++ [codeLine]
+    }
 
 addConstant :: Value -> Chunk -> (Chunk, Int)
 addConstant val ch@(Chunk {constants}) =

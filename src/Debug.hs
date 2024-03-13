@@ -21,9 +21,19 @@ lpad pad m xs = replicate (m - length ys) pad ++ ys
   where
     ys = take m xs
 
+getPrintLineData :: Chunk -> Int -> String
+getPrintLineData (Chunk {codeLines}) offset =
+  if offset > 0 && (codeLines !! offset) == (codeLines !! (offset - 1))
+    then "   |  "
+    else fmt4 ' ' ((codeLines !! offset) + 1) ++ "  "
+
+fmt4 :: Char -> Int -> String
+fmt4 c x = lpad c 4 (show x)
+
 disassembleInstruction :: Chunk -> Int -> IO Int
 disassembleInstruction chunk offset = do
-  putStr $ lpad '0' 4 (show offset) ++ " "
+  putStr $ fmt4 '0' offset ++ " "
+  putStr $ getPrintLineData chunk offset
   let instruction = code chunk !! offset
   case toEnum instruction :: OpCode of
     OP_RETURN -> simpleInstruction "OP_RETURN" offset

@@ -5,7 +5,6 @@ module Compiler where
 import ByteCode
 import Data.Map (Map, fromList)
 import Grammar
-import Grammar (ProgLine, Statement (Jump))
 import Value
 
 getLabelMap :: [ProgLine] -> Map String Int
@@ -15,50 +14,51 @@ getLabelMap pLines =
 
 compileProg :: Program -> IO Chunk
 compileProg (Program {pLines}) = do
-  let labelMap = getLabelMap pLines
+  let numLines = zip pLines [0 :: Int ..]
+      labelMap = getLabelMap pLines
       ch = initChunk labelMap
-  ch1 <- compileLines pLines ch
-  return $ writeChunk (fromEnum OP_RETURN) ch1
+  ch1 <- compileLines numLines ch
+  return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
 
-compileLines :: [ProgLine] -> Chunk -> IO Chunk
+compileLines :: [(ProgLine, Int)] -> Chunk -> IO Chunk
 compileLines (l : ls) ch = compileLine l ch >>= compileLines ls
 compileLines [] ch = return ch
 
-compileLine :: ProgLine -> Chunk -> IO Chunk
-compileLine (ProgLine {labels, stmts}) = compileStmts stmts
+compileLine :: (ProgLine, Int) -> Chunk -> IO Chunk
+compileLine (ProgLine {labels, stmts}, lineNum) = compileStmts stmts lineNum
 
-compileStmts :: [Statement] -> Chunk -> IO Chunk
-compileStmts (st : stmts) ch = compileStmt st ch >>= compileStmts stmts
-compileStmts [] ch = return ch
+compileStmts :: [Statement] -> Int -> Chunk -> IO Chunk
+compileStmts (st : stmts) lineNum ch = compileStmt st lineNum ch >>= compileStmts stmts lineNum
+compileStmts [] _ ch = return ch
 
-compileStmt :: Statement -> Chunk -> IO Chunk
-compileStmt Stop ch = return $ writeChunk (fromEnum OP_RETURN) ch
+compileStmt :: Statement -> Int -> Chunk -> IO Chunk
+compileStmt Stop lineNum ch = return $ writeChunk (fromEnum OP_RETURN) lineNum ch
 --
-compileStmt (BuiltinFunc "print" [ex]) ch = do
-  ch1 <- compileExpr ex ch
-  return $ writeChunk (fromEnum OP_PRINT) ch1
+compileStmt (BuiltinFunc "print" [ex]) lineNum ch = do
+  ch1 <- compileExpr ex lineNum ch
+  return $ writeChunk (fromEnum OP_PRINT) lineNum ch1
 --
-compileStmt (ExpSt ex) ch = do
-  ch1 <- compileExpr ex ch
-  return $ writeChunk (fromEnum OP_POP) ch1
+compileStmt (ExpSt ex) lineNum ch = do
+  ch1 <- compileExpr ex lineNum ch
+  return $ writeChunk (fromEnum OP_POP) lineNum ch1
 --
-compileStmt (Jump label) ch = do
-  let ch1 = writeChunk (fromEnum OP_JUMP) ch
-  return $ writeChunk 0 ch1
+compileStmt (Jump label) lineNum ch = do
+  let ch1 = writeChunk (fromEnum OP_JUMP) lineNum ch
+  return $ writeChunk 0 lineNum ch1
 --
-compileStmt st _ = error $ "cannot compile " ++ show st ++ " yet"
+compileStmt st _ _ = error $ "cannot compile " ++ show st ++ " yet"
 
-compileExpr :: Expr -> Chunk -> IO Chunk
-compileExpr (Lit val) ch = do
+compileExpr :: Expr -> Int -> Chunk -> IO Chunk
+compileExpr (Lit val) lineNum ch = do
   let (ch1, constant) = addConstant (IntVal val) ch
-      ch2 = writeChunk (fromEnum OP_CONSTANT) ch1
-  return $ writeChunk constant ch2
+      ch2 = writeChunk (fromEnum OP_CONSTANT) lineNum ch1
+  return $ writeChunk constant lineNum ch2
 --
-compileExpr (BinOpApp op a b) ch = do
-  ch1 <- compileExpr a ch
-  ch2 <- compileExpr b ch1
-  return $ writeChunk (fromEnum (binOpToOpCode op)) ch2
-compileExpr _ _ = undefined
+compileExpr (BinOpApp op a b) lineNum ch = do
+  ch1 <- compileExpr a lineNum ch
+  ch2 <- compileExpr b lineNum ch1
+  return $ writeChunk (fromEnum (binOpToOpCode op)) lineNum ch2
+compileExpr _ _ _ = undefined
 
 binOpToOpCode :: BinOp -> OpCode
 binOpToOpCode Add = OP_ADD
