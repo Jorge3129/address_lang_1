@@ -2,6 +2,7 @@
 
 module ByteCode where
 
+import Data.Map (Map, fromList)
 import Value
 
 data OpCode
@@ -20,14 +21,22 @@ data OpCode
   | OP_JUMP
   deriving (Eq, Show, Enum)
 
+type LabelLineMap = Map String Int
+
 data Chunk = Chunk
   { code :: [Int],
-    constants :: [Value]
+    constants :: [Value],
+    labelLineMap :: LabelLineMap
   }
   deriving (Eq, Show)
 
-initChunk :: Chunk
-initChunk = Chunk {code = [], constants = []}
+initChunk :: LabelLineMap -> Chunk
+initChunk labelLineMap =
+  Chunk
+    { code = [],
+      constants = [],
+      labelLineMap = labelLineMap
+    }
 
 writeChunk :: Int -> Chunk -> Chunk
 writeChunk byte ch@(Chunk {code}) = ch {code = code ++ [byte]}

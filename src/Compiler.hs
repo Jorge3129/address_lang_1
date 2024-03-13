@@ -16,8 +16,7 @@ getLabelMap pLines =
 compileProg :: Program -> IO Chunk
 compileProg (Program {pLines}) = do
   let labelMap = getLabelMap pLines
-      ch = initChunk
-  print labelMap
+      ch = initChunk labelMap
   ch1 <- compileLines pLines ch
   return $ writeChunk (fromEnum OP_RETURN) ch1
 
