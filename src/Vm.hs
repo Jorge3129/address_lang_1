@@ -58,7 +58,11 @@ run vm = do
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) =
   let (instruction, newVm) = readByte vm
-   in execInstruction (toEnum instruction) newVm
+   in do
+        -- print $ (toEnum instruction :: OpCode)
+        (resVM, intRes) <- execInstruction (toEnum instruction) newVm
+        -- print $ stack resVM
+        return (resVM, intRes)
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm = do

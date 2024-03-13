@@ -3,20 +3,14 @@
 module Compiler where
 
 import ByteCode
-import Data.Map (Map, fromList)
+import Data.Map (insert, (!))
 import Grammar
 import Value
-
-getLabelMap :: [ProgLine] -> Map String Int
-getLabelMap pLines =
-  let lblIndexes = zip (map labels pLines) [0 :: Int ..]
-   in fromList $ concat $ [[(lbl, i) | lbl <- lbls] | (lbls, i) <- lblIndexes]
 
 compileProg :: Program -> IO Chunk
 compileProg (Program {pLines}) = do
   let numLines = zip pLines [0 :: Int ..]
-      labelMap = getLabelMap pLines
-      ch = initChunk labelMap
+      ch = initChunk
   ch1 <- compileLines numLines ch
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
 
@@ -25,7 +19,15 @@ compileLines (l : ls) ch = compileLine l ch >>= compileLines ls
 compileLines [] ch = return ch
 
 compileLine :: (ProgLine, Int) -> Chunk -> IO Chunk
-compileLine (ProgLine {labels, stmts}, lineNum) = compileStmts stmts lineNum
+compileLine (ProgLine {labels, stmts}, lineNum) ch = do
+  let ch1 = compileLineLabels labels ch
+  compileStmts stmts lineNum ch1
+
+compileLineLabels :: [String] -> Chunk -> Chunk
+compileLineLabels lbls chunk@(Chunk {labelOffsetMap, code}) =
+  let offset = length code
+      newLblMap = foldl (\lblMap lbl -> insert lbl offset lblMap) labelOffsetMap lbls
+   in chunk {labelOffsetMap = newLblMap}
 
 compileStmts :: [Statement] -> Int -> Chunk -> IO Chunk
 compileStmts (st : stmts) lineNum ch = compileStmt st lineNum ch >>= compileStmts stmts lineNum
@@ -42,9 +44,12 @@ compileStmt (ExpSt ex) lineNum ch = do
   ch1 <- compileExpr ex lineNum ch
   return $ writeChunk (fromEnum OP_POP) lineNum ch1
 --
-compileStmt (Jump label) lineNum ch = do
+compileStmt (Jump label) lineNum ch@(Chunk {labelOffsetMap, code}) = do
+  let curOffset = length code
+      jumpToInstr = labelOffsetMap ! label
+      jumpOffset = jumpToInstr - curOffset - 2
   let ch1 = writeChunk (fromEnum OP_JUMP) lineNum ch
-  return $ writeChunk 0 lineNum ch1
+  return $ writeChunk jumpOffset lineNum ch1
 --
 compileStmt st _ _ = error $ "cannot compile " ++ show st ++ " yet"
 
