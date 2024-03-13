@@ -24,6 +24,7 @@ initVM ch =
       stack = []
     }
 
+-- TODO change arg order
 push :: VM -> Value -> VM
 push vm@(VM {stack}) val =
   vm {stack = val : stack}
@@ -33,6 +34,9 @@ pop vm@(VM {stack}) =
   ( head stack,
     vm {stack = tail stack}
   )
+
+peek :: Int -> VM -> Value
+peek offset (VM {stack}) = stack !! offset
 
 addIp :: Int -> VM -> VM
 addIp ipOffset vm@(VM {ip}) = vm {ip = ip + ipOffset}
@@ -85,7 +89,7 @@ execInstruction OP_PRINT vm = do
 --
 execInstruction OP_NOT vm = do
   let (val, newVm) = pop vm
-      newVal = DoubleVal $ if asNum val == 0 then 1 else 0
+      newVal = IntVal $ if isFalsy val then 1 else 0
       newVm1 = push newVm $ newVal
   return (newVm1, Nothing)
 --
@@ -96,6 +100,14 @@ execInstruction OP_POP vm = do
 execInstruction OP_JUMP vm = do
   let (jumpOffset, newVm) = readByte vm
   return (addIp jumpOffset newVm, Nothing)
+--
+execInstruction OP_JUMP_IF_FALSE vm = do
+  let (jumpOffset, newVm) = readByte vm
+      newVm1 =
+        if isFalsy (peek 0 vm)
+          then addIp jumpOffset newVm
+          else newVm
+  return (newVm1, Nothing)
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 

@@ -3,6 +3,7 @@
 module Compiler where
 
 import ByteCode
+import Control.Arrow ((>>>))
 import Data.Map (insert, (!))
 import Grammar
 import Value
@@ -51,7 +52,30 @@ compileStmt (Jump lbl) lineNum ch@(Chunk {code}) = do
       ch2 = writeChunk (fromEnum OP_JUMP) lineNum ch1
   return $ writeChunk 0 lineNum ch2
 --
+compileStmt (Predicate ifExp thenStmts elseStmts) lineNum ch = do
+  ch1 <- compileExpr ifExp lineNum ch
+  let ch2 = emitJump OP_JUMP_IF_FALSE lineNum ch1
+      thenJump = length (code ch2) - 1
+      ch3 = writeChunk (fromEnum OP_POP) lineNum ch2
+  ch4 <- compileStmts thenStmts lineNum ch3
+  let ch5 = emitJump OP_JUMP lineNum ch4
+      elseJump = length (code ch5) - 1
+      ch6 = patchJump thenJump ch5
+      ch7 = writeChunk (fromEnum OP_POP) lineNum ch6
+  ch8 <- compileStmts elseStmts lineNum ch7
+  return $ patchJump elseJump ch8
+--
 compileStmt st _ _ = error $ "cannot compile " ++ show st ++ " yet"
+
+patchJump :: Int -> Chunk -> Chunk
+patchJump offset ch =
+  let jump = length (code ch) - offset - 1
+   in ch {code = replace offset jump (code ch)}
+
+emitJump :: OpCode -> Int -> Chunk -> Chunk
+emitJump op lineNum =
+  writeChunk (fromEnum op) lineNum
+    >>> writeChunk 0 lineNum
 
 compileExpr :: Expr -> Int -> Chunk -> IO Chunk
 compileExpr (Lit val) lineNum ch = do

@@ -39,8 +39,10 @@ instance Fractional Value where
   (/) :: Value -> Value -> Value
   (/) = divV
 
--- fromRational x = DoubleVal x
--- (/) = _
+isFalsy :: Value -> Bool
+isFalsy (IntVal v) = v == 0
+isFalsy (DoubleVal v) = v == 0
+isFalsy _ = error "isFalsy not implemented"
 
 asNum :: Value -> Double
 asNum (IntVal v) = fromIntegral v :: Double

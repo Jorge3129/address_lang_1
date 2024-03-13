@@ -1,8 +1,1 @@
-a
-print 1
-@a ...
-print 2
-b
-print 3
-@b ...
-print 4
+P { 0 } print 10 | print 20
