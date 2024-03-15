@@ -39,6 +39,10 @@ instance Fractional Value where
   (/) :: Value -> Value -> Value
   (/) = divV
 
+asInt :: Value -> Int
+asInt (IntVal v) = v
+asInt v = error $ "the value " ++ show v ++ " is not an integer"
+
 isFalsy :: Value -> Bool
 isFalsy (IntVal v) = v == 0
 isFalsy (DoubleVal v) = v == 0

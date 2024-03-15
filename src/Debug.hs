@@ -44,6 +44,7 @@ disassembleInstruction chunk offset = do
     OP_NOT -> simpleInstruction "OP_NOT" offset
     OP_PRINT -> simpleInstruction "OP_PRINT" offset
     OP_POP -> simpleInstruction "OP_POP" offset
+    OP_SEND -> simpleInstruction "OP_SEND" offset
     OP_JUMP -> jumpInstruction "OP_JUMP" chunk offset
     OP_JUMP_IF_FALSE -> jumpInstruction "OP_JUMP_IF_FALSE" chunk offset
     OP_CONSTANT -> constantInstruction "OP_CONSTANT" chunk offset

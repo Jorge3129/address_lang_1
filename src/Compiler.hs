@@ -6,6 +6,7 @@ import ByteCode
 import Control.Arrow ((>>>))
 import Data.Map (insert, (!))
 import Grammar
+import MyUtils
 import Value
 
 compileProg :: Program -> IO Chunk
@@ -45,6 +46,11 @@ compileStmt (BuiltinFunc "print" [ex]) lineNum ch = do
 compileStmt (ExpSt ex) lineNum ch = do
   ch1 <- compileExpr ex lineNum ch
   return $ writeChunk (fromEnum OP_POP) lineNum ch1
+--
+compileStmt (Send valEx addrEx) lineNum ch = do
+  ch1 <- compileExpr valEx lineNum ch
+  ch2 <- compileExpr addrEx lineNum ch1
+  return $ writeChunk (fromEnum OP_SEND) lineNum ch2
 --
 compileStmt (Jump lbl) lineNum ch@(Chunk {code}) = do
   let curOffset = length code
@@ -105,9 +111,6 @@ backPatchLabelJumps chunk@(Chunk {labelJumpsToBackPatch, labelOffsetMap}) =
     )
     chunk
     labelJumpsToBackPatch
-
-replace :: Int -> a -> [a] -> [a]
-replace i val xs = [if xi == i then val else x | (x, xi) <- zip xs [0 :: Int ..]]
 
 binOpToOpCode :: BinOp -> OpCode
 binOpToOpCode Add = OP_ADD

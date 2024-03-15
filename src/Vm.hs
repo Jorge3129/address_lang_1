@@ -12,16 +12,21 @@ data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)
 data VM = VM
   { chunk :: Chunk,
     ip :: Int,
-    stack :: [Value]
+    stack :: [Value],
+    memory :: [Value]
   }
   deriving (Eq, Show)
+
+memMax :: Int
+memMax = 1000
 
 initVM :: Chunk -> VM
 initVM ch =
   VM
     { chunk = ch,
       ip = 0,
-      stack = []
+      stack = [],
+      memory = replicate memMax 0
     }
 
 -- TODO change arg order
@@ -65,6 +70,7 @@ runStep (vm, _) =
    in do
         -- print $ (toEnum instruction :: OpCode)
         (resVM, intRes) <- execInstruction (toEnum instruction) newVm
+        -- print $ memory resVM
         -- print $ stack resVM
         return (resVM, intRes)
 
@@ -86,6 +92,13 @@ execInstruction OP_PRINT vm = do
   let (val, newVm) = pop vm
   print val
   return (newVm, Nothing)
+--
+execInstruction OP_SEND vm = do
+  let (addr, newVm) = pop vm
+      (val, newVm1) = pop newVm
+      newVm2 = newVm1 {memory = replace (asInt addr) val (memory newVm1)}
+  return (newVm2, Nothing)
+--
 --
 execInstruction OP_NOT vm = do
   let (val, newVm) = pop vm
