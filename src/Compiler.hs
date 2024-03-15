@@ -71,7 +71,7 @@ compileStmt (Predicate ifExp thenStmts elseStmts) lineNum ch = do
   ch8 <- compileStmts elseStmts lineNum ch7
   return $ patchJump elseJump ch8
 --
-compileStmt st _ _ = error $ "cannot compile " ++ show st ++ " yet"
+compileStmt st _ _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 
 patchJump :: Int -> Chunk -> Chunk
 patchJump offset ch =
@@ -97,7 +97,7 @@ compileExpr (BinOpApp op a b) lineNum ch = do
 compileExpr (Deref ex) lineNum ch = do
   ch1 <- compileExpr ex lineNum ch
   return $ writeChunk (fromEnum OP_DEREF) lineNum ch1
-compileExpr _ _ _ = undefined
+compileExpr ex _ _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
 pushLblToBackPatch :: Int -> String -> Chunk -> Chunk
 pushLblToBackPatch curOffset lbl ch@(Chunk {labelJumpsToBackPatch}) =
