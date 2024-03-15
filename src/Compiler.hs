@@ -93,6 +93,10 @@ compileExpr (BinOpApp op a b) lineNum ch = do
   ch1 <- compileExpr a lineNum ch
   ch2 <- compileExpr b lineNum ch1
   return $ writeChunk (fromEnum (binOpToOpCode op)) lineNum ch2
+--
+compileExpr (Deref ex) lineNum ch = do
+  ch1 <- compileExpr ex lineNum ch
+  return $ writeChunk (fromEnum OP_DEREF) lineNum ch1
 compileExpr _ _ _ = undefined
 
 pushLblToBackPatch :: Int -> String -> Chunk -> Chunk

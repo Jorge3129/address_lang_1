@@ -99,6 +99,11 @@ execInstruction OP_SEND vm = do
       newVm2 = newVm1 {memory = replace (asInt addr) val (memory newVm1)}
   return (newVm2, Nothing)
 --
+execInstruction OP_DEREF vm = do
+  let (addr, newVm) = pop vm
+      val = memory vm !! asInt addr
+      newVm1 = push newVm val
+  return (newVm1, Nothing)
 --
 execInstruction OP_NOT vm = do
   let (val, newVm) = pop vm

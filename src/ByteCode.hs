@@ -21,6 +21,7 @@ data OpCode
   | OP_JUMP
   | OP_JUMP_IF_FALSE
   | OP_SEND
+  | OP_DEREF
   deriving (Eq, Show, Enum)
 
 type LabelOffsetMap = Map String Int
