@@ -4,117 +4,143 @@ module Compiler where
 
 import ByteCode
 import Control.Arrow ((>>>))
-import Data.Map (insert, (!))
+import Data.Map (Map, empty, insert, (!))
 import Grammar
 import MyUtils
 import Value
 
-compileProg :: Program -> IO Chunk
-compileProg (Program {pLines}) = do
-  let numLines = zip pLines [0 :: Int ..]
-      ch = initChunk
-  ch1 <- compileLines numLines ch
-  let ch2 = patchLabelJumps ch1
-  return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch2
+type LabelOffsetMap = Map String Int
 
-compileLines :: [(ProgLine, Int)] -> Chunk -> IO Chunk
-compileLines (l : ls) ch = compileLine l ch >>= compileLines ls
-compileLines [] ch = return ch
+data CompState = CompState
+  { curChunk :: Chunk,
+    curLine :: Int,
+    labelOffsetMap :: LabelOffsetMap,
+    labelJumpsToPatch :: [(Int, String)]
+  }
+  deriving (Eq, Show)
 
-compileLine :: (ProgLine, Int) -> Chunk -> IO Chunk
-compileLine (ProgLine {labels, stmts}, lineNum) ch = do
-  let ch1 = compileLineLabels labels ch
-  compileStmts stmts lineNum ch1
+-- compileProg :: Program -> IO Chunk
+-- compileProg (Program {pLines}) = do
+--   let numLines = zip pLines [0 :: Int ..]
+--       ch = initChunk
+--   ch1 <- compileLines numLines ch
+--   let ch2 = patchLabelJumps ch1
+--   return $ writeChunk OP_RETURN (length pLines) ch2
 
-compileLineLabels :: [String] -> Chunk -> Chunk
-compileLineLabels lbls chunk@(Chunk {labelOffsetMap, code}) =
-  let offset = length code
-      newLblMap = foldl (\lblMap lbl -> insert lbl offset lblMap) labelOffsetMap lbls
-   in chunk {labelOffsetMap = newLblMap}
+-- compileLines :: [(ProgLine, Int)] -> Chunk -> IO Chunk
+-- compileLines (l : ls) ch = compileLine l ch >>= compileLines ls
+-- compileLines [] ch = return ch
 
-compileStmts :: [Statement] -> Int -> Chunk -> IO Chunk
-compileStmts (st : stmts) lineNum ch = compileStmt st lineNum ch >>= compileStmts stmts lineNum
-compileStmts [] _ ch = return ch
+-- compileLine :: (ProgLine, Int) -> Chunk -> IO Chunk
+-- compileLine (ProgLine {labels, stmts}, lineNum) ch = do
+--   let ch1 = compileLineLabels labels ch
+--   compileStmts stmts lineNum ch1
 
-compileStmt :: Statement -> Int -> Chunk -> IO Chunk
-compileStmt Stop lineNum ch = return $ writeChunk (fromEnum OP_RETURN) lineNum ch
+-- compileLineLabels :: [String] -> Chunk -> Chunk
+-- compileLineLabels lbls chunk@(Chunk {labelOffsetMap, code}) =
+--   let offset = length code
+--       newLblMap = foldl (\lblMap lbl -> insert lbl offset lblMap) labelOffsetMap lbls
+--    in chunk {labelOffsetMap = newLblMap}
+
+compileStmts :: [Statement] -> CompState -> IO CompState
+compileStmts (st : stmts) cs = compileStmt st cs >>= compileStmts stmts
+compileStmts [] cs = return cs
+
+compileStmt :: Statement -> CompState -> IO CompState
+compileStmt Stop cs = return $ emitOpCode OP_RETURN cs
 --
-compileStmt (BuiltinFunc "print" [ex]) lineNum ch = do
-  ch1 <- compileExpr ex lineNum ch
-  return $ writeChunk (fromEnum OP_PRINT) lineNum ch1
+compileStmt (BuiltinFunc "print" [ex]) cs = do
+  cs1 <- compileExpr ex cs
+  return $ emitOpCode OP_PRINT cs1
 --
-compileStmt (ExpSt ex) lineNum ch = do
-  ch1 <- compileExpr ex lineNum ch
-  return $ writeChunk (fromEnum OP_POP) lineNum ch1
+compileStmt (ExpSt ex) cs = do
+  cs1 <- compileExpr ex cs
+  return $ emitOpCode OP_POP cs1
 --
-compileStmt (Send valEx addrEx) lineNum ch = do
-  ch1 <- compileExpr valEx lineNum ch
-  ch2 <- compileExpr addrEx lineNum ch1
-  return $ writeChunk (fromEnum OP_SEND) lineNum ch2
+compileStmt (Send valEx addrEx) cs = do
+  cs1 <- compileExpr valEx cs
+  cs2 <- compileExpr addrEx cs1
+  return $ emitOpCode OP_SEND cs2
 --
-compileStmt (Jump lbl) lineNum ch@(Chunk {code}) = do
-  let curOffset = length code
-      ch1 = pushLblToPatch curOffset lbl ch
-      ch2 = writeChunk (fromEnum OP_JUMP) lineNum ch1
-  return $ writeChunk 0 lineNum ch2
+compileStmt (Jump lbl) cs = do
+  let curOffset = length $ code $ curChunk cs
+      cs1 = pushLblToPatch curOffset lbl cs
+      cs2 = emitOpCode OP_JUMP cs1
+  return $ emitByte 0 cs2
 --
-compileStmt (Predicate ifExp thenStmts elseStmts) lineNum ch = do
-  ch1 <- compileExpr ifExp lineNum ch
-  let ch2 = emitJump OP_JUMP_IF_FALSE lineNum ch1
-      thenJump = length (code ch2) - 1
-      ch3 = writeChunk (fromEnum OP_POP) lineNum ch2
-  ch4 <- compileStmts thenStmts lineNum ch3
-  let ch5 = emitJump OP_JUMP lineNum ch4
-      elseJump = length (code ch5) - 1
-      ch6 = patchJump thenJump ch5
-      ch7 = writeChunk (fromEnum OP_POP) lineNum ch6
-  ch8 <- compileStmts elseStmts lineNum ch7
-  return $ patchJump elseJump ch8
+compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
+  cs1 <- compileExpr ifExp cs
+  let cs2 = emitJump OP_JUMP_IF_FALSE cs1
+      thenJump = length (code (curChunk cs2)) - 1
+      cs3 = emitOpCode OP_POP cs2
+  cs4 <- compileStmts thenStmts cs3
+  let cs5 = emitJump OP_JUMP cs4
+      elseJump = length (code (curChunk cs5)) - 1
+      cs6 = patchJump thenJump cs5
+      cs7 = emitOpCode OP_POP cs6
+  cs8 <- compileStmts elseStmts cs7
+  return $ patchJump elseJump cs8
 --
-compileStmt st _ _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
+compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 
-patchJump :: Int -> Chunk -> Chunk
-patchJump offset ch =
-  let jump = length (code ch) - offset - 1
-   in ch {code = replace offset jump (code ch)}
+patchJump :: Int -> CompState -> CompState
+patchJump offset cs =
+  let ch = curChunk cs
+      jump = length (code ch) - offset - 1
+      newCh = ch {code = replace offset jump (code ch)}
+   in cs {curChunk = newCh}
 
-emitJump :: OpCode -> Int -> Chunk -> Chunk
-emitJump op lineNum =
-  writeChunk (fromEnum op) lineNum
-    >>> writeChunk 0 lineNum
+emitJump :: OpCode -> CompState -> CompState
+emitJump op =
+  emitOpCode op
+    >>> emitByte 0
 
-compileExpr :: Expr -> Int -> Chunk -> IO Chunk
-compileExpr (Lit val) lineNum ch = do
-  let (ch1, constant) = addConstant (IntVal val) ch
-      ch2 = writeChunk (fromEnum OP_CONSTANT) lineNum ch1
-  return $ writeChunk constant lineNum ch2
+compileExpr :: Expr -> CompState -> IO CompState
+compileExpr (Lit val) cs = do
+  let (cs1, constant) = addConstantToCs (IntVal val) cs
+      cs2 = emitOpCode OP_CONSTANT cs1
+  return $ emitByte constant cs2
 --
-compileExpr (BinOpApp op a b) lineNum ch = do
-  ch1 <- compileExpr a lineNum ch
-  ch2 <- compileExpr b lineNum ch1
-  return $ writeChunk (fromEnum (binOpToOpCode op)) lineNum ch2
+compileExpr (BinOpApp op a b) cs = do
+  cs1 <- compileExpr a cs
+  cs2 <- compileExpr b cs1
+  return $ emitOpCode (binOpToOpCode op) cs2
 --
-compileExpr (Deref ex) lineNum ch = do
-  ch1 <- compileExpr ex lineNum ch
-  return $ writeChunk (fromEnum OP_DEREF) lineNum ch1
-compileExpr ex _ _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
+compileExpr (Deref ex) cs = do
+  cs1 <- compileExpr ex cs
+  return $ emitOpCode OP_DEREF cs1
+compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
-pushLblToPatch :: Int -> String -> Chunk -> Chunk
-pushLblToPatch curOffset lbl ch@(Chunk {labelJumpsToPatch}) =
-  ch
+emitByte :: Int -> CompState -> CompState
+emitByte byte cs@(CompState {curChunk, curLine}) =
+  cs
+    { curChunk = writeChunk (fromEnum byte) curLine curChunk
+    }
+
+emitOpCode :: OpCode -> CompState -> CompState
+emitOpCode op = emitByte (fromEnum op)
+
+addConstantToCs :: Value -> CompState -> (CompState, Int)
+addConstantToCs val cs@(CompState {curChunk}) =
+  let (newCh, constant) = addConstant val curChunk
+   in (cs {curChunk = newCh}, constant)
+
+pushLblToPatch :: Int -> String -> CompState -> CompState
+pushLblToPatch curOffset lbl cs@(CompState {labelJumpsToPatch}) =
+  cs
     { labelJumpsToPatch = labelJumpsToPatch ++ [(curOffset, lbl)]
     }
 
-patchLabelJumps :: Chunk -> Chunk
-patchLabelJumps chunk@(Chunk {labelJumpsToPatch, labelOffsetMap}) =
-  foldl
-    ( \ch@(Chunk {code}) (curOffset, lbl) ->
-        let jumpToInstr = labelOffsetMap ! lbl
-            jumpOffset = jumpToInstr - curOffset - 2
-         in ch {code = replace (curOffset + 1) jumpOffset code}
-    )
-    chunk
-    labelJumpsToPatch
+-- patchLabelJumps :: Chunk -> Chunk
+-- patchLabelJumps chunk@(Chunk {labelJumpsToPatch, labelOffsetMap}) =
+--   foldl
+--     ( \ch@(Chunk {code}) (curOffset, lbl) ->
+--         let jumpToInstr = labelOffsetMap ! lbl
+--             jumpOffset = jumpToInstr - curOffset - 2
+--          in ch {code = replace (curOffset + 1) jumpOffset code}
+--     )
+--     chunk
+--     labelJumpsToPatch
 
 binOpToOpCode :: BinOp -> OpCode
 binOpToOpCode Add = OP_ADD

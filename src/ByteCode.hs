@@ -2,7 +2,6 @@
 
 module ByteCode where
 
-import Data.Map (Map, empty)
 import Value
 
 data OpCode
@@ -24,14 +23,10 @@ data OpCode
   | OP_DEREF
   deriving (Eq, Show, Enum)
 
-type LabelOffsetMap = Map String Int
-
 data Chunk = Chunk
   { code :: [Int],
     codeLines :: [Int],
-    constants :: [Value],
-    labelOffsetMap :: LabelOffsetMap,
-    labelJumpsToPatch :: [(Int, String)]
+    constants :: [Value]
   }
   deriving (Eq, Show)
 
@@ -40,9 +35,7 @@ initChunk =
   Chunk
     { code = [],
       codeLines = [],
-      constants = [],
-      labelOffsetMap = Data.Map.empty,
-      labelJumpsToPatch = []
+      constants = []
     }
 
 writeChunk :: Int -> Int -> Chunk -> Chunk
