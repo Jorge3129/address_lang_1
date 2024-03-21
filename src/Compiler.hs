@@ -14,7 +14,7 @@ compileProg (Program {pLines}) = do
   let numLines = zip pLines [0 :: Int ..]
       ch = initChunk
   ch1 <- compileLines numLines ch
-  let ch2 = backPatchLabelJumps ch1
+  let ch2 = patchLabelJumps ch1
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch2
 
 compileLines :: [(ProgLine, Int)] -> Chunk -> IO Chunk
@@ -54,7 +54,7 @@ compileStmt (Send valEx addrEx) lineNum ch = do
 --
 compileStmt (Jump lbl) lineNum ch@(Chunk {code}) = do
   let curOffset = length code
-      ch1 = pushLblToBackPatch curOffset lbl ch
+      ch1 = pushLblToPatch curOffset lbl ch
       ch2 = writeChunk (fromEnum OP_JUMP) lineNum ch1
   return $ writeChunk 0 lineNum ch2
 --
@@ -99,14 +99,14 @@ compileExpr (Deref ex) lineNum ch = do
   return $ writeChunk (fromEnum OP_DEREF) lineNum ch1
 compileExpr ex _ _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
-pushLblToBackPatch :: Int -> String -> Chunk -> Chunk
-pushLblToBackPatch curOffset lbl ch@(Chunk {labelJumpsToBackPatch}) =
+pushLblToPatch :: Int -> String -> Chunk -> Chunk
+pushLblToPatch curOffset lbl ch@(Chunk {labelJumpsToPatch}) =
   ch
-    { labelJumpsToBackPatch = labelJumpsToBackPatch ++ [(curOffset, lbl)]
+    { labelJumpsToPatch = labelJumpsToPatch ++ [(curOffset, lbl)]
     }
 
-backPatchLabelJumps :: Chunk -> Chunk
-backPatchLabelJumps chunk@(Chunk {labelJumpsToBackPatch, labelOffsetMap}) =
+patchLabelJumps :: Chunk -> Chunk
+patchLabelJumps chunk@(Chunk {labelJumpsToPatch, labelOffsetMap}) =
   foldl
     ( \ch@(Chunk {code}) (curOffset, lbl) ->
         let jumpToInstr = labelOffsetMap ! lbl
@@ -114,7 +114,7 @@ backPatchLabelJumps chunk@(Chunk {labelJumpsToBackPatch, labelOffsetMap}) =
          in ch {code = replace (curOffset + 1) jumpOffset code}
     )
     chunk
-    labelJumpsToBackPatch
+    labelJumpsToPatch
 
 binOpToOpCode :: BinOp -> OpCode
 binOpToOpCode Add = OP_ADD

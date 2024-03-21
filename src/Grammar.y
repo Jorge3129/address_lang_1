@@ -165,6 +165,7 @@ data Statement
   | Send Expr Expr
   | Exchange Expr Expr
   | Predicate Expr [Statement] [Statement]
+  --           start step end counter scope-lbl   next-lbl
   | LoopSimple Expr Expr Expr Expr (Maybe String) (Maybe String)
   | SubprogramCall String [Expr] (Maybe String)
   | BuiltinFunc String [Expr]

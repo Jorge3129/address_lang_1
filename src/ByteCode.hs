@@ -31,7 +31,7 @@ data Chunk = Chunk
     codeLines :: [Int],
     constants :: [Value],
     labelOffsetMap :: LabelOffsetMap,
-    labelJumpsToBackPatch :: [(Int, String)]
+    labelJumpsToPatch :: [(Int, String)]
   }
   deriving (Eq, Show)
 
@@ -42,7 +42,7 @@ initChunk =
       codeLines = [],
       constants = [],
       labelOffsetMap = Data.Map.empty,
-      labelJumpsToBackPatch = []
+      labelJumpsToPatch = []
     }
 
 writeChunk :: Int -> Int -> Chunk -> Chunk
