@@ -2,3 +2,4 @@
 4 => 3
 5 => 4
 print '''2
+P { 0 } print 2 | print 3

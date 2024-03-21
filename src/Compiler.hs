@@ -19,28 +19,37 @@ data CompState = CompState
   }
   deriving (Eq, Show)
 
--- compileProg :: Program -> IO Chunk
--- compileProg (Program {pLines}) = do
---   let numLines = zip pLines [0 :: Int ..]
---       ch = initChunk
---   ch1 <- compileLines numLines ch
---   let ch2 = patchLabelJumps ch1
---   return $ writeChunk OP_RETURN (length pLines) ch2
+initCs :: CompState
+initCs =
+  CompState
+    { curChunk = initChunk,
+      curLine = 0,
+      labelOffsetMap = Data.Map.empty,
+      labelJumpsToPatch = []
+    }
 
--- compileLines :: [(ProgLine, Int)] -> Chunk -> IO Chunk
--- compileLines (l : ls) ch = compileLine l ch >>= compileLines ls
--- compileLines [] ch = return ch
+compileProg :: Program -> IO Chunk
+compileProg (Program {pLines}) = do
+  let numLines = zip pLines [0 :: Int ..]
+      cs = initCs
+  cs1 <- compileLines numLines cs
+  let cs2 = patchLabelJumps cs1
+  return $ writeChunk (fromEnum OP_RETURN) (length pLines) (curChunk cs2)
 
--- compileLine :: (ProgLine, Int) -> Chunk -> IO Chunk
--- compileLine (ProgLine {labels, stmts}, lineNum) ch = do
---   let ch1 = compileLineLabels labels ch
---   compileStmts stmts lineNum ch1
+compileLines :: [(ProgLine, Int)] -> CompState -> IO CompState
+compileLines (l : ls) cs = compileLine l cs >>= compileLines ls
+compileLines [] cs = return cs
 
--- compileLineLabels :: [String] -> Chunk -> Chunk
--- compileLineLabels lbls chunk@(Chunk {labelOffsetMap, code}) =
---   let offset = length code
---       newLblMap = foldl (\lblMap lbl -> insert lbl offset lblMap) labelOffsetMap lbls
---    in chunk {labelOffsetMap = newLblMap}
+compileLine :: (ProgLine, Int) -> CompState -> IO CompState
+compileLine (ProgLine {labels, stmts}, lineNum) cs = do
+  let cs1 = compileLineLabels labels (cs {curLine = lineNum})
+  compileStmts stmts cs1
+
+compileLineLabels :: [String] -> CompState -> CompState
+compileLineLabels lbls cs@(CompState {labelOffsetMap, curChunk}) =
+  let offset = length $ code $ curChunk
+      newLblMap = foldl (\lblMap lbl -> insert lbl offset lblMap) labelOffsetMap lbls
+   in cs {labelOffsetMap = newLblMap}
 
 compileStmts :: [Statement] -> CompState -> IO CompState
 compileStmts (st : stmts) cs = compileStmt st cs >>= compileStmts stmts
@@ -131,16 +140,18 @@ pushLblToPatch curOffset lbl cs@(CompState {labelJumpsToPatch}) =
     { labelJumpsToPatch = labelJumpsToPatch ++ [(curOffset, lbl)]
     }
 
--- patchLabelJumps :: Chunk -> Chunk
--- patchLabelJumps chunk@(Chunk {labelJumpsToPatch, labelOffsetMap}) =
---   foldl
---     ( \ch@(Chunk {code}) (curOffset, lbl) ->
---         let jumpToInstr = labelOffsetMap ! lbl
---             jumpOffset = jumpToInstr - curOffset - 2
---          in ch {code = replace (curOffset + 1) jumpOffset code}
---     )
---     chunk
---     labelJumpsToPatch
+patchLabelJumps :: CompState -> CompState
+patchLabelJumps cs@(CompState {labelJumpsToPatch, labelOffsetMap, curChunk}) =
+  let newCh =
+        foldl
+          ( \ch@(Chunk {code}) (curOffset, lbl) ->
+              let jumpToInstr = labelOffsetMap ! lbl
+                  jumpOffset = jumpToInstr - curOffset - 2
+               in ch {code = replace (curOffset + 1) jumpOffset code}
+          )
+          curChunk
+          labelJumpsToPatch
+   in cs {curChunk = newCh}
 
 binOpToOpCode :: BinOp -> OpCode
 binOpToOpCode Add = OP_ADD
