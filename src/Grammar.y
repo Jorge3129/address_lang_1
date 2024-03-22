@@ -80,16 +80,22 @@ stmt : '!' { Stop }
     | builtin Exp { BuiltinFunc $1 [$2] }
     | subprogCallSt { $1 }
     | predicateSt { $1 }
-    | loopSt { $1}
+    | loopStSimple { $1 }
+    | loopStComplex { $1 }
     | assignSt { $1 }
     | sendSt { $1 }
     | Ret { Ret }
     | var { Jump $1 }
 --     | Exp { ExpSt $1 }
 
-predicateSt : P '{' Exp '}' stmts '|' stmts { Predicate $3 $5 $7}
+predicateSt : P '{' Exp '}' stmts '|' stmts { Predicate $3 $5 $7 }
 
-loopSt : L '{' Exp '(' Exp ')' Exp "=>" Exp '}' loopScope loopNext { LoopSimple $3 $5 $7 $9 $11 $12}
+loopStSimple : L '{' Exp '(' Exp ')' loopEnd "=>" Exp '}' loopScope loopNext { LoopSimple $3 $5 $7 $9 $11 $12 }
+
+loopStComplex : L '{' Exp ',' Exp ',' loopEnd "=>" Exp '}' loopScope loopNext { LoopComplex $3 $5 $7 $9 $11 $12 }
+
+loopEnd : P '{' Exp '}' { LoopEndCondition $3 }
+      | Exp             { LoopEndValue $1 }
 
 loopScope : var { Just $1 }
       | {- empty -}  { Nothing }
@@ -160,13 +166,16 @@ data Expr
   | Nil
   deriving (Eq, Show)
 
+data LoopEnd = LoopEndValue Expr | LoopEndCondition Expr deriving (Eq, Show)
+
 data Statement
   = Assignment Expr Expr
   | Send Expr Expr
   | Exchange Expr Expr
   | Predicate Expr [Statement] [Statement]
-  --           start step end counter scope-lbl   next-lbl
-  | LoopSimple Expr Expr Expr Expr (Maybe String) (Maybe String)
+  --           start step end             counter scope-lbl   next-lbl
+  | LoopSimple Expr Expr LoopEnd Expr (Maybe String) (Maybe String)
+  | LoopComplex Expr Expr LoopEnd Expr (Maybe String) (Maybe String)
   | SubprogramCall String [Expr] (Maybe String)
   | BuiltinFunc String [Expr]
   | Jump String
