@@ -11,11 +11,21 @@ import Value
 
 type LabelOffsetMap = Map String Int
 
+data LoopPatch = LoopPatch
+  { scopeLabel :: Maybe String,
+    nextLabel :: Maybe String,
+    loopLine :: Int,
+    stepStart :: Int,
+    exitJump :: Int
+  }
+  deriving (Eq, Show)
+
 data CompState = CompState
   { curChunk :: Chunk,
     curLine :: Int,
     labelOffsetMap :: LabelOffsetMap,
-    labelJumpsToPatch :: [(Int, String)]
+    labelJumpsToPatch :: [(Int, String)],
+    loopPatches :: [LoopPatch]
   }
   deriving (Eq, Show)
 
@@ -25,7 +35,8 @@ initCs =
     { curChunk = initChunk,
       curLine = 0,
       labelOffsetMap = Data.Map.empty,
-      labelJumpsToPatch = []
+      labelJumpsToPatch = [],
+      loopPatches = []
     }
 
 compileProg :: Program -> IO Chunk
@@ -72,8 +83,7 @@ compileStmt (Send valEx addrEx) cs = do
   return $ emitOpCode OP_SEND cs2
 --
 compileStmt (Jump lbl) cs = do
-  let curOffset = curChunkCount cs
-      cs1 = pushLblToPatch curOffset lbl cs
+  let cs1 = pushLblToPatch (curChunkCount cs) lbl cs
       cs2 = emitOpCode OP_JUMP cs1
   return $ emitByte 0 cs2
 --
@@ -103,16 +113,32 @@ compileStmt (LoopSimple startVal step end counter scope next) cs = do
   cs6 <- compileStmt (getLoopStepStmt step counter) cs5
   let cs7 = emitLoop loopStart cs6
       cs8 = patchJump bodyJump cs7
-      patchAfterBodyFn =
-        ( \ccs ->
-            let ccs1 = emitLoop stepStart ccs
-                ccs2 = patchJump exitJump ccs1
-                ccs3 = emitOpCode OP_POP ccs2
-             in ccs3
-        )
-  return cs8
+  return $
+    addLoopPatch
+      ( LoopPatch
+          { scopeLabel = scope,
+            nextLabel = next,
+            stepStart = stepStart,
+            exitJump = exitJump,
+            loopLine = curLine cs8
+          }
+      )
+      cs8
 --
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
+
+patchLoop :: LoopPatch -> CompState -> CompState
+patchLoop (LoopPatch {stepStart, exitJump}) =
+  emitLoop stepStart
+    >>> patchJump exitJump
+    >>> emitOpCode OP_POP
+
+-- let ccs1 = emitLoop stepStart cs
+--     ccs2 = patchJump exitJump ccs1
+--  in emitOpCode OP_POP ccs2
+
+addLoopPatch :: LoopPatch -> CompState -> CompState
+addLoopPatch p cs = cs {loopPatches = p : loopPatches cs}
 
 getLoopStepStmt :: Expr -> Expr -> Statement
 getLoopStepStmt step counter = Send (BinOpApp Add (Deref counter) step) counter
