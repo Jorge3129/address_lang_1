@@ -79,12 +79,10 @@ compileStmt (Jump lbl) cs = do
 --
 compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   cs1 <- compileExpr ifExp cs
-  let cs2 = emitJump OP_JUMP_IF_FALSE cs1
-      thenJump = length (code (curChunk cs2)) - 1
+  let (cs2, thenJump) = emitJump OP_JUMP_IF_FALSE cs1
       cs3 = emitOpCode OP_POP cs2
   cs4 <- compileStmts thenStmts cs3
-  let cs5 = emitJump OP_JUMP cs4
-      elseJump = length (code (curChunk cs5)) - 1
+  let (cs5, elseJump) = emitJump OP_JUMP cs4
       cs6 = patchJump thenJump cs5
       cs7 = emitOpCode OP_POP cs6
   cs8 <- compileStmts elseStmts cs7
@@ -99,10 +97,10 @@ patchJump offset cs =
       newCh = ch {code = replace offset jump (code ch)}
    in cs {curChunk = newCh}
 
-emitJump :: OpCode -> CompState -> CompState
-emitJump op =
-  emitOpCode op
-    >>> emitByte 0
+emitJump :: OpCode -> CompState -> (CompState, Int)
+emitJump op cs =
+  let cs1 = (emitOpCode op >>> emitByte 0) cs
+   in (cs1, length (code (curChunk cs1)) - 1)
 
 compileExpr :: Expr -> CompState -> IO CompState
 compileExpr (Lit val) cs = do
