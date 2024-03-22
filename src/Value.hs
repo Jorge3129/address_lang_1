@@ -13,6 +13,14 @@ instance Show Value where
   show (DoubleVal v) = show v
   show (StringVal s) = s
 
+instance Ord Value where
+  compare :: Value -> Value -> Ordering
+  compare (IntVal a) (IntVal b) = compare a b
+  compare (IntVal a) (DoubleVal b) = compare (fromIntegral a) b
+  compare (DoubleVal a) (IntVal b) = compare a (fromIntegral b)
+  compare (DoubleVal a) (DoubleVal b) = compare a b
+  compare a b = error $ "cannot compare " ++ show a ++ " and " ++ show b
+
 instance Num Value where
   (+) :: Value -> Value -> Value
   (+) = addV

@@ -88,6 +88,10 @@ execInstruction OP_SUB vm = binaryInstr (-) vm
 execInstruction OP_MUL vm = binaryInstr (*) vm
 execInstruction OP_DIV vm = binaryInstr (/) vm
 --
+execInstruction OP_GREATER vm = compInstr (>) vm
+execInstruction OP_LESS vm = compInstr (<) vm
+execInstruction OP_EQUAL vm = compInstr (==) vm
+--
 execInstruction OP_PRINT vm = do
   let (val, newVm) = pop vm
   print val
@@ -134,4 +138,11 @@ binaryInstr op vm = do
   let (b, newVm) = pop vm
       (a, newVm1) = pop newVm
       newVm2 = push newVm1 $ op a b
+  return (newVm2, Nothing)
+
+compInstr :: (Value -> Value -> Bool) -> VM -> IO (VM, Maybe InterpretResult)
+compInstr op vm = do
+  let (b, newVm) = pop vm
+      (a, newVm1) = pop newVm
+      newVm2 = push newVm1 $ if op a b then 1 else 0
   return (newVm2, Nothing)

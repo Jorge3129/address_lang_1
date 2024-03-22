@@ -5,6 +5,7 @@ module Compiler where
 import ByteCode
 import Control.Arrow ((>>>))
 import Data.Map (Map, empty, insert, (!))
+import Data.Maybe (fromMaybe)
 import Grammar
 import MyUtils
 import Value
@@ -52,9 +53,18 @@ compileLines (l : ls) cs = compileLine l cs >>= compileLines ls
 compileLines [] cs = return cs
 
 compileLine :: (ProgLine, Int) -> CompState -> IO CompState
-compileLine (ProgLine {labels, stmts}, lineNum) cs = do
+compileLine pl@(ProgLine {labels, stmts}, lineNum) cs = do
   let cs1 = compileLineLabels labels (cs {curLine = lineNum})
-  compileStmts stmts cs1
+      cs2 = patchLoops (loopPatches cs1) pl cs1
+  compileStmts stmts cs2
+
+patchLoops :: [LoopPatch] -> (ProgLine, Int) -> CompState -> CompState
+patchLoops (lp : lps) pl@(ProgLine {labels}, _) cs =
+  let shouldPatch = fromMaybe "" (scopeLabel lp) `elem` labels
+   in if shouldPatch
+        then patchLoops lps pl (patchLoop lp (cs {loopPatches = lps}))
+        else cs
+patchLoops [] _ cs = cs
 
 compileLineLabels :: [String] -> CompState -> CompState
 compileLineLabels lbls cs@(CompState {labelOffsetMap, curChunk}) =
