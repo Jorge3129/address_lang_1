@@ -72,35 +72,54 @@ compileStmt (Send valEx addrEx) cs = do
   return $ emitOpCode OP_SEND cs2
 --
 compileStmt (Jump lbl) cs = do
-  let curOffset = length $ code $ curChunk cs
+  let curOffset = curChunkCount cs
       cs1 = pushLblToPatch curOffset lbl cs
       cs2 = emitOpCode OP_JUMP cs1
   return $ emitByte 0 cs2
 --
 compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
+  -- condition
   cs1 <- compileExpr ifExp cs
-  let (cs2, thenJump) = emitJump OP_JUMP_IF_FALSE cs1
-      cs3 = emitOpCode OP_POP cs2
+  let (cs2, toElseJump) = emitJump OP_JUMP_IF_FALSE cs1
+  -- then clause
+  let cs3 = emitOpCode OP_POP cs2
   cs4 <- compileStmts thenStmts cs3
-  let (cs5, elseJump) = emitJump OP_JUMP cs4
-      cs6 = patchJump thenJump cs5
+  let (cs5, toEndJump) = emitJump OP_JUMP cs4
+  -- else clause
+  let cs6 = patchJump toElseJump cs5
       cs7 = emitOpCode OP_POP cs6
   cs8 <- compileStmts elseStmts cs7
-  return $ patchJump elseJump cs8
+  -- end
+  return $ patchJump toEndJump cs8
+--
+compileStmt (LoopSimple startVal step end counter scope next) cs = do
+  cs1 <- compileStmt (Send startVal counter) cs
+  let loopStart = curChunkCount cs1
+  cs2 <- compileExpr (getLoopEndExpr end counter) cs1
+  let (cs3, exitJump) = emitJump OP_JUMP_IF_FALSE cs2
+      cs4 = emitOpCode OP_POP cs3
+      (cs5, bodyJump) = emitJump OP_JUMP cs4
+      stepStart = curChunkCount cs5
+  cs6 <- compileStmt (getLoopStepStmt step counter) cs5
+  let cs7 = emitLoop loopStart cs6
+      cs8 = patchJump bodyJump cs7
+      patchAfterBodyFn =
+        ( \ccs ->
+            let ccs1 = emitLoop stepStart ccs
+                ccs2 = patchJump exitJump ccs1
+                ccs3 = emitOpCode OP_POP ccs2
+             in ccs3
+        )
+  return cs8
 --
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 
-patchJump :: Int -> CompState -> CompState
-patchJump offset cs =
-  let ch = curChunk cs
-      jump = length (code ch) - offset - 1
-      newCh = ch {code = replace offset jump (code ch)}
-   in cs {curChunk = newCh}
+getLoopStepStmt :: Expr -> Expr -> Statement
+getLoopStepStmt step counter = Send (BinOpApp Add (Deref counter) step) counter
 
-emitJump :: OpCode -> CompState -> (CompState, Int)
-emitJump op cs =
-  let cs1 = (emitOpCode op >>> emitByte 0) cs
-   in (cs1, length (code (curChunk cs1)) - 1)
+getLoopEndExpr :: LoopEnd -> Expr -> Expr
+getLoopEndExpr (LoopEndValue val) counter = BinOpApp LessEqual (Deref counter) val
+getLoopEndExpr (LoopEndCondition ex) _ = ex
 
 compileExpr :: Expr -> CompState -> IO CompState
 compileExpr (Lit val) cs = do
@@ -127,6 +146,23 @@ emitByte byte cs@(CompState {curChunk, curLine}) =
 emitOpCode :: OpCode -> CompState -> CompState
 emitOpCode op = emitByte (fromEnum op)
 
+emitJump :: OpCode -> CompState -> (CompState, Int)
+emitJump op cs =
+  let cs1 = (emitOpCode op >>> emitByte 0) cs
+   in (cs1, curChunkCount cs1 - 1)
+
+emitLoop :: Int -> CompState -> CompState
+emitLoop jumpToInstr cs =
+  let jumpOffset = jumpToInstr - curChunkCount cs - 2
+   in (emitOpCode OP_JUMP >>> emitByte jumpOffset) cs
+
+patchJump :: Int -> CompState -> CompState
+patchJump offset cs =
+  let ch = curChunk cs
+      jump = curChunkCount cs - offset - 1
+      newCh = ch {code = replace offset jump (code ch)}
+   in cs {curChunk = newCh}
+
 addConstantToCs :: Value -> CompState -> (CompState, Int)
 addConstantToCs val cs@(CompState {curChunk}) =
   let (newCh, constant) = addConstant val curChunk
@@ -150,6 +186,9 @@ patchLabelJumps cs@(CompState {labelJumpsToPatch, labelOffsetMap, curChunk}) =
           curChunk
           labelJumpsToPatch
    in cs {curChunk = newCh}
+
+curChunkCount :: CompState -> Int
+curChunkCount = length . code . curChunk
 
 binOpToOpCode :: BinOp -> OpCode
 binOpToOpCode Add = OP_ADD
