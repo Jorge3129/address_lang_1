@@ -1,13 +1,14 @@
-import ByteCode
 import Compiler
 import Debug
 import Grammar
+import System.Directory (getCurrentDirectory)
 import Tokens
 import Vm
 
 main :: IO ()
 main = do
-  let basePath = "D:/DiplomaFiles/addr-lang1/test/data"
+  rootDir <- getCurrentDirectory
+  let basePath = rootDir ++ "/test/data"
       fileName = "test1"
   tokens <- scanTokens <$> readFile (basePath ++ "/" ++ fileName ++ ".adpl")
   -- print tokens

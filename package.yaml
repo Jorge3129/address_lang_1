@@ -26,6 +26,7 @@ dependencies:
   - array
   - monad-loops
   - containers
+  - directory
 
 ghc-options:
   - -Wall
