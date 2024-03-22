@@ -4,6 +4,7 @@ module Compiler where
 
 import ByteCode
 import Control.Arrow ((>>>))
+import Data.List (foldl')
 import Data.Map (Map, empty, insert, (!))
 import Data.Maybe (fromMaybe)
 import Grammar
@@ -69,7 +70,7 @@ patchLoops [] _ cs = cs
 compileLineLabels :: [String] -> CompState -> CompState
 compileLineLabels lbls cs@(CompState {labelOffsetMap, curChunk}) =
   let offset = length $ code $ curChunk
-      newLblMap = foldl (\lblMap lbl -> insert lbl offset lblMap) labelOffsetMap lbls
+      newLblMap = foldl' (\lblMap lbl -> insert lbl offset lblMap) labelOffsetMap lbls
    in cs {labelOffsetMap = newLblMap}
 
 compileStmts :: [Statement] -> CompState -> IO CompState
@@ -143,10 +144,6 @@ patchLoop (LoopPatch {stepStart, exitJump}) =
     >>> patchJump exitJump
     >>> emitOpCode OP_POP
 
--- let ccs1 = emitLoop stepStart cs
---     ccs2 = patchJump exitJump ccs1
---  in emitOpCode OP_POP ccs2
-
 addLoopPatch :: LoopPatch -> CompState -> CompState
 addLoopPatch p cs = cs {loopPatches = p : loopPatches cs}
 
@@ -166,7 +163,7 @@ compileExpr (Lit val) cs = do
 compileExpr (BinOpApp op a b) cs = do
   cs1 <- compileExpr a cs
   cs2 <- compileExpr b cs1
-  return $ emitOpCode (binOpToOpCode op) cs2
+  return $ emitOpCodes (binOpToOpCode op) cs2
 --
 compileExpr (Deref ex) cs = do
   cs1 <- compileExpr ex cs
@@ -181,6 +178,9 @@ emitByte byte cs@(CompState {curChunk, curLine}) =
 
 emitOpCode :: OpCode -> CompState -> CompState
 emitOpCode op = emitByte (fromEnum op)
+
+emitOpCodes :: [OpCode] -> CompState -> CompState
+emitOpCodes ops cs = foldl' (flip emitOpCode) cs ops
 
 emitJump :: OpCode -> CompState -> (CompState, Int)
 emitJump op cs =
@@ -213,7 +213,7 @@ pushLblToPatch curOffset lbl cs@(CompState {labelJumpsToPatch}) =
 patchLabelJumps :: CompState -> CompState
 patchLabelJumps cs@(CompState {labelJumpsToPatch, labelOffsetMap, curChunk}) =
   let newCh =
-        foldl
+        foldl'
           ( \ch@(Chunk {code}) (curOffset, lbl) ->
               let jumpToInstr = labelOffsetMap ! lbl
                   jumpOffset = jumpToInstr - curOffset - 2
@@ -226,12 +226,15 @@ patchLabelJumps cs@(CompState {labelJumpsToPatch, labelOffsetMap, curChunk}) =
 curChunkCount :: CompState -> Int
 curChunkCount = length . code . curChunk
 
-binOpToOpCode :: BinOp -> OpCode
-binOpToOpCode Add = OP_ADD
-binOpToOpCode Sub = OP_SUB
-binOpToOpCode Mul = OP_MUL
-binOpToOpCode Div = OP_DIV
-binOpToOpCode Equal = OP_EQUAL
-binOpToOpCode Greater = OP_GREATER
-binOpToOpCode Less = OP_LESS
+binOpToOpCode :: BinOp -> [OpCode]
+binOpToOpCode Add = [OP_ADD]
+binOpToOpCode Sub = [OP_SUB]
+binOpToOpCode Mul = [OP_MUL]
+binOpToOpCode Div = [OP_DIV]
+binOpToOpCode Equal = [OP_EQUAL]
+binOpToOpCode Greater = [OP_GREATER]
+binOpToOpCode Less = [OP_LESS]
+binOpToOpCode NotEqual = [OP_EQUAL, OP_NOT]
+binOpToOpCode GreaterEqual = [OP_LESS, OP_NOT]
+binOpToOpCode LessEqual = [OP_GREATER, OP_NOT]
 binOpToOpCode _ = undefined
