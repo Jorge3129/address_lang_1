@@ -67,7 +67,8 @@ simpleInstruction name offset = do
 constantInstruction :: String -> Chunk -> Int -> IO Int
 constantInstruction name (Chunk {code, constants}) offset = do
   let constant = code !! (offset + 1)
-  putStr $ name ++ " " ++ show constant ++ " "
+  -- putStr $ name ++ " " ++ show constant ++ " "
+  putStr $ name ++ " "
   print (constants !! constant)
   return $ offset + 2
 
