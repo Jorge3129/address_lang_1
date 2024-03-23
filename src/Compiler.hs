@@ -114,6 +114,12 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
       )
       cs8
 --
+compileStmt (Assignment (Var name) lhs) cs = do
+  csEx <- compileExpr lhs cs
+  let (cs1, arg) = addConstantToCs (StringVal name) csEx
+  let cs2 = emitOpCode OP_SET_VAR cs1
+  return $ emitByte arg cs2
+--
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 
 compileExpr :: Expr -> CompState -> IO CompState

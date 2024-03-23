@@ -152,6 +152,13 @@ execInstruction OP_GET_VAR vm = do
       vm2 = push vm1 (memory vm1 !! addr)
   return (vm2, Nothing)
 --
+execInstruction OP_SET_VAR vm = do
+  let (name, vm1) = readConst vm
+      addr = varsMap vm1 ! asStr name
+      (val, vm2) = pop vm1
+      vm3 = vm2 {memory = replace addr val (memory vm2)}
+  return (vm3, Nothing)
+--
 execInstruction OP_ALLOC vm = do
   let free = IntVal $ allocNewVal (memory vm)
   return (push vm free, Nothing)
