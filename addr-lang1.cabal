@@ -35,6 +35,7 @@ library
       Debug
       Grammar
       Lib
+      MemUtils
       MyUtils
       ProgTreeUtils
       Tokens

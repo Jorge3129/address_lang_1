@@ -5,6 +5,7 @@ module Vm where
 import ByteCode
 import Data.Map (Map, empty, insert)
 import Data.Maybe (isJust)
+import MemUtils
 import MyUtils
 import Value
 
@@ -138,7 +139,10 @@ execInstruction OP_DEFINE_VAR vm = do
   let (name, newVm) = readConst vm
       newVm1 = newVm {varsMap = insert (asStr name) 0 (varsMap newVm)}
   return (newVm1, Nothing)
-
+--
+execInstruction OP_ALLOC vm = do
+  let free = IntVal $ allocNewVal (memory vm)
+  return (push vm free, Nothing)
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 
