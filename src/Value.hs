@@ -53,6 +53,10 @@ asInt :: Value -> Int
 asInt (IntVal v) = v
 asInt v = error $ "the value " ++ show v ++ " is not an integer"
 
+asStr :: Value -> String
+asStr (StringVal v) = v
+asStr v = error $ "the value " ++ show v ++ " is not a string"
+
 isFalsy :: Value -> Bool
 isFalsy (IntVal v) = v == 0
 isFalsy (DoubleVal v) = v == 0

@@ -4,44 +4,15 @@ module Compiler where
 
 import ByteCode
 import CompilerLoopUtils
+import CompilerState
 import Control.Arrow ((>>>))
 import Data.List (foldl')
-import Data.Map (Map, empty, insert, (!))
+import Data.Map (insert, (!))
 import Data.Maybe (fromMaybe)
 import Grammar
 import MyUtils
 import ProgTreeUtils (exprVars, progExprs)
 import Value
-
-type LabelOffsetMap = Map String Int
-
-data LoopPatch = LoopPatch
-  { scopeLabel :: Maybe String,
-    nextLabel :: Maybe String,
-    loopLine :: Int,
-    stepStart :: Int,
-    exitJump :: Int
-  }
-  deriving (Eq, Show)
-
-data CompState = CompState
-  { curChunk :: Chunk,
-    curLine :: Int,
-    labelOffsetMap :: LabelOffsetMap,
-    labelJumpsToPatch :: [(Int, String)],
-    loopPatches :: [LoopPatch]
-  }
-  deriving (Eq, Show)
-
-initCs :: CompState
-initCs =
-  CompState
-    { curChunk = initChunk,
-      curLine = 0,
-      labelOffsetMap = Data.Map.empty,
-      labelJumpsToPatch = [],
-      loopPatches = []
-    }
 
 compileProg :: Program -> IO Chunk
 compileProg pg@(Program {pLines}) = do
@@ -145,15 +116,6 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
 --
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 
-patchLoop :: LoopPatch -> CompState -> CompState
-patchLoop (LoopPatch {stepStart, exitJump}) =
-  emitLoop stepStart
-    >>> patchJump exitJump
-    >>> emitOpCode OP_POP
-
-addLoopPatch :: LoopPatch -> CompState -> CompState
-addLoopPatch p cs = cs {loopPatches = p : loopPatches cs}
-
 compileExpr :: Expr -> CompState -> IO CompState
 compileExpr (Lit val) cs = do
   let (cs1, constant) = addConstantToCs (IntVal val) cs
@@ -169,18 +131,6 @@ compileExpr (Deref ex) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_DEREF cs1
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
-
-emitByte :: Int -> CompState -> CompState
-emitByte byte cs@(CompState {curChunk, curLine}) =
-  cs
-    { curChunk = writeChunk (fromEnum byte) curLine curChunk
-    }
-
-emitOpCode :: OpCode -> CompState -> CompState
-emitOpCode op = emitByte (fromEnum op)
-
-emitOpCodes :: [OpCode] -> CompState -> CompState
-emitOpCodes ops cs = foldl' (flip emitOpCode) cs ops
 
 emitJump :: OpCode -> CompState -> (CompState, Int)
 emitJump op cs =
@@ -199,10 +149,14 @@ patchJump offset cs =
       newCh = ch {code = replace offset jump (code ch)}
    in cs {curChunk = newCh}
 
-addConstantToCs :: Value -> CompState -> (CompState, Int)
-addConstantToCs val cs@(CompState {curChunk}) =
-  let (newCh, constant) = addConstant val curChunk
-   in (cs {curChunk = newCh}, constant)
+patchLoop :: LoopPatch -> CompState -> CompState
+patchLoop (LoopPatch {stepStart, exitJump}) =
+  emitLoop stepStart
+    >>> patchJump exitJump
+    >>> emitOpCode OP_POP
+
+addLoopPatch :: LoopPatch -> CompState -> CompState
+addLoopPatch p cs = cs {loopPatches = p : loopPatches cs}
 
 addLabelPatch :: Int -> String -> CompState -> CompState
 addLabelPatch curOffset lbl cs@(CompState {labelJumpsToPatch}) =
@@ -222,9 +176,6 @@ patchLabelJumps cs@(CompState {labelJumpsToPatch, labelOffsetMap, curChunk}) =
           curChunk
           labelJumpsToPatch
    in cs {curChunk = newCh}
-
-curChunkCount :: CompState -> Int
-curChunkCount = length . code . curChunk
 
 binOpToOpCode :: BinOp -> [OpCode]
 binOpToOpCode Add = [OP_ADD]

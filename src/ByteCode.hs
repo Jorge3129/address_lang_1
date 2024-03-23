@@ -21,6 +21,9 @@ data OpCode
   | OP_JUMP_IF_FALSE
   | OP_SEND
   | OP_DEREF
+  | OP_DEFINE_VAR
+  | OP_SET_VAR
+  | OP_GET_VAR
   deriving (Eq, Show, Enum)
 
 data Chunk = Chunk

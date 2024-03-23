@@ -30,6 +30,8 @@ library
       ByteCode
       Compiler
       CompilerLoopUtils
+      CompilerState
+      CompileVars
       Debug
       Grammar
       Lib
