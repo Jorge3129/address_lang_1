@@ -114,15 +114,19 @@ compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   -- end
   return $ patchJump toEndJump cs8
 --
-compileStmt (LoopSimple startVal step end counter scope next) cs = do
-  cs1 <- compileStmt (Send startVal counter) cs
+compileStmt st@(LoopSimple {}) cs = compileStmt (desugarStmt st) cs
+--
+compileStmt st@(LoopComplex {}) cs = compileStmt (desugarStmt st) cs
+--
+compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
+  cs1 <- compileStmt initStmt cs
   let loopStart = curChunkCount cs1
-  cs2 <- compileExpr (getLoopEndExpr end counter) cs1
+  cs2 <- compileExpr endCondition cs1
   let (cs3, exitJump) = emitJump OP_JUMP_IF_FALSE cs2
       cs4 = emitOpCode OP_POP cs3
       (cs5, bodyJump) = emitJump OP_JUMP cs4
       stepStart = curChunkCount cs5
-  cs6 <- compileStmt (getLoopStepStmt step counter) cs5
+  cs6 <- compileStmt stepStmt cs5
   let cs7 = emitLoop loopStart cs6
       cs8 = patchJump bodyJump cs7
   return $

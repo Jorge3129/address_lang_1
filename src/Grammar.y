@@ -176,6 +176,7 @@ data Statement
   --           start step end             counter scope-lbl   next-lbl
   | LoopSimple Expr Expr LoopEnd Expr (Maybe String) (Maybe String)
   | LoopComplex Expr Expr LoopEnd Expr (Maybe String) (Maybe String)
+  | LoopCommon Statement Statement Expr Expr (Maybe String) (Maybe String)
   | SubprogramCall String [Expr] (Maybe String)
   | BuiltinFunc String [Expr]
   | Jump String

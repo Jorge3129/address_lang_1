@@ -2,8 +2,30 @@ module CompilerUtils where
 
 import Grammar
 
-getLoopStepStmt :: Expr -> Expr -> Statement
-getLoopStepStmt step counter = Send (BinOpApp Add (Deref counter) step) counter
+loopStepValToStmt :: Expr -> Expr -> Statement
+loopStepValToStmt step counter = Send (BinOpApp Add (Deref counter) step) counter
+
+loopStepExprToStmt :: Expr -> Expr -> Statement
+loopStepExprToStmt stepExpr counter = Send (replaceNil stepExpr (Deref counter)) counter
+
+desugarStmt :: Statement -> Statement
+desugarStmt (LoopSimple initVal stepVal end counter scope next) =
+  LoopCommon
+    (Send initVal counter)
+    (loopStepValToStmt stepVal counter)
+    (getLoopEndExpr end counter)
+    counter
+    scope
+    next
+desugarStmt (LoopComplex initVal stepExpr end counter scope next) =
+  LoopCommon
+    (Send initVal counter)
+    (loopStepExprToStmt stepExpr counter)
+    (getLoopEndExpr end counter)
+    counter
+    scope
+    next
+desugarStmt s = s
 
 getLoopEndExpr :: LoopEnd -> Expr -> Expr
 getLoopEndExpr (LoopEndValue val) counter = BinOpApp LessEqual (Deref counter) val
