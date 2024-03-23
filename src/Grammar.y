@@ -18,6 +18,7 @@ import Tokens
     not { TokenKeyword "not"}
     builtin { TokenBuiltin $$ }
     Nil { TokenKeyword "Nil" }
+    lab { TokenLabel $$ }
 
     '@' { TokenAt }
     '|' { TokenVerticalBar }
@@ -42,7 +43,6 @@ import Tokens
     "'" { TokenSingleQuote }
     "`" { TokenBackTick }
     "=>" { TokenEqualGreater }
-    "..." { TokenEllipsis }
 
 %nonassoc "==" "/="
 %nonassoc '>' '<' "<=" ">="
@@ -66,7 +66,7 @@ lineLabels : lineLabels lineLabel          { $1 ++ [$2] }
       | lineLabel			{ [$1] }
       | {- empty -}           { [] }
 
-lineLabel : '@' var "..." { $2 }
+lineLabel : lab { $1 }
 
 stmts : stmts stmtSep stmt        { $1 ++ [$3] }
       | stmts stmtSep             { $1 }

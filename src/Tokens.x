@@ -1,5 +1,7 @@
 {
 module Tokens where
+
+import Data.Char (isAlphaNum)
 }
 
 %wrapper "basic"
@@ -10,6 +12,7 @@ $white_no_nl = [\ \t]
 $lf = \n
 $cr = \r
 @eol_pattern = $lf | $cr $lf | $cr $lf
+@id = $letter ($letter | $digit)*
 
 tokens :-
   $white_no_nl+ ;
@@ -39,9 +42,9 @@ tokens :-
   "`"       { \_ -> TokenBackTick }
   "->"      { \_ -> TokenMinusGreater }
   "=>"      { \_ -> TokenEqualGreater }
-  "..."     { \_ -> TokenEllipsis }
   "<=>"     { \_ -> TokenLessEqualGreater }
-  $letter ($letter | $digit)* { \s -> 
+  "@" @id $white_no_nl* "..." { \s -> TokenLabel (takeWhile isAlphaNum (tail s)) }
+  @id { \s -> 
       let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "not"]
           builtins = ["print", "printList"]
       in if elem s keywords then TokenKeyword s
@@ -80,8 +83,8 @@ data Token =
   | TokenSingleQuote
   | TokenBackTick
   | TokenEqualGreater
-  | TokenEllipsis
   | TokenLessEqualGreater
+  | TokenLabel String
   | TokenIdentifier String
   | TokenKeyword String
   | TokenBuiltin String
