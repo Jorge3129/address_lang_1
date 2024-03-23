@@ -1,12 +1,14 @@
-20 => h
-0 => n
+0 => length
+100 => firstNode
+'firstNode => h
 
-P { 'n == 0 } 0 => h |
+P { 'length == 0 } 0 => h |
 
-L { 0 (1) 'n - 1 => i } a
-    P { 'i == 'n - 1 } 0 => nextAddr | 20 + ('i + 1) * 2 => nextAddr
-    'nextAddr => 20 + 'i * 2
-    'i + 1 => 20 + 'i * 2 + 1
+L { 1 (1) 'length => i } a
+    'firstNode + ('i - 1) * 2 => curAddr
+    'curAddr + 2 => 'curAddr
+    'i => 'curAddr + 1
+    P { 'i == 'length } 0 => 'curAddr |
 @a ...
 
 L { 'h, 'Nil, P { 'j /= 0 } => j } b
