@@ -1,0 +1,12 @@
+20 => h
+10 => n
+
+L { 1 (1) 'n => i } a
+    P { 'i == 'n } 0 => nextAddr | 20 + ('i) * 2 => nextAddr
+    'nextAddr => 20 + ('i - 1) * 2
+    'i => 20 + ('i - 1) * 2 + 1
+@a ...
+
+L { 'h, 'Nil, P { 'j /= 0 } => j } b
+    print '('j + 1)
+@b ...

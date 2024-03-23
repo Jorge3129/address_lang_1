@@ -3,8 +3,10 @@
 module Vm where
 
 import ByteCode
-import Data.Map (Map, empty, insert, (!))
+import Data.Bifunctor
+import Data.Map (Map, empty, insert, toList, (!))
 import Data.Maybe (isJust)
+import Debug (disassembleInstruction, lpad)
 import MemUtils
 import MyUtils
 import Value
@@ -69,19 +71,19 @@ run vm = do
   return intRes
 
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
-runStep (vm, _) =
+runStep (vm, _) = do
+  -- _ <- disassembleInstruction (chunk vm) (ip vm)
   let (instruction, newVm) = readByte vm
-   in do
-        -- print $ (toEnum instruction :: OpCode)
-        (resVM, intRes) <- execInstruction (toEnum instruction) newVm
-        -- print $ take 10 (memory resVM)
-        -- print $ varsMap resVM
-        -- print $ stack resVM
-        return (resVM, intRes)
+  -- print $ (toEnum instruction :: OpCode)
+  (resVM, intRes) <- execInstruction (toEnum instruction) newVm
+  -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
+  -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
+  -- print $ map (second (memory resVM !!)) (toList (varsMap resVM))
+  -- print $ stack resVM
+  return (resVM, intRes)
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
-execInstruction OP_RETURN vm = do
-  return (vm, Just OK)
+execInstruction OP_RETURN vm = return (vm, Just OK)
 --
 execInstruction OP_CONSTANT vm = do
   let (val, newVm) = readConst vm
@@ -117,7 +119,7 @@ execInstruction OP_DEREF vm = do
 execInstruction OP_NOT vm = do
   let (val, newVm) = pop vm
       newVal = IntVal $ if isFalsy val then 1 else 0
-      newVm1 = push newVm $ newVal
+      newVm1 = push newVm newVal
   return (newVm1, Nothing)
 --
 execInstruction OP_POP vm = do
