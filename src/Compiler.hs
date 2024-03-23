@@ -3,6 +3,7 @@
 module Compiler where
 
 import ByteCode
+import CompileVars (compileVars)
 import CompilerLoopUtils
 import CompilerState
 import Control.Arrow ((>>>))
@@ -11,15 +12,14 @@ import Data.Map (insert, (!))
 import Data.Maybe (fromMaybe)
 import Grammar
 import MyUtils
-import ProgTreeUtils (exprVars, progExprs)
 import Value
 
 compileProg :: Program -> IO Chunk
 compileProg pg@(Program {pLines}) = do
   let numLines = zip pLines [0 :: Int ..]
       cs = initCs
-  print $ concatMap exprVars (progExprs pg)
-  cs1 <- compileLines numLines cs
+  csv <- compileVars pg cs
+  cs1 <- compileLines numLines csv
   let cs2 = patchLabelJumps cs1
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) (curChunk cs2)
 
@@ -130,6 +130,8 @@ compileExpr (BinOpApp op a b) cs = do
 compileExpr (Deref ex) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_DEREF cs1
+--
+compileExpr (Var _) cs = return cs
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
 emitJump :: OpCode -> CompState -> (CompState, Int)

@@ -52,9 +52,14 @@ disassembleInstruction chunk offset = do
     OP_POP -> simpleInstruction "OP_POP" offset
     OP_SEND -> simpleInstruction "OP_SEND" offset
     OP_DEREF -> simpleInstruction "OP_DEREF" offset
+    --
+    OP_ALLOC -> simpleInstruction "OP_ALLOC" offset
+    --
     OP_JUMP -> jumpInstruction "OP_JUMP" chunk offset
     OP_JUMP_IF_FALSE -> jumpInstruction "OP_JUMP_IF_FALSE" chunk offset
+    --
     OP_CONSTANT -> constantInstruction "OP_CONSTANT" chunk offset
+    OP_DEFINE_VAR -> constantInstruction "OP_DEFINE_VAR" chunk offset
     _ -> do
       putStrLn $ "Unknown opcode " ++ show instruction
       return $ offset + 1

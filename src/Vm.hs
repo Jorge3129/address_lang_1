@@ -74,7 +74,8 @@ runStep (vm, _) =
    in do
         -- print $ (toEnum instruction :: OpCode)
         (resVM, intRes) <- execInstruction (toEnum instruction) newVm
-        print $ take 10 (memory resVM)
+        -- print $ take 10 (memory resVM)
+        print $ (varsMap resVM)
         -- print $ stack resVM
         return (resVM, intRes)
 
@@ -136,9 +137,10 @@ execInstruction OP_JUMP_IF_FALSE vm = do
   return (newVm1, Nothing)
 --
 execInstruction OP_DEFINE_VAR vm = do
-  let (name, newVm) = readConst vm
-      newVm1 = newVm {varsMap = insert (asStr name) 0 (varsMap newVm)}
-  return (newVm1, Nothing)
+  let (name, vm1) = readConst vm
+      (addr, vm2) = pop vm1
+      vm3 = vm2 {varsMap = insert (asStr name) (asInt addr) (varsMap vm2)}
+  return (vm3, Nothing)
 --
 execInstruction OP_ALLOC vm = do
   let free = IntVal $ allocNewVal (memory vm)
