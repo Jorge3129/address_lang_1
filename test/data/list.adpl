@@ -1,10 +1,12 @@
 20 => h
-10 => n
+0 => n
 
-L { 1 (1) 'n => i } a
-    P { 'i == 'n } 0 => nextAddr | 20 + ('i) * 2 => nextAddr
-    'nextAddr => 20 + ('i - 1) * 2
-    'i => 20 + ('i - 1) * 2 + 1
+P { 'n == 0 } 0 => h |
+
+L { 0 (1) 'n - 1 => i } a
+    P { 'i == 'n - 1 } 0 => nextAddr | 20 + ('i + 1) * 2 => nextAddr
+    'nextAddr => 20 + 'i * 2
+    'i + 1 => 20 + 'i * 2 + 1
 @a ...
 
 L { 'h, 'Nil, P { 'j /= 0 } => j } b
