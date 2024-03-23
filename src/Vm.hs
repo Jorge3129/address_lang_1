@@ -3,6 +3,7 @@
 module Vm where
 
 import ByteCode
+import Data.Map (Map, empty)
 import Data.Maybe (isJust)
 import MyUtils
 import Value
@@ -13,7 +14,8 @@ data VM = VM
   { chunk :: Chunk,
     ip :: Int,
     stack :: [Value],
-    memory :: [Value]
+    memory :: [Value],
+    varsMap :: Map String Int
   }
   deriving (Eq, Show)
 
@@ -26,7 +28,8 @@ initVM ch =
     { chunk = ch,
       ip = 0,
       stack = [],
-      memory = replicate memMax 0
+      memory = replicate memMax NilVal,
+      varsMap = Data.Map.empty
     }
 
 -- TODO change arg order
@@ -70,7 +73,7 @@ runStep (vm, _) =
    in do
         -- print $ (toEnum instruction :: OpCode)
         (resVM, intRes) <- execInstruction (toEnum instruction) newVm
-        -- print $ memory resVM
+        print $ take 10 (memory resVM)
         -- print $ stack resVM
         return (resVM, intRes)
 

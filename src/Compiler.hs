@@ -3,13 +3,14 @@
 module Compiler where
 
 import ByteCode
-import CompilerUtils
+import CompilerLoopUtils
 import Control.Arrow ((>>>))
 import Data.List (foldl')
 import Data.Map (Map, empty, insert, (!))
 import Data.Maybe (fromMaybe)
 import Grammar
 import MyUtils
+import ProgTreeUtils (exprVars, progExprs)
 import Value
 
 type LabelOffsetMap = Map String Int
@@ -43,9 +44,10 @@ initCs =
     }
 
 compileProg :: Program -> IO Chunk
-compileProg (Program {pLines}) = do
+compileProg pg@(Program {pLines}) = do
   let numLines = zip pLines [0 :: Int ..]
       cs = initCs
+  print $ concatMap exprVars (progExprs pg)
   cs1 <- compileLines numLines cs
   let cs2 = patchLabelJumps cs1
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) (curChunk cs2)

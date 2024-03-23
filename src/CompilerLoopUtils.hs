@@ -1,4 +1,4 @@
-module CompilerUtils where
+module CompilerLoopUtils where
 
 import Grammar
 

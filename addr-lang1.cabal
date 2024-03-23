@@ -29,11 +29,12 @@ library
   exposed-modules:
       ByteCode
       Compiler
-      CompilerUtils
+      CompilerLoopUtils
       Debug
       Grammar
       Lib
       MyUtils
+      ProgTreeUtils
       Tokens
       Value
       Vm

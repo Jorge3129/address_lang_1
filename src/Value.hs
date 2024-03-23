@@ -6,12 +6,14 @@ data Value
   = IntVal Int
   | DoubleVal Double
   | StringVal String
+  | NilVal
   deriving (Eq)
 
 instance Show Value where
   show (IntVal v) = show v
   show (DoubleVal v) = show v
   show (StringVal s) = s
+  show NilVal = "N"
 
 instance Ord Value where
   compare :: Value -> Value -> Ordering
