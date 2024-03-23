@@ -139,12 +139,9 @@ execInstruction OP_JUMP_IF_FALSE vm = do
 execInstruction OP_DEFINE_VAR vm = do
   let (name, vm1) = readConst vm
       (addr, vm2) = pop vm1
-      vm3 =
-        vm2
-          { varsMap = insert (asStr name) (asInt addr) (varsMap vm2),
-            memory = replace (asInt addr) 0 (memory vm2)
-          }
+      vm3 = vm2 {varsMap = insert (asStr name) (asInt addr) (varsMap vm2)}
   return (vm3, Nothing)
+-- memory = replace (asInt addr) 0 (memory vm2)
 --
 execInstruction OP_GET_VAR vm = do
   let (name, vm1) = readConst vm
@@ -160,8 +157,9 @@ execInstruction OP_SET_VAR vm = do
   return (vm3, Nothing)
 --
 execInstruction OP_ALLOC vm = do
-  let free = IntVal $ allocNewVal (memory vm)
-  return (push vm free, Nothing)
+  let free = allocNewVal (memory vm)
+      vm1 = vm {memory = replace free 0 (memory vm)}
+  return (push vm1 (IntVal free), Nothing)
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 
