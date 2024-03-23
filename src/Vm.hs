@@ -3,7 +3,7 @@
 module Vm where
 
 import ByteCode
-import Data.Map (Map, empty, insert)
+import Data.Map (Map, empty, insert, (!))
 import Data.Maybe (isJust)
 import MemUtils
 import MyUtils
@@ -74,8 +74,8 @@ runStep (vm, _) =
    in do
         -- print $ (toEnum instruction :: OpCode)
         (resVM, intRes) <- execInstruction (toEnum instruction) newVm
-        print $ take 10 (memory resVM)
-        print $ (varsMap resVM)
+        -- print $ take 10 (memory resVM)
+        -- print $ varsMap resVM
         -- print $ stack resVM
         return (resVM, intRes)
 
@@ -145,6 +145,12 @@ execInstruction OP_DEFINE_VAR vm = do
             memory = replace (asInt addr) 0 (memory vm2)
           }
   return (vm3, Nothing)
+--
+execInstruction OP_GET_VAR vm = do
+  let (name, vm1) = readConst vm
+      addr = varsMap vm1 ! asStr name
+      vm2 = push vm1 (memory vm1 !! addr)
+  return (vm2, Nothing)
 --
 execInstruction OP_ALLOC vm = do
   let free = IntVal $ allocNewVal (memory vm)

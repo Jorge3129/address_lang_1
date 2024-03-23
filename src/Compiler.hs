@@ -131,7 +131,12 @@ compileExpr (Deref ex) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_DEREF cs1
 --
-compileExpr (Var _) cs = return cs
+compileExpr (Var name) cs = do
+  let (cs1, constant) = addConstantToCs (StringVal name) cs
+      cs2 = emitOpCode OP_GET_VAR cs1
+      cs3 = emitByte constant cs2
+  return cs3
+--
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
 emitJump :: OpCode -> CompState -> (CompState, Int)
