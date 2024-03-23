@@ -9,7 +9,7 @@ main :: IO ()
 main = do
   rootDir <- getCurrentDirectory
   let basePath = rootDir ++ "/test/data"
-      fileName = "loops"
+      fileName = "loops2"
   tokens <- scanTokens <$> readFile (basePath ++ "/" ++ fileName ++ ".adpl")
   -- print tokens
   let progAst = parseProg tokens
