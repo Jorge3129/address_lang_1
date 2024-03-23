@@ -29,6 +29,7 @@ library
   exposed-modules:
       ByteCode
       Compiler
+      CompilerUtils
       Debug
       Grammar
       Lib

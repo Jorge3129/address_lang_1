@@ -3,6 +3,7 @@
 module Compiler where
 
 import ByteCode
+import CompilerUtils
 import Control.Arrow ((>>>))
 import Data.List (foldl')
 import Data.Map (Map, empty, insert, (!))
@@ -94,7 +95,7 @@ compileStmt (Send valEx addrEx) cs = do
   return $ emitOpCode OP_SEND cs2
 --
 compileStmt (Jump lbl) cs = do
-  let cs1 = pushLblToPatch (curChunkCount cs) lbl cs
+  let cs1 = addLabelPatch (curChunkCount cs) lbl cs
       cs2 = emitOpCode OP_JUMP cs1
   return $ emitByte 0 cs2
 --
@@ -147,13 +148,6 @@ patchLoop (LoopPatch {stepStart, exitJump}) =
 addLoopPatch :: LoopPatch -> CompState -> CompState
 addLoopPatch p cs = cs {loopPatches = p : loopPatches cs}
 
-getLoopStepStmt :: Expr -> Expr -> Statement
-getLoopStepStmt step counter = Send (BinOpApp Add (Deref counter) step) counter
-
-getLoopEndExpr :: LoopEnd -> Expr -> Expr
-getLoopEndExpr (LoopEndValue val) counter = BinOpApp LessEqual (Deref counter) val
-getLoopEndExpr (LoopEndCondition ex) _ = ex
-
 compileExpr :: Expr -> CompState -> IO CompState
 compileExpr (Lit val) cs = do
   let (cs1, constant) = addConstantToCs (IntVal val) cs
@@ -204,8 +198,8 @@ addConstantToCs val cs@(CompState {curChunk}) =
   let (newCh, constant) = addConstant val curChunk
    in (cs {curChunk = newCh}, constant)
 
-pushLblToPatch :: Int -> String -> CompState -> CompState
-pushLblToPatch curOffset lbl cs@(CompState {labelJumpsToPatch}) =
+addLabelPatch :: Int -> String -> CompState -> CompState
+addLabelPatch curOffset lbl cs@(CompState {labelJumpsToPatch}) =
   cs
     { labelJumpsToPatch = labelJumpsToPatch ++ [(curOffset, lbl)]
     }
