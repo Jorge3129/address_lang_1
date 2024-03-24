@@ -19,7 +19,8 @@ data VM = VM
     ip :: Int,
     stack :: [Value],
     memory :: [Value],
-    varsMap :: Map String Int
+    varsMap :: Map String Int,
+    vmCalls :: [(String, Int)]
   }
   deriving (Eq, Show)
 
@@ -33,7 +34,8 @@ initVM ch =
       ip = 0,
       stack = [],
       memory = replicate memMax NilVal,
-      varsMap = Data.Map.empty
+      varsMap = Data.Map.empty,
+      vmCalls = []
     }
 
 -- TODO change arg order
@@ -81,7 +83,7 @@ runStep (vm, _) = do
   -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
   -- print $ map (second (memory resVM !!)) (toList (varsMap resVM))
-  -- print $ stack resVM
+  -- print $ vmCalls resVM
   return (resVM, intRes)
   where
     handler :: Int -> ErrorCall -> IO (VM, Maybe InterpretResult)
@@ -91,7 +93,11 @@ runStep (vm, _) = do
       evaluate (vm, Just RUNTIME_ERR)
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
-execInstruction OP_RETURN vm = return (vm, Just OK)
+execInstruction OP_RETURN vm@(VM {vmCalls = []}) = return (vm, Just OK)
+execInstruction OP_RETURN vm@(VM {vmCalls = ((fn, ret) : calls)}) = do
+  -- print $ "Returning from " ++ fn
+  let vm1 = vm {vmCalls = calls, ip = ret}
+  return (vm1, Nothing)
 --
 execInstruction OP_CONSTANT vm = do
   let (val, newVm) = readConst vm
@@ -195,9 +201,11 @@ execInstruction OP_ALLOC vm = do
 --
 execInstruction OP_CALL vm = do
   let (name, vm1) = readConst vm
-  let jumpTo = chLabelMap (chunk vm1) ! asStr name
-      vm2 = vm1 {ip = jumpTo}
-  return (vm2, Nothing)
+      fnName = asStr name
+  let jumpTo = chLabelMap (chunk vm1) ! fnName
+      vm2 = vm1 {vmCalls = (fnName, ip vm1) : vmCalls vm}
+      vm3 = vm2 {ip = jumpTo}
+  return (vm3, Nothing)
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 

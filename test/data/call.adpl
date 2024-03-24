@@ -1,4 +1,8 @@
 Pg foo { 1, 2, 3 }
+print 40
+Pg foo { 5, 6, 7 }
+print 80
+!
 
 @foo ... Nil => a, Nil => b, Nil => c
     print 'a
