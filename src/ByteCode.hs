@@ -25,6 +25,8 @@ data OpCode
   | OP_SET_VAR
   | OP_GET_VAR
   | OP_ALLOC
+  | OP_SET_POINTER
+  | OP_MAKE_POINTER
   deriving (Eq, Show, Enum)
 
 data Chunk = Chunk

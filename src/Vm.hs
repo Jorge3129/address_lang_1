@@ -3,10 +3,11 @@
 module Vm where
 
 import ByteCode
+import Control.Exception as Exc
 import Data.Bifunctor
 import Data.Map (Map, empty, insert, toList, (!))
 import Data.Maybe (isJust)
-import Debug (disassembleInstruction, lpad)
+import Debug
 import MemUtils
 import MyUtils
 import Value
@@ -73,14 +74,21 @@ run vm = do
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) = do
   -- _ <- disassembleInstruction (chunk vm) (ip vm)
+  -- print $ getLineByOffset (ip vm) (chunk vm)
   let (instruction, newVm) = readByte vm
   -- print $ (toEnum instruction :: OpCode)
-  (resVM, intRes) <- execInstruction (toEnum instruction) newVm
+  (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) newVm) (handler 0)
   -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
   -- print $ map (second (memory resVM !!)) (toList (varsMap resVM))
   -- print $ stack resVM
   return (resVM, intRes)
+  where
+    handler :: Int -> ErrorCall -> IO (VM, Maybe InterpretResult)
+    handler lineNum (ErrorCallWithLocation msg _) = do
+      putStrLn $ "Runtime error at line " ++ show lineNum
+      putStrLn $ msg
+      evaluate (vm, Just RUNTIME_ERR)
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm = return (vm, Just OK)
@@ -105,10 +113,10 @@ execInstruction OP_PRINT vm = do
   return (newVm, Nothing)
 --
 execInstruction OP_SEND vm = do
-  let (addr, newVm) = pop vm
-      (val, newVm1) = pop newVm
-      newVm2 = newVm1 {memory = replace (asInt addr) val (memory newVm1)}
-  return (newVm2, Nothing)
+  let (addr, vm1) = pop vm
+      (val, vm2) = pop vm1
+      vm3 = vm2 {memory = replace (asInt addr) val (memory vm2)}
+  return (vm3, Nothing)
 --
 execInstruction OP_DEREF vm = do
   let (addr, newVm) = pop vm
@@ -154,9 +162,24 @@ execInstruction OP_GET_VAR vm = do
 execInstruction OP_SET_VAR vm = do
   let (name, vm1) = readConst vm
       addr = varsMap vm1 ! asStr name
+      oldVal = memory vm1 !! addr
       (val, vm2) = pop vm1
-      vm3 = vm2 {memory = replace addr val (memory vm2)}
+      castVal = if isPointer oldVal then asPointer val else val
+      vm3 = vm2 {memory = replace addr castVal (memory vm2)}
   return (vm3, Nothing)
+--
+execInstruction OP_SET_POINTER vm = do
+  let (name, vm1) = readConst vm
+      addr = varsMap vm1 ! asStr name
+      oldVal = memory vm1 !! addr
+      vm2 = vm1 {memory = replace addr (asPointer oldVal) (memory vm1)}
+  return (vm2, Nothing)
+--
+execInstruction OP_MAKE_POINTER vm = do
+  let addr = asInt (peek 0 vm)
+      oldVal = memory vm !! addr
+      vm1 = vm {memory = replace addr (asPointer oldVal) (memory vm)}
+  return (vm1, Nothing)
 --
 execInstruction OP_ALLOC vm = do
   let free = allocNewVal (memory vm)

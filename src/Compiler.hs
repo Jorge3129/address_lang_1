@@ -62,6 +62,21 @@ compileStmt (ExpSt ex) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_POP cs1
 --
+compileStmt (Send valEx (Var name)) cs = do
+  cs1 <- compileExpr valEx cs
+  cs2 <- compileExpr (Var name) cs1
+  let cs3 = emitOpCode OP_SEND cs2
+  let (cs4, arg) = addConstantToCs (StringVal name) cs3
+  let cs5 = emitOpCode OP_SET_POINTER cs4
+  return $ emitByte arg cs5
+--
+compileStmt (Send valEx (Deref innerExpr)) cs = do
+  cs1 <- compileExpr valEx cs
+  cs2 <- compileExpr innerExpr cs1
+  let cs3 = emitOpCode OP_MAKE_POINTER cs2
+  let cs4 = emitOpCode OP_DEREF cs3
+  return $ emitOpCode OP_SEND cs4
+--
 compileStmt (Send valEx addrEx) cs = do
   cs1 <- compileExpr valEx cs
   cs2 <- compileExpr addrEx cs1

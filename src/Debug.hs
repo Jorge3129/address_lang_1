@@ -23,9 +23,13 @@ lpad pad m xs = replicate (m - length ys) pad ++ ys
 
 getPrintLineData :: Chunk -> Int -> String
 getPrintLineData (Chunk {codeLines}) offset =
-  if offset > 0 && (codeLines !! offset) == (codeLines !! (offset - 1))
-    then "   |  "
-    else fmt4 ' ' ((codeLines !! offset) + 1) ++ "  "
+  let curLine = codeLines !! offset
+   in if offset > 0 && curLine == (codeLines !! (offset - 1))
+        then "   |  "
+        else fmt4 ' ' (curLine + 1) ++ "  "
+
+getLineByOffset :: Int -> Chunk -> Int
+getLineByOffset offset (Chunk {codeLines}) = codeLines !! offset
 
 fmt4 :: Char -> Int -> String
 fmt4 c x = lpad c 4 (show x)
@@ -52,6 +56,7 @@ disassembleInstruction chunk offset = do
     OP_POP -> simpleInstruction "OP_POP" offset
     OP_SEND -> simpleInstruction "OP_SEND" offset
     OP_DEREF -> simpleInstruction "OP_DEREF" offset
+    OP_MAKE_POINTER -> simpleInstruction "OP_MAKE_POINTER" offset
     --
     OP_ALLOC -> simpleInstruction "OP_ALLOC" offset
     --
@@ -62,6 +67,7 @@ disassembleInstruction chunk offset = do
     OP_DEFINE_VAR -> constantInstruction "OP_DEFINE_VAR" chunk offset
     OP_GET_VAR -> constantInstruction "OP_GET_VAR" chunk offset
     OP_SET_VAR -> constantInstruction "OP_SET_VAR" chunk offset
+    OP_SET_POINTER -> constantInstruction "OP_SET_POINTER" chunk offset
     _ -> do
       putStrLn $ "Unknown opcode " ++ show instruction
       return $ offset + 1

@@ -1,16 +1,21 @@
 length = 7
 firstNode = 100
-allocStep = 3
+allocStep = 2
 firstNode => h
 
 P { length == 0 } 0 => h |
 
 L { 1 (1) length => i } a
     curAddr = firstNode + ('i - 1) * allocStep
-    curAddr + allocStep => curAddr
     'i * 'i * 'i => curAddr + 1
+    curAddr + allocStep => curAddr
     P { 'i == length } 0 => curAddr |
+    0 => 'curAddr
+    print 'curAddr
 @a ...
+
+curAddr = 0
+print curAddr
 
 L { 'h, 'Nil, P { 'j /= 0 } => j } b
     print '('j + 1)

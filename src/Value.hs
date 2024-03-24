@@ -4,6 +4,7 @@ module Value where
 
 data Value
   = IntVal Int
+  | PointerVal Int
   | DoubleVal Double
   | StringVal String
   | NilVal
@@ -11,16 +12,26 @@ data Value
 
 instance Show Value where
   show (IntVal v) = show v
+  show (PointerVal v) = "(Pointer " ++ show v ++ ")"
   show (DoubleVal v) = show v
   show (StringVal s) = s
   show NilVal = "N"
 
 instance Ord Value where
   compare :: Value -> Value -> Ordering
+  -- a + a
   compare (IntVal a) (IntVal b) = compare a b
+  compare (DoubleVal a) (DoubleVal b) = compare a b
+  compare (PointerVal a) (PointerVal b) = compare a b
+  -- Int + Double
   compare (IntVal a) (DoubleVal b) = compare (fromIntegral a) b
   compare (DoubleVal a) (IntVal b) = compare a (fromIntegral b)
-  compare (DoubleVal a) (DoubleVal b) = compare a b
+  -- Int + Pointer
+  compare (IntVal a) (PointerVal b) = compare a b
+  compare (PointerVal a) (IntVal b) = compare a b
+  -- Pointer + Double
+  compare (PointerVal a) (DoubleVal b) = compare (fromIntegral a) b
+  compare (DoubleVal a) (PointerVal b) = compare a (fromIntegral b)
   compare a b = error $ "cannot compare " ++ show a ++ " and " ++ show b
 
 instance Num Value where
@@ -30,16 +41,19 @@ instance Num Value where
   (*) = mulV
   abs :: Value -> Value
   abs (IntVal v) = IntVal $ abs v
+  abs (PointerVal v) = PointerVal $ abs v
   abs (DoubleVal v) = DoubleVal $ abs v
   abs _ = undefined
   signum :: Value -> Value
   signum (IntVal v) = IntVal $ signum v
+  signum (PointerVal v) = PointerVal $ signum v
   signum (DoubleVal v) = DoubleVal $ signum v
   signum _ = undefined
   fromInteger :: Integer -> Value
   fromInteger v = IntVal $ fromInteger v
   negate :: Value -> Value
   negate (IntVal v) = IntVal $ -1 * v
+  negate (PointerVal v) = PointerVal $ -1 * v
   negate (DoubleVal v) = DoubleVal $ -1 * v
   negate _ = undefined
 
@@ -51,7 +65,17 @@ instance Fractional Value where
 
 asInt :: Value -> Int
 asInt (IntVal v) = v
+asInt (PointerVal v) = v
 asInt v = error $ "the value " ++ show v ++ " is not an integer"
+
+isPointer :: Value -> Bool
+isPointer (PointerVal _) = True
+isPointer _ = False
+
+asPointer :: Value -> Value
+asPointer (PointerVal v) = PointerVal v
+asPointer (IntVal v) = PointerVal v
+asPointer v = error $ "cannot convert value " ++ show v ++ " to pointer"
 
 asStr :: Value -> String
 asStr (StringVal v) = v
@@ -59,38 +83,43 @@ asStr v = error $ "the value " ++ show v ++ " is not a string"
 
 isFalsy :: Value -> Bool
 isFalsy (IntVal v) = v == 0
+isFalsy (PointerVal v) = v == 0
 isFalsy (DoubleVal v) = v == 0
 isFalsy _ = error "isFalsy not implemented"
 
-asNum :: Value -> Double
-asNum (IntVal v) = fromIntegral v :: Double
-asNum (DoubleVal v) = v
-asNum _ = error "cannot convert value to number"
-
 addV :: Value -> Value -> Value
 addV (IntVal a) (IntVal b) = IntVal $ a + b
+addV (DoubleVal a) (DoubleVal b) = DoubleVal $ a + b
+addV (PointerVal a) (PointerVal b) = IntVal $ a + b
+--
 addV (IntVal a) (DoubleVal b) = DoubleVal $ fromIntegral a + b
 addV (DoubleVal a) (IntVal b) = DoubleVal $ a + fromIntegral b
-addV (DoubleVal a) (DoubleVal b) = DoubleVal $ a + b
-addV _ _ = error "cannot add"
+--
+addV (IntVal a) (PointerVal b) = IntVal $ a + b
+addV (PointerVal a) (IntVal b) = IntVal $ a + b
+--
+addV a b = error $ "cannot add " ++ show a ++ " and " ++ show b
 
 subV :: Value -> Value -> Value
 subV (IntVal a) (IntVal b) = IntVal $ a - b
+subV (DoubleVal a) (DoubleVal b) = DoubleVal $ a - b
+--
 subV (IntVal a) (DoubleVal b) = DoubleVal $ fromIntegral a - b
 subV (DoubleVal a) (IntVal b) = DoubleVal $ a - fromIntegral b
-subV (DoubleVal a) (DoubleVal b) = DoubleVal $ a - b
-subV _ _ = error "cannot sub"
+subV a b = error $ "cannot subtract " ++ show a ++ " and " ++ show b
 
 mulV :: Value -> Value -> Value
 mulV (IntVal a) (IntVal b) = IntVal $ a * b
+mulV (DoubleVal a) (DoubleVal b) = DoubleVal $ a * b
+--
 mulV (IntVal a) (DoubleVal b) = DoubleVal $ fromIntegral a * b
 mulV (DoubleVal a) (IntVal b) = DoubleVal $ a * fromIntegral b
-mulV (DoubleVal a) (DoubleVal b) = DoubleVal $ a * b
-mulV _ _ = error "cannot mul"
+mulV a b = error $ "cannot multiply " ++ show a ++ " and " ++ show b
 
 divV :: Value -> Value -> Value
 divV (IntVal a) (IntVal b) = IntVal $ a `div` b
+divV (DoubleVal a) (DoubleVal b) = DoubleVal $ a / b
+--
 divV (IntVal a) (DoubleVal b) = DoubleVal $ fromIntegral a / b
 divV (DoubleVal a) (IntVal b) = DoubleVal $ a / fromIntegral b
-divV (DoubleVal a) (DoubleVal b) = DoubleVal $ a / b
-divV _ _ = error "cannot div"
+divV a b = error $ "cannot divide " ++ show a ++ " and " ++ show b
