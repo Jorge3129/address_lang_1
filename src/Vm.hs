@@ -193,6 +193,12 @@ execInstruction OP_ALLOC vm = do
       vm1 = vm {memory = replace free 0 (memory vm)}
   return (push vm1 (IntVal free), Nothing)
 --
+execInstruction OP_CALL vm = do
+  let (name, vm1) = readConst vm
+  let jumpTo = chLabelMap (chunk vm1) ! asStr name
+      vm2 = vm1 {ip = jumpTo}
+  return (vm2, Nothing)
+--
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 
 binaryInstr :: (Value -> Value -> Value) -> VM -> IO (VM, Maybe InterpretResult)

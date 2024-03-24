@@ -69,6 +69,7 @@ disassembleInstruction chunk offset = do
     OP_GET_VAR -> constantInstruction "OP_GET_VAR" chunk offset
     OP_SET_VAR -> constantInstruction "OP_SET_VAR" chunk offset
     OP_SET_POINTER -> constantInstruction "OP_SET_POINTER" chunk offset
+    OP_CALL -> constantInstruction "OP_CALL" chunk offset
     _ -> do
       putStrLn $ "Unknown opcode " ++ show instruction
       return $ offset + 1

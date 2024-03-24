@@ -2,6 +2,7 @@
 
 module ByteCode where
 
+import Data.Map
 import Value
 
 data OpCode
@@ -28,12 +29,14 @@ data OpCode
   | OP_ALLOC
   | OP_SET_POINTER
   | OP_MAKE_POINTER
+  | OP_CALL
   deriving (Eq, Show, Enum)
 
 data Chunk = Chunk
   { code :: [Int],
     codeLines :: [Int],
-    constants :: [Value]
+    constants :: [Value],
+    chLabelMap :: Map String Int
   }
   deriving (Eq, Show)
 
@@ -42,7 +45,8 @@ initChunk =
   Chunk
     { code = [],
       codeLines = [],
-      constants = []
+      constants = [],
+      chLabelMap = Data.Map.empty
     }
 
 writeChunk :: Int -> Int -> Chunk -> Chunk

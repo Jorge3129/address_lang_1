@@ -21,13 +21,19 @@ compileProg pg@(Program {pLines}) = do
   csv <- compileVars pg cs
   cs1 <- compileLines numLines csv
   let cs2 = patchLabelJumps cs1
-  return $ writeChunk (fromEnum OP_RETURN) (length pLines) (curChunk cs2)
+      ch = curChunk cs2
+      ch1 = ch {chLabelMap = labelOffsetMap cs2}
+  return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
 
 compileLines :: [(ProgLine, Int)] -> CompState -> IO CompState
 compileLines (l : ls) cs = compileLine l cs >>= compileLines ls
 compileLines [] cs = return cs
 
 compileLine :: (ProgLine, Int) -> CompState -> IO CompState
+compileLine pl@(ProgLine lbls@(_ : _) args@(Send Nil (Var _) : _), lineNum) cs = do
+  let cs1 = compileLineLabels lbls (cs {curLine = lineNum})
+  cs2 <- compileStmts (reverse args) cs1
+  return cs2
 compileLine pl@(ProgLine {labels, stmts}, lineNum) cs = do
   let cs1 = compileLineLabels labels (cs {curLine = lineNum})
       cs2 = patchLoops (loopPatches cs1) pl cs1
@@ -139,7 +145,19 @@ compileStmt (Assignment (Var name) lhs) cs = do
   let cs2 = emitOpCode OP_SET_VAR cs1
   return $ emitByte arg cs2
 --
+compileStmt (SubprogramCall name args _) cs = do
+  cs1 <- compileExprs args cs
+  let (cs2, constant) = addConstantToCs (StringVal name) cs1
+  let cs3 = emitOpCode OP_CALL cs2
+  return $ emitByte constant cs3
+--
+compileStmt Ret cs = return $ emitOpCode OP_RETURN cs
+--
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
+
+compileExprs :: [Expr] -> CompState -> IO CompState
+compileExprs (ex : exs) cs = compileExpr ex cs >>= compileExprs exs
+compileExprs [] cs = return cs
 
 compileExpr :: Expr -> CompState -> IO CompState
 compileExpr (Lit val) cs = do
@@ -161,6 +179,9 @@ compileExpr (Var name) cs = do
       cs2 = emitOpCode OP_GET_VAR cs1
       cs3 = emitByte constant cs2
   return cs3
+--
+compileExpr Nil cs = do
+  return cs
 --
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 

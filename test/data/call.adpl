@@ -1,0 +1,7 @@
+Pg foo { 1, 2, 3 }
+
+@foo ... Nil => a, Nil => b, Nil => c
+    print 'a
+    print 'b
+    print 'c
+    Ret
