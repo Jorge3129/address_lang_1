@@ -58,6 +58,10 @@ compileStmt (BuiltinFunc "print" [ex]) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_PRINT cs1
 --
+compileStmt (BuiltinFunc "printRefs" [ex]) cs = do
+  cs1 <- compileExpr ex cs
+  return $ emitOpCode OP_PRINT_REFS cs1
+--
 compileStmt (ExpSt ex) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_POP cs1

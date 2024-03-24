@@ -112,6 +112,13 @@ execInstruction OP_PRINT vm = do
   print val
   return (newVm, Nothing)
 --
+execInstruction OP_PRINT_REFS vm = do
+  let (val, newVm) = pop vm
+      addr = asInt val
+  let refs = [i | (c, i) <- zip (memory vm) [0 :: Int ..], isPointer c && asInt c == addr]
+  putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
+  return (newVm, Nothing)
+--
 execInstruction OP_SEND vm = do
   let (addr, vm1) = pop vm
       (val, vm2) = pop vm1

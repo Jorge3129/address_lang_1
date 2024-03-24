@@ -16,6 +16,7 @@ data OpCode
   | OP_GREATER
   | OP_LESS
   | OP_PRINT
+  | OP_PRINT_REFS
   | OP_POP
   | OP_JUMP
   | OP_JUMP_IF_FALSE

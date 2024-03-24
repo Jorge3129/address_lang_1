@@ -46,7 +46,7 @@ tokens :-
   "@" @id $white_no_nl* "..." { \s -> TokenLabel (takeWhile isAlphaNum (tail s)) }
   @id { \s -> 
       let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "not"]
-          builtins = ["print", "printList"]
+          builtins = ["print", "printList", "printRefs"]
       in if elem s keywords then TokenKeyword s
           else if elem s builtins then TokenBuiltin s 
           else TokenIdentifier s 
