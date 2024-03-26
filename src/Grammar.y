@@ -60,7 +60,7 @@ progLines : progLines eol progLine  { $1 ++ [$3] }
       | progLine { [$1] }
       | {- empty -}		{ [] }
 
-progLine : lineLabels stmts { ProgLine $1 $2 }
+progLine : lineLabels stmts { ProgLine $1 $2 0 }
 
 lineLabels : lineLabels lineLabel          { $1 ++ [$2] }
       | lineLabel			{ [$1] }
@@ -188,7 +188,8 @@ data Statement
 
 data ProgLine = ProgLine {
       labels :: [String],
-      stmts :: [Statement]
+      stmts :: [Statement],
+      lineNum :: Int
 } deriving (Eq, Show)
 
 data Program = Program { pLines :: [ProgLine] } deriving (Eq, Show)

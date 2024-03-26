@@ -15,8 +15,9 @@ import MyUtils
 import Value.Core
 
 compileProg :: Program -> IO Chunk
-compileProg pg@(Program {pLines}) = do
-  let numLines = zip pLines [0 :: Int ..]
+compileProg (Program {pLines}) = do
+  let numLines = zipWith (\pl i -> pl {lineNum = i}) pLines [0 :: Int ..]
+      pg = Program {pLines = numLines}
       cs = initCs
   csv <- compileVars pg cs
   cs1 <- compileLines numLines csv
@@ -25,22 +26,22 @@ compileProg pg@(Program {pLines}) = do
       ch1 = ch {chLabelMap = labelOffsetMap cs2}
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
 
-compileLines :: [(ProgLine, Int)] -> CompState -> IO CompState
+compileLines :: [ProgLine] -> CompState -> IO CompState
 compileLines (l : ls) cs = compileLine l cs >>= compileLines ls
 compileLines [] cs = return cs
 
-compileLine :: (ProgLine, Int) -> CompState -> IO CompState
-compileLine pl@(ProgLine lbls@(_ : _) args@(Send Nil (Var _) : _), lineNum) cs = do
+compileLine :: ProgLine -> CompState -> IO CompState
+compileLine (ProgLine lbls@(_ : _) args@(Send Nil (Var _) : _) lineNum) cs = do
   let cs1 = compileLineLabels lbls (cs {curLine = lineNum})
-  cs2 <- compileStmts (reverse args) cs1
-  return cs2
-compileLine pl@(ProgLine {labels, stmts}, lineNum) cs = do
+  compileStmts (reverse args) cs1
+--
+compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
   let cs1 = compileLineLabels labels (cs {curLine = lineNum})
       cs2 = patchLoops (loopPatches cs1) pl cs1
   compileStmts stmts cs2
 
-patchLoops :: [LoopPatch] -> (ProgLine, Int) -> CompState -> CompState
-patchLoops (lp : lps) pl@(ProgLine {labels}, _) cs =
+patchLoops :: [LoopPatch] -> ProgLine -> CompState -> CompState
+patchLoops (lp : lps) pl@(ProgLine {labels}) cs =
   let shouldPatch = fromMaybe "" (scopeLabel lp) `elem` labels
    in if shouldPatch
         then patchLoops lps pl (patchLoop lp (cs {loopPatches = lps}))

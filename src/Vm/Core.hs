@@ -49,7 +49,7 @@ execInstruction OP_RETURN vm@(VM {vmCalls = ((fn, ret) : calls)}) = do
 --
 execInstruction OP_CONSTANT vm = do
   let (val, newVm) = readConst vm
-      newVm1 = push newVm val
+      newVm1 = val `seq` push newVm val
   return' newVm1
 --
 execInstruction OP_ADD vm = binaryInstr (+) vm
@@ -97,7 +97,7 @@ execInstruction OP_DEREF vm = do
 execInstruction OP_NOT vm = do
   let (val, newVm) = pop vm
       newVal = IntVal $ if isFalsy val then 1 else 0
-      newVm1 = push newVm newVal
+      newVm1 = newVal `seq` push newVm newVal
   return' newVm1
 --
 execInstruction OP_POP vm = do
