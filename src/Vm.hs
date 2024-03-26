@@ -2,7 +2,7 @@
 
 module Vm where
 
-import ByteCode
+import ByteCode.Core
 import Control.Exception as Exc
 import Data.Bifunctor
 import Data.Map (Map, empty, insert, toList, (!))

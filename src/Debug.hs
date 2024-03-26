@@ -2,7 +2,7 @@
 
 module Debug where
 
-import ByteCode
+import ByteCode.Core
 
 disassembleChunk :: Chunk -> String -> IO ()
 disassembleChunk chunk name = do

@@ -2,7 +2,7 @@
 
 module Compiler.Core where
 
-import ByteCode
+import ByteCode.Core
 import Compiler.LoopUtils
 import Compiler.State
 import Compiler.Vars

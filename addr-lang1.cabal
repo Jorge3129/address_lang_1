@@ -27,7 +27,7 @@ source-repository head
 
 library
   exposed-modules:
-      ByteCode
+      ByteCode.Core
       Compiler.Core
       Compiler.LoopUtils
       Compiler.ProgTreeUtils

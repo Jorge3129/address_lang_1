@@ -1,6 +1,6 @@
 module Compiler.Vars where
 
-import ByteCode
+import ByteCode.Core
 import Compiler.ProgTreeUtils
 import Compiler.State
 import Data.List (foldl', nub)

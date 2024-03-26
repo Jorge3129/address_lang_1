@@ -1,6 +1,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module ByteCode where
+module ByteCode.Core where
 
 import Data.Map
 import Value.Core

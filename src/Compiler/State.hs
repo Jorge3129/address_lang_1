@@ -2,7 +2,7 @@
 
 module Compiler.State where
 
-import ByteCode
+import ByteCode.Core
 import Data.List (foldl')
 import Data.Map (Map, empty)
 import Value.Core
