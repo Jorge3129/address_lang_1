@@ -1,0 +1,5 @@
+curAddr = 100
+print curAddr
+0 => curAddr
+curAddr + allocStep => curAddr
+printRefs 'curAddr

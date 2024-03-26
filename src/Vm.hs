@@ -88,7 +88,7 @@ runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) = do
   -- _ <- disassembleInstruction (chunk vm) (ip vm)
   let lineNum = getLineByOffset (ip vm) (chunk vm) + 1
-  print $ getLineByOffset (ip vm) (chunk vm) + 1
+  -- print $ getLineByOffset (ip vm) (chunk vm) + 1
   let (instruction, newVm) = readByte vm
   -- print $ (toEnum instruction :: OpCode)
   (resVM, intRes) <- Exc.catch (evaluate =<< (execInstruction (toEnum instruction) newVm)) (handler lineNum)
