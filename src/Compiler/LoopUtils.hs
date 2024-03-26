@@ -1,4 +1,4 @@
-module CompilerLoopUtils where
+module Compiler.LoopUtils where
 
 import Grammar
 

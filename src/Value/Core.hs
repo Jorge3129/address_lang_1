@@ -1,6 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 
-module Value where
+module Value.Core where
 
 data Value
   = IntVal !Int

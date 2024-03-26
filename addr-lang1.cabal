@@ -28,18 +28,18 @@ source-repository head
 library
   exposed-modules:
       ByteCode
-      Compiler
-      CompilerLoopUtils
-      CompilerState
-      CompileVars
+      Compiler.Core
+      Compiler.LoopUtils
+      Compiler.ProgTreeUtils
+      Compiler.State
+      Compiler.Vars
       Debug
       Grammar
       Lib
       MemUtils
       MyUtils
-      ProgTreeUtils
       Tokens
-      Value
+      Value.Core
       Vm
   other-modules:
       Paths_addr_lang1

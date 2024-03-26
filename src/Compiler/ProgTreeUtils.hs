@@ -1,8 +1,8 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module ProgTreeUtils where
+module Compiler.ProgTreeUtils where
 
-import CompilerLoopUtils
+import Compiler.LoopUtils
 import Grammar
 
 progExprs :: Program -> [Expr]

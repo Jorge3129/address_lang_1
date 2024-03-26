@@ -1,18 +1,18 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Compiler where
+module Compiler.Core where
 
 import ByteCode
-import CompileVars (compileVars)
-import CompilerLoopUtils
-import CompilerState
+import Compiler.LoopUtils
+import Compiler.State
+import Compiler.Vars
 import Control.Arrow ((>>>))
 import Data.List (foldl')
 import Data.Map (insert, (!))
 import Data.Maybe (fromMaybe)
 import Grammar
 import MyUtils
-import Value
+import Value.Core
 
 compileProg :: Program -> IO Chunk
 compileProg pg@(Program {pLines}) = do

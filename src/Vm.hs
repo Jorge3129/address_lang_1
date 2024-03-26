@@ -11,7 +11,7 @@ import Debug
 import Debug.Trace
 import MemUtils
 import MyUtils
-import Value
+import Value.Core
 
 data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)
 
@@ -91,7 +91,7 @@ runStep (vm, _) = do
   -- print $ getLineByOffset (ip vm) (chunk vm) + 1
   let (instruction, newVm) = readByte vm
   -- print $ (toEnum instruction :: OpCode)
-  (resVM, intRes) <- Exc.catch (evaluate =<< (execInstruction (toEnum instruction) newVm)) (handler lineNum)
+  (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) newVm) (handler lineNum)
   -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
   -- print $ map (second (memory resVM !!)) (toList (varsMap resVM))
@@ -140,13 +140,22 @@ execInstruction OP_PRINT_REFS vm = do
 execInstruction OP_SEND vm = do
   let (addr, vm1) = pop vm
       (val, vm2) = pop vm1
-      vm3 = vm2 {memory = replace (asInt addr) val (memory vm2)}
+      intAddr = asInt addr
+      destAddr =
+        if intAddr > 0
+          then intAddr
+          else error $ "Cannot send to memory at " ++ show intAddr
+      vm3 = destAddr `seq` vm2 {memory = replace destAddr val (memory vm2)}
   return' vm3
 --
 execInstruction OP_DEREF vm = do
   let (addr, newVm) = pop vm
-      val = memory vm !! asInt addr
-      newVm1 = push newVm val
+      intAddr = asInt addr
+      val =
+        if intAddr > 0
+          then memory vm !! intAddr
+          else error $ "Cannot dereference memory at " ++ show intAddr
+      newVm1 = val `seq` push newVm val
   return' newVm1
 --
 execInstruction OP_NOT vm = do

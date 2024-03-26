@@ -3,7 +3,7 @@
 module ByteCode where
 
 import Data.Map
-import Value
+import Value.Core
 
 data OpCode
   = OP_RETURN

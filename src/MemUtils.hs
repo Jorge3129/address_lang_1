@@ -1,6 +1,6 @@
 module MemUtils where
 
-import Value
+import Value.Core
 
 allocNewVal :: [Value] -> Int
 allocNewVal mem =

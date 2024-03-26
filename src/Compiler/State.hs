@@ -1,11 +1,11 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module CompilerState where
+module Compiler.State where
 
 import ByteCode
 import Data.List (foldl')
 import Data.Map (Map, empty)
-import Value
+import Value.Core
 
 type LabelOffsetMap = Map String Int
 

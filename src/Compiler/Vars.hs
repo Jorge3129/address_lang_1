@@ -1,11 +1,11 @@
-module CompileVars where
+module Compiler.Vars where
 
 import ByteCode
-import CompilerState
+import Compiler.ProgTreeUtils
+import Compiler.State
 import Data.List (foldl', nub)
 import Grammar
-import ProgTreeUtils
-import Value
+import Value.Core
 
 compileVars :: Program -> CompState -> IO CompState
 compileVars pg cs = do

@@ -1,4 +1,4 @@
-import Compiler
+import Compiler.Core
 import Debug
 import Grammar
 import System.Directory (getCurrentDirectory)
