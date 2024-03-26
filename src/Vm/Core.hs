@@ -5,13 +5,12 @@ module Vm.Core where
 import ByteCode.Core
 import Control.Exception as Exc
 import Data.Bifunctor
-import Data.Map (Map, empty, insert, toList, (!))
+import Data.Map (insert, (!))
 import Data.Maybe (isJust)
 import Debug
-import Debug.Trace
-import MemUtils
 import MyUtils
 import Value.Core
+import Vm.MemUtils
 import Vm.State
 
 data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)

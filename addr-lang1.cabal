@@ -36,11 +36,11 @@ library
       Debug
       Grammar
       Lib
-      MemUtils
       MyUtils
       Tokens
       Value.Core
       Vm.Core
+      Vm.MemUtils
       Vm.State
   other-modules:
       Paths_addr_lang1

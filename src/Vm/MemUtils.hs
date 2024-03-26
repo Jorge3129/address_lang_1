@@ -1,4 +1,4 @@
-module MemUtils where
+module Vm.MemUtils where
 
 import Value.Core
 

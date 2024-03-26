@@ -3,14 +3,7 @@
 module Vm.State where
 
 import ByteCode.Core
-import Control.Exception as Exc
-import Data.Bifunctor
-import Data.Map (Map, empty, insert, toList, (!))
-import Data.Maybe (isJust)
-import Debug
-import Debug.Trace
-import MemUtils
-import MyUtils
+import Data.Map (Map, empty)
 import Value.Core
 
 data VM = VM
