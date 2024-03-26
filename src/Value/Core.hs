@@ -117,7 +117,8 @@ mulV (DoubleVal a) (IntVal b) = DoubleVal $ a * fromIntegral b
 mulV a b = error $ "cannot multiply " ++ show a ++ " and " ++ show b
 
 divV :: Value -> Value -> Value
-divV (IntVal a) (IntVal b) = IntVal $ a `div` b
+divV (IntVal a) (IntVal b) = DoubleVal $ fromIntegral a / fromIntegral b
+-- divV (IntVal a) (IntVal b) = IntVal $ a `div` b
 divV (DoubleVal a) (DoubleVal b) = DoubleVal $ a / b
 --
 divV (IntVal a) (DoubleVal b) = DoubleVal $ fromIntegral a / b
