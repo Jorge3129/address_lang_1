@@ -3,10 +3,10 @@
 module Value where
 
 data Value
-  = IntVal Int
-  | PointerVal Int
-  | DoubleVal Double
-  | StringVal String
+  = IntVal !Int
+  | PointerVal !Int
+  | DoubleVal !Double
+  | StringVal !String
   | NilVal
   deriving (Eq)
 
@@ -95,8 +95,8 @@ addV (PointerVal a) (PointerVal b) = IntVal $ a + b
 addV (IntVal a) (DoubleVal b) = DoubleVal $ fromIntegral a + b
 addV (DoubleVal a) (IntVal b) = DoubleVal $ a + fromIntegral b
 --
-addV (IntVal a) (PointerVal b) = IntVal $ a + b
-addV (PointerVal a) (IntVal b) = IntVal $ a + b
+-- addV (IntVal a) (PointerVal b) = IntVal $ a + b
+-- addV (PointerVal a) (IntVal b) = IntVal $ a + b
 --
 addV a b = error $ "cannot add " ++ show a ++ " and " ++ show b
 

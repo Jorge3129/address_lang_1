@@ -27,6 +27,7 @@ dependencies:
   - monad-loops
   - containers
   - directory
+  - deepseq
 
 ghc-options:
   - -Wall

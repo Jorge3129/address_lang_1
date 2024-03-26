@@ -52,6 +52,7 @@ library
       array
     , base >=4.7 && <5
     , containers
+    , deepseq
     , directory
     , monad-loops
   default-language: Haskell2010
@@ -70,6 +71,7 @@ executable addr-lang1-exe
     , array
     , base >=4.7 && <5
     , containers
+    , deepseq
     , directory
     , monad-loops
   default-language: Haskell2010
@@ -89,6 +91,7 @@ test-suite addr-lang1-test
     , array
     , base >=4.7 && <5
     , containers
+    , deepseq
     , directory
     , monad-loops
   default-language: Haskell2010

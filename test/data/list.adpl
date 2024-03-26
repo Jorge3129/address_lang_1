@@ -7,8 +7,8 @@ P { length == 0 } 0 => h |
 
 L { 1 (1) length => i } a
     curAddr = firstNode + ('i - 1) * allocStep
-    'i * 'i * 'i => curAddr + 1
-    curAddr + allocStep => curAddr + 0
+    curAddr + allocStep => curAddr
+    // 'i * 'i * 'i => curAddr + 1
     P { 'i == length } 0 => curAddr + 0 |
     0 => 'curAddr
     printRefs 'curAddr
