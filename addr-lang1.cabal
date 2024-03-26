@@ -41,6 +41,7 @@ library
       Tokens
       Value.Core
       Vm.Core
+      Vm.State
   other-modules:
       Paths_addr_lang1
   autogen-modules:

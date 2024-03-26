@@ -4,6 +4,7 @@ import Grammar
 import System.Directory (getCurrentDirectory)
 import Tokens
 import Vm.Core
+import Vm.State
 
 main :: IO ()
 main = do
