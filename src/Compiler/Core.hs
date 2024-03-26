@@ -15,16 +15,20 @@ import MyUtils
 import Value.Core
 
 compileProg :: Program -> IO Chunk
-compileProg (Program {pLines}) = do
-  let numLines = zipWith (\pl i -> pl {lineNum = i}) pLines [0 :: Int ..]
-      pg = Program {pLines = numLines}
+compileProg pg1 = do
+  let pg@(Program {pLines}) = numerateLines pg1
       cs = initCs
   csv <- compileVars pg cs
-  cs1 <- compileLines numLines csv
+  cs1 <- compileLines pLines csv
   let cs2 = patchLabelJumps cs1
       ch = curChunk cs2
       ch1 = ch {chLabelMap = labelOffsetMap cs2}
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
+
+numerateLines :: Program -> Program
+numerateLines pg@(Program {pLines}) =
+  let numLines = zipWith (\pl i -> pl {lineNum = i}) pLines [0 :: Int ..]
+   in pg {pLines = numLines}
 
 compileLines :: [ProgLine] -> CompState -> IO CompState
 compileLines (l : ls) cs = compileLine l cs >>= compileLines ls

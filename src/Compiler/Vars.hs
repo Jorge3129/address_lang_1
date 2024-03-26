@@ -9,7 +9,7 @@ import Value.Core
 
 compileVars :: Program -> CompState -> IO CompState
 compileVars pg cs = do
-  let vars = nub $ concatMap (exprVars) (progExprs pg)
+  let vars = nub $ concatMap exprVars (progExprs pg)
   print vars
   let cs1 = foldl' (flip compileVar) cs vars
   return $ foldl' (flip compileVarInit) cs1 vars
