@@ -40,7 +40,7 @@ library
       MyUtils
       Tokens
       Value.Core
-      Vm
+      Vm.Core
   other-modules:
       Paths_addr_lang1
   autogen-modules:

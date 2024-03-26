@@ -3,7 +3,7 @@ import Debug
 import Grammar
 import System.Directory (getCurrentDirectory)
 import Tokens
-import Vm
+import Vm.Core
 
 main :: IO ()
 main = do

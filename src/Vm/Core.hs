@@ -1,6 +1,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Vm where
+module Vm.Core where
 
 import ByteCode.Core
 import Control.Exception as Exc
