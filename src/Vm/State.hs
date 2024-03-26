@@ -51,6 +51,12 @@ pop vm@(VM {stack}) =
     vm {stack = tail stack}
   )
 
+popMap :: (Value -> a) -> VM -> (a, VM)
+popMap f vm =
+  let (val, vm1) = pop vm
+      res = f val
+   in res `seq` (f val, vm1)
+
 peek :: Int -> VM -> Value
 peek offset (VM {stack}) = stack !! offset
 

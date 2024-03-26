@@ -30,6 +30,7 @@ data OpCode
   | OP_SET_POINTER
   | OP_MAKE_POINTER
   | OP_CALL
+  | OP_EXCHANGE
   deriving (Eq, Show, Enum)
 
 data Chunk = Chunk

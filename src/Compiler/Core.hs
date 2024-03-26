@@ -97,6 +97,11 @@ compileStmt (Send valEx addrEx) cs = do
   cs2 <- compileExpr addrEx cs1
   return $ emitOpCode OP_SEND cs2
 --
+compileStmt (Exchange a b) cs = do
+  cs1 <- compileExpr a cs
+  cs2 <- compileExpr b cs1
+  return $ emitOpCode OP_EXCHANGE cs2
+--
 compileStmt (Jump lbl) cs = do
   let cs1 = addLabelPatch (curChunkCount cs) lbl cs
       cs2 = emitOpCode OP_JUMP cs1

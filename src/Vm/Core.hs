@@ -67,32 +67,38 @@ execInstruction OP_PRINT vm = do
   return' newVm
 --
 execInstruction OP_PRINT_REFS vm = do
-  let (val, newVm) = pop vm
-      addr = asInt val
+  let (addr, newVm) = popMap asInt vm
   let refs = [i | (c, i) <- zip (memory vm) [0 :: Int ..], isPointer c && asInt c == addr]
   putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
   return' newVm
 --
 execInstruction OP_SEND vm = do
-  let (addr, vm1) = pop vm
+  let (addr, vm1) = popMap asInt vm
       (val, vm2) = pop vm1
-      intAddr = asInt addr
       destAddr =
-        if intAddr > 0
-          then intAddr
-          else error $ "Cannot send to memory at " ++ show intAddr
+        if addr > 0
+          then addr
+          else error $ "Cannot send to memory at " ++ show addr
       vm3 = destAddr `seq` vm2 {memory = replace destAddr val (memory vm2)}
   return' vm3
 --
 execInstruction OP_DEREF vm = do
-  let (addr, newVm) = pop vm
-      intAddr = asInt addr
+  let (addr, newVm) = popMap asInt vm
       val =
-        if intAddr > 0
-          then memory vm !! intAddr
-          else error $ "Cannot dereference memory at " ++ show intAddr
+        if addr > 0
+          then memory vm !! addr
+          else error $ "Cannot dereference memory at " ++ show addr
       newVm1 = val `seq` push newVm val
   return' newVm1
+--
+execInstruction OP_EXCHANGE vm = do
+  let (addrB, vm1) = popMap asInt vm
+      (addrA, vm2) = popMap asInt vm1
+      valA = memory vm2 !! addrA
+      valB = memory vm2 !! addrB
+      vm3 = valB `seq` vm2 {memory = replace addrA valB (memory vm2)}
+      vm4 = valA `seq` vm3 {memory = replace addrB valA (memory vm3)}
+  return' vm4
 --
 execInstruction OP_NOT vm = do
   let (val, newVm) = pop vm
@@ -118,10 +124,9 @@ execInstruction OP_JUMP_IF_FALSE vm = do
 --
 execInstruction OP_DEFINE_VAR vm = do
   let (name, vm1) = readConst vm
-      (addr, vm2) = pop vm1
-      vm3 = vm2 {varsMap = insert (asStr name) (asInt addr) (varsMap vm2)}
+      (addr, vm2) = popMap asInt vm1
+      vm3 = vm2 {varsMap = insert (asStr name) addr (varsMap vm2)}
   return' vm3
--- memory = replace (asInt addr) 0 (memory vm2)
 --
 execInstruction OP_GET_VAR vm = do
   let (name, vm1) = readConst vm

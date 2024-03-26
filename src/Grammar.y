@@ -43,6 +43,7 @@ import Tokens
     "'" { TokenSingleQuote }
     "`" { TokenBackTick }
     "=>" { TokenEqualGreater }
+    "<=>" { TokenLessEqualGreater }
 
 %nonassoc "==" "/="
 %nonassoc '>' '<' "<=" ">="
@@ -79,6 +80,7 @@ stmtSep : ';' { () }
 stmt : '!' { Stop }
     | builtin Exp { BuiltinFunc $1 [$2] }
     | subprogCallSt { $1 }
+    | exchangeSt { $1 }
     | predicateSt { $1 }
     | loopStSimple { $1 }
     | loopStComplex { $1 }
@@ -87,6 +89,8 @@ stmt : '!' { Stop }
     | Ret { Ret }
     | var { Jump $1 }
 --     | Exp { ExpSt $1 }
+
+exchangeSt : Exp "<=>" Exp    { Exchange $1 $3 }
 
 predicateSt : P '{' Exp '}' stmts '|' stmts { Predicate $3 $5 $7 }
 
