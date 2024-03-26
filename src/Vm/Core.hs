@@ -123,20 +123,20 @@ execInstruction OP_JUMP_IF_FALSE vm = do
   return' newVm1
 --
 execInstruction OP_DEFINE_VAR vm = do
-  let (name, vm1) = readConst vm
+  let (name, vm1) = readStr vm
       (addr, vm2) = popMap asInt vm1
-      vm3 = vm2 {varsMap = insert (asStr name) addr (varsMap vm2)}
+      vm3 = vm2 {varsMap = insert name addr (varsMap vm2)}
   return' vm3
 --
 execInstruction OP_GET_VAR vm = do
-  let (name, vm1) = readConst vm
-      addr = varsMap vm1 ! asStr name
+  let (name, vm1) = readStr vm
+      addr = varsMap vm1 ! name
       vm2 = push vm1 (memory vm1 !! addr)
   return' vm2
 --
 execInstruction OP_SET_VAR vm = do
-  let (name, vm1) = readConst vm
-      addr = varsMap vm1 ! asStr name
+  let (name, vm1) = readStr vm
+      addr = varsMap vm1 ! name
       oldVal = memory vm1 !! addr
       (val, vm2) = pop vm1
       castVal = if isPointer oldVal then asPointer val else val
@@ -144,8 +144,8 @@ execInstruction OP_SET_VAR vm = do
   return' vm3
 --
 execInstruction OP_SET_POINTER vm = do
-  let (name, vm1) = readConst vm
-      addr = varsMap vm1 ! asStr name
+  let (name, vm1) = readStr vm
+      addr = varsMap vm1 ! name
       oldVal = memory vm1 !! addr
       vm2 = vm1 {memory = replace addr (asPointer oldVal) (memory vm1)}
   return' vm2
@@ -162,8 +162,7 @@ execInstruction OP_ALLOC vm = do
   return' $ push vm1 (IntVal free)
 --
 execInstruction OP_CALL vm = do
-  let (name, vm1) = readConst vm
-      fnName = asStr name
+  let (fnName, vm1) = readStr vm
   let jumpTo = chLabelMap (chunk vm1) ! fnName
       vm2 = vm1 {vmCalls = (fnName, ip vm1) : vmCalls vm}
       vm3 = vm2 {ip = jumpTo}

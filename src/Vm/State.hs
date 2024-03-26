@@ -75,3 +75,9 @@ readConst vm@(VM {chunk}) =
   let (Chunk {constants}) = chunk
       (constPos, newVm) = readByte vm
    in (constants !! constPos, newVm)
+
+readStr :: VM -> (String, VM)
+readStr vm =
+  let (val, vm1) = readConst vm
+      res = asStr val
+   in res `seq` (res, vm1)
