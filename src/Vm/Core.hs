@@ -96,8 +96,8 @@ execInstruction OP_EXCHANGE vm = do
       (addrA, vm2) = popMap asInt vm1
       valA = memory vm2 !! addrA
       valB = memory vm2 !! addrB
-      vm3 = valB `seq` vm2 {memory = replace addrA valB (memory vm2)}
-      vm4 = valA `seq` vm3 {memory = replace addrB valA (memory vm3)}
+      vm3 = valB `seq` memSet addrA valB vm2
+      vm4 = valA `seq` memSet addrB valA vm3
   return' vm4
 --
 execInstruction OP_NOT vm = do
@@ -131,8 +131,8 @@ execInstruction OP_DEFINE_VAR vm = do
 execInstruction OP_GET_VAR vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 ! name
-      vm2 = push vm1 (memory vm1 !! addr)
-  return' vm2
+      val = memory vm1 !! addr
+  return' $ push vm1 val
 --
 execInstruction OP_SET_VAR vm = do
   let (name, vm1) = readStr vm
@@ -140,25 +140,22 @@ execInstruction OP_SET_VAR vm = do
       oldVal = memory vm1 !! addr
       (val, vm2) = pop vm1
       castVal = if isPointer oldVal then asPointer val else val
-      vm3 = vm2 {memory = replace addr castVal (memory vm2)}
-  return' vm3
+  return' $ memSet addr castVal vm2
 --
 execInstruction OP_SET_POINTER vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 ! name
       oldVal = memory vm1 !! addr
-      vm2 = vm1 {memory = replace addr (asPointer oldVal) (memory vm1)}
-  return' vm2
+  return' $ memSet addr (asPointer oldVal) vm1
 --
 execInstruction OP_MAKE_POINTER vm = do
   let addr = asInt (peek 0 vm)
       oldVal = memory vm !! addr
-      vm1 = vm {memory = replace addr (asPointer oldVal) (memory vm)}
-  return' vm1
+  return' $ memSet addr (asPointer oldVal) vm
 --
 execInstruction OP_ALLOC vm = do
   let free = allocNewVal (memory vm)
-      vm1 = vm {memory = replace free 0 (memory vm)}
+      vm1 = memSet free 0 vm
   return' $ push vm1 (IntVal free)
 --
 execInstruction OP_CALL vm = do

@@ -4,6 +4,7 @@ module Vm.State where
 
 import ByteCode.Core
 import Data.Map (Map, empty)
+import MyUtils
 import Value.Core
 
 data VM = VM
@@ -81,3 +82,7 @@ readStr vm =
   let (val, vm1) = readConst vm
       res = asStr val
    in res `seq` (res, vm1)
+
+memSet :: Int -> Value -> VM -> VM
+memSet addr val vm =
+  vm {memory = replace addr val (memory vm)}
