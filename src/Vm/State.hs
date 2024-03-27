@@ -4,6 +4,7 @@ module Vm.State where
 
 import ByteCode.Core
 import Data.Map (Map, empty)
+import Debug (lpad)
 import MyUtils
 import Value.Core
 
@@ -88,4 +89,9 @@ memSet addr val vm =
   vm {memory = replace addr val (memory vm)}
 
 scopedVar :: VM -> String -> String
-scopedVar vm name = "[" ++ show (length (vmCalls vm)) ++ "]" ++ name
+scopedVar vm name =
+  let scope = lpad '0' 8 $ show $ length $ vmCalls vm
+   in scope ++ name
+
+getVarScope :: String -> Int
+getVarScope s = read $ take 8 s

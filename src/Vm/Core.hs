@@ -5,7 +5,7 @@ module Vm.Core where
 import ByteCode.Core
 import Control.Exception as Exc
 import Data.Bifunctor
-import Data.Map (insert, (!))
+import qualified Data.Map as Map
 import Data.Maybe (isJust)
 import Debug
 import MyUtils
@@ -26,13 +26,13 @@ runStep (vm, _) = do
   let lineNum = getLineByOffset (ip vm) (chunk vm) + 1
   -- print $ getLineByOffset (ip vm) (chunk vm) + 1
   let (instruction, newVm) = readByte vm
-  -- print $ (toEnum instruction :: OpCode)
+  print $ (toEnum instruction :: OpCode)
   (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) newVm) (handler lineNum)
   -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
   -- print $ map (second (memory resVM !!)) (toList (varsMap resVM))
   -- print $ vmCalls resVM
-  -- print $ stack resVM
+  print $ stack resVM
   return (resVM, intRes)
   where
     handler :: Int -> ErrorCall -> IO (VM, Maybe InterpretResult)
@@ -41,11 +41,18 @@ runStep (vm, _) = do
       putStrLn msg
       return (vm, Just RUNTIME_ERR)
 
+freeVars :: VM -> VM
+freeVars vm =
+  let curScope = length (vmCalls vm)
+      locals = [addr | (varName, addr) <- Map.toList (varsMap vm), getVarScope varName == curScope]
+   in vm {memory = [if addr `elem` locals then NilVal else val | (addr, val) <- zip [0 ..] (memory vm)]}
+
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm@(VM {vmCalls = []}) = returnOk vm
 execInstruction OP_RETURN vm@(VM {vmCalls = ((fn, ret) : calls)}) = do
   -- print $ "Returning from " ++ fn
-  let vm1 = vm {vmCalls = calls, ip = ret}
+  let vmFreed = freeVars vm
+      vm1 = vmFreed {vmCalls = calls, ip = ret}
   return' vm1
 --
 execInstruction OP_CONSTANT vm = do
@@ -126,18 +133,18 @@ execInstruction OP_JUMP_IF_FALSE vm = do
 execInstruction OP_DEFINE_VAR vm = do
   let (name, vm1) = readStr vm
       (addr, vm2) = popMap asInt vm1
-      vm3 = vm2 {varsMap = insert (scopedVar vm name) addr (varsMap vm2)}
+      vm3 = vm2 {varsMap = Map.insert (scopedVar vm name) addr (varsMap vm2)}
   return' vm3
 --
 execInstruction OP_GET_VAR vm = do
   let (name, vm1) = readStr vm
-      addr = varsMap vm1 ! scopedVar vm name
+      addr = varsMap vm1 Map.! scopedVar vm name
       val = memory vm1 !! addr
   return' $ push vm1 val
 --
 execInstruction OP_SET_VAR vm = do
   let (name, vm1) = readStr vm
-      addr = varsMap vm1 ! scopedVar vm name
+      addr = varsMap vm1 Map.! scopedVar vm name
       oldVal = memory vm1 !! addr
       (val, vm2) = pop vm1
       castVal = if isPointer oldVal then asPointer val else val
@@ -145,7 +152,7 @@ execInstruction OP_SET_VAR vm = do
 --
 execInstruction OP_MAKE_VAR_POINTER vm = do
   let (name, vm1) = readStr vm
-      addr = varsMap vm1 ! scopedVar vm name
+      addr = varsMap vm1 Map.! scopedVar vm name
       oldVal = memory vm1 !! addr
   return' $ memSet addr (asPointer oldVal) vm1
 --
@@ -161,7 +168,7 @@ execInstruction OP_ALLOC vm = do
 --
 execInstruction OP_CALL vm = do
   let (fnName, vm1) = readStr vm
-  let jumpTo = chLabelMap (chunk vm1) ! fnName
+  let jumpTo = chLabelMap (chunk vm1) Map.! fnName
       vm2 = vm1 {vmCalls = (fnName, ip vm1) : vmCalls vm}
       vm3 = vm2 {ip = jumpTo}
   return' vm3
