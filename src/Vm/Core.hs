@@ -26,13 +26,13 @@ runStep (vm, _) = do
   let lineNum = getLineByOffset (ip vm) (chunk vm) + 1
   -- print $ getLineByOffset (ip vm) (chunk vm) + 1
   let (instruction, newVm) = readByte vm
-  print $ (toEnum instruction :: OpCode)
+  -- print $ (toEnum instruction :: OpCode)
   (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) newVm) (handler lineNum)
   -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
   -- print $ map (second (memory resVM !!)) (toList (varsMap resVM))
   -- print $ vmCalls resVM
-  print $ stack resVM
+  -- print $ stack resVM
   return (resVM, intRes)
   where
     handler :: Int -> ErrorCall -> IO (VM, Maybe InterpretResult)
