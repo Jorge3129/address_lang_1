@@ -84,7 +84,7 @@ compileStmt (Send valEx (Var name)) cs = do
   cs2 <- compileExpr (Var name) cs1
   let cs3 = emitOpCode OP_SEND cs2
   let (cs4, arg) = addConstantToCs (StringVal name) cs3
-  let cs5 = emitOpCode OP_SET_POINTER cs4
+  let cs5 = emitOpCode OP_MAKE_VAR_POINTER cs4
   return $ emitByte arg cs5
 --
 compileStmt (Send valEx (Deref innerExpr)) cs = do

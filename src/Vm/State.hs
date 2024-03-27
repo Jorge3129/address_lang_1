@@ -86,3 +86,6 @@ readStr vm =
 memSet :: Int -> Value -> VM -> VM
 memSet addr val vm =
   vm {memory = replace addr val (memory vm)}
+
+scopedVar :: VM -> String -> String
+scopedVar vm name = "[" ++ show (length (vmCalls vm)) ++ "]" ++ name

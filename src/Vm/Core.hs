@@ -126,26 +126,26 @@ execInstruction OP_JUMP_IF_FALSE vm = do
 execInstruction OP_DEFINE_VAR vm = do
   let (name, vm1) = readStr vm
       (addr, vm2) = popMap asInt vm1
-      vm3 = vm2 {varsMap = insert name addr (varsMap vm2)}
+      vm3 = vm2 {varsMap = insert (scopedVar vm name) addr (varsMap vm2)}
   return' vm3
 --
 execInstruction OP_GET_VAR vm = do
   let (name, vm1) = readStr vm
-      addr = varsMap vm1 ! name
+      addr = varsMap vm1 ! scopedVar vm name
       val = memory vm1 !! addr
   return' $ push vm1 val
 --
 execInstruction OP_SET_VAR vm = do
   let (name, vm1) = readStr vm
-      addr = varsMap vm1 ! name
+      addr = varsMap vm1 ! scopedVar vm name
       oldVal = memory vm1 !! addr
       (val, vm2) = pop vm1
       castVal = if isPointer oldVal then asPointer val else val
   return' $ memSet addr castVal vm2
 --
-execInstruction OP_SET_POINTER vm = do
+execInstruction OP_MAKE_VAR_POINTER vm = do
   let (name, vm1) = readStr vm
-      addr = varsMap vm1 ! name
+      addr = varsMap vm1 ! scopedVar vm name
       oldVal = memory vm1 !! addr
   return' $ memSet addr (asPointer oldVal) vm1
 --
