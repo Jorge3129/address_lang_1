@@ -17,8 +17,9 @@ import Value.Core
 compileProg :: Program -> IO Chunk
 compileProg pg1 = do
   let pg@(Program {pLines}) = numerateLines pg1
-      cs = initCs
-  csv <- compileVars pg cs
+      fnVars = collectProgVars pg
+      cs = initCs {csFnVars = fnVars}
+  csv <- compileVars (fnVars ! "") cs
   cs1 <- compileLines pLines csv
   let cs2 = patchLabelJumps cs1
       ch = curChunk cs2
@@ -35,9 +36,10 @@ compileLines (l : ls) cs = compileLine l cs >>= compileLines ls
 compileLines [] cs = return cs
 
 compileLine :: ProgLine -> CompState -> IO CompState
-compileLine (ProgLine lbls@(_ : _) args@(Send Nil (Var _) : _) lineNum) cs = do
+compileLine (ProgLine lbls@(fnName : _) args@(Send Nil (Var _) : _) lineNum) cs = do
   let cs1 = compileLineLabels lbls (cs {curLine = lineNum})
-  compileStmts (reverse args) cs1
+  cs2 <- compileVars (csFnVars cs ! fnName) cs1
+  compileStmts (reverse args) cs2
 --
 compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
   let cs1 = compileLineLabels labels (cs {curLine = lineNum})

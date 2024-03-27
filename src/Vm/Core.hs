@@ -32,6 +32,7 @@ runStep (vm, _) = do
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
   -- print $ map (second (memory resVM !!)) (toList (varsMap resVM))
   -- print $ vmCalls resVM
+  -- print $ stack resVM
   return (resVM, intRes)
   where
     handler :: Int -> ErrorCall -> IO (VM, Maybe InterpretResult)

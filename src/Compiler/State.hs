@@ -9,6 +9,8 @@ import Value.Core
 
 type LabelOffsetMap = Map String Int
 
+type FnVarMap = Map String [String]
+
 data LoopPatch = LoopPatch
   { scopeLabel :: Maybe String,
     nextLabel :: Maybe String,
@@ -23,7 +25,8 @@ data CompState = CompState
     curLine :: Int,
     labelOffsetMap :: LabelOffsetMap,
     labelJumpsToPatch :: [(Int, String)],
-    loopPatches :: [LoopPatch]
+    loopPatches :: [LoopPatch],
+    csFnVars :: FnVarMap
   }
   deriving (Eq, Show)
 
@@ -34,7 +37,8 @@ initCs =
       curLine = 0,
       labelOffsetMap = Data.Map.empty,
       labelJumpsToPatch = [],
-      loopPatches = []
+      loopPatches = [],
+      csFnVars = Data.Map.empty
     }
 
 emitByte :: Int -> CompState -> CompState

@@ -1,5 +1,11 @@
 print a
 print b
+Pg foo { 1, 2, 3 }
+print a
+print b
+Pg foo { 1, 2, 3 }
+print a
+print b
 
 !
 
@@ -9,8 +15,8 @@ print b
     Ret
 
 @bar ... Nil => x; Nil => y
-    print z
     print a
+    print b
     Ret
 
 print k
