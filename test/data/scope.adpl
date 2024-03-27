@@ -1,0 +1,16 @@
+print a
+print b
+
+!
+
+@foo ... Nil => c; Nil => d; Nil => e
+    print a
+    print b
+    Ret
+
+@bar ... Nil => x; Nil => y
+    print z
+    print a
+    Ret
+
+print k
