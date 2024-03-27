@@ -1,0 +1,12 @@
+L { 0 (1) 100 => i } l1
+    Pg fact { 'i, res }
+    print 'res
+@l1 ...
+
+!
+
+@fact ... Nil => n, Nil => res
+    P { 'n <= 1 } 1 => 'res; Ret |
+    Pg fact { 'n - 1, prevFact }
+    'n * 'prevFact => 'res
+    Ret
