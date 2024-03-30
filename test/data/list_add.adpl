@@ -1,0 +1,34 @@
+Pg listEmpty { list1 }
+printList list1
+Pg listAdd { 1, list1 }
+printList list1
+Pg listAdd { 2, list1 }
+printList list1
+Pg listAdd { 3, list1 }
+printList list1
+
+!
+
+@listEmpty ... Nil => targetAddr
+    0 => 'targetAddr
+    Ret
+
+@listAdd ... Nil => val, Nil => listAddr
+    h = 'listAddr
+    P { 'h == 0 } listAddEmpty | listAddNonEmpty
+
+    @listAddEmpty ...
+        curAddr = h;
+        listAddCommon
+
+    @listAddNonEmpty ...
+        L { 'h, 'Nil, P { ''j /= 0 } => j } b
+        @b ...
+        curAddr = 'j;
+        listAddCommon
+
+    @listAddCommon ...
+        nextNode = alloc 2;
+        nextNode => curAddr
+        'val => nextNode + 1
+    Ret

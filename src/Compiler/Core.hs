@@ -71,6 +71,10 @@ compileStmt (BuiltinProc "print" [ex]) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_PRINT cs1
 --
+compileStmt (BuiltinProc "printList" [ex]) cs = do
+  cs1 <- compileExpr ex cs
+  return $ emitOpCode OP_PRINT_LIST cs1
+--
 compileStmt (BuiltinProc "printRefs" [ex]) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_PRINT_REFS cs1

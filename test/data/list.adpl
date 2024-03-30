@@ -1,4 +1,4 @@
-length = 7
+length = 2
 firstNode = 100
 allocStep = 2
 firstNode => h
@@ -19,3 +19,5 @@ print curAddr
 L { 'h, 'Nil, P { 'j /= 0 } => j } b
     print '('j + 1)
 @b ...
+
+printList h
