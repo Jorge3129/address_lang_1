@@ -61,6 +61,7 @@ disassembleInstruction chunk offset = do
     OP_EXCHANGE -> simpleInstruction "OP_EXCHANGE" offset
     --
     OP_ALLOC -> simpleInstruction "OP_ALLOC" offset
+    OP_ALLOC_N -> simpleInstruction "OP_ALLOC_N" offset
     --
     OP_JUMP -> jumpInstruction "OP_JUMP" chunk offset
     OP_JUMP_IF_FALSE -> jumpInstruction "OP_JUMP_IF_FALSE" chunk offset

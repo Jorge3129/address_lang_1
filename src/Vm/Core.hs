@@ -5,6 +5,7 @@ module Vm.Core where
 import ByteCode.Core
 import Control.Exception as Exc
 import Data.Bifunctor
+import Data.Foldable (Foldable (foldl'))
 import qualified Data.Map as Map
 import Data.Maybe (isJust)
 import Debug
@@ -162,9 +163,15 @@ execInstruction OP_MAKE_POINTER vm = do
   return' $ memSet addr (asPointer oldVal) vm
 --
 execInstruction OP_ALLOC vm = do
-  let free = allocNewVal (memory vm)
-      vm1 = memSet free 0 vm
-  return' $ push vm1 (IntVal free)
+  let freeAddr = allocN 1 (memory vm)
+      vm1 = memSet freeAddr 0 vm
+  return' $ push vm1 (IntVal freeAddr)
+--
+execInstruction OP_ALLOC_N vm = do
+  let (n, vm1) = popMap asInt vm
+      freeAddr = allocN 1 (memory vm)
+      vm2 = foldl' (\vm_ offset -> memSet (freeAddr + offset) 0 vm_) vm1 [0 .. (n - 1)]
+  return' $ push vm2 (PointerVal freeAddr)
 --
 execInstruction OP_CALL vm = do
   let (fnName, vm1) = readStr vm

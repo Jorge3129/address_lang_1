@@ -195,6 +195,10 @@ compileExpr (Var name) cs = do
 compileExpr Nil cs = do
   return cs
 --
+compileExpr (BuiltinFn "alloc" [ex]) cs = do
+  cs1 <- compileExpr ex cs
+  return $ emitOpCode OP_ALLOC_N cs1
+--
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
 emitJump :: OpCode -> CompState -> (CompState, Int)
