@@ -67,11 +67,11 @@ compileStmts [] cs = return cs
 compileStmt :: Statement -> CompState -> IO CompState
 compileStmt Stop cs = return $ emitOpCode OP_RETURN cs
 --
-compileStmt (BuiltinFunc "print" [ex]) cs = do
+compileStmt (BuiltinProc "print" [ex]) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_PRINT cs1
 --
-compileStmt (BuiltinFunc "printRefs" [ex]) cs = do
+compileStmt (BuiltinProc "printRefs" [ex]) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_PRINT_REFS cs1
 --

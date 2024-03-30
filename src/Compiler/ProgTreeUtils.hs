@@ -23,7 +23,7 @@ stmtExprs st@(LoopSimple {}) = stmtExprs (desugarStmt st)
 stmtExprs st@(LoopComplex {}) = stmtExprs (desugarStmt st)
 stmtExprs (LoopCommon initSt stepSt endExpr cntExpr _ _) =
   stmtExprs initSt ++ stmtExprs stepSt ++ [endExpr] ++ [cntExpr]
-stmtExprs (BuiltinFunc _ exs) = exs
+stmtExprs (BuiltinProc _ exs) = exs
 stmtExprs (SubprogramCall _ exs _) = exs
 stmtExprs (CompJump ex) = [ex]
 stmtExprs (ExpSt ex) = [ex]

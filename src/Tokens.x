@@ -46,9 +46,11 @@ tokens :-
   "@" @id $white_no_nl* "..." { \s -> TokenLabel (takeWhile isAlphaNum (tail s)) }
   @id { \s -> 
       let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "not"]
-          builtins = ["print", "printList", "printRefs"]
-      in if elem s keywords then TokenKeyword s
-          else if elem s builtins then TokenBuiltin s 
+          builtinProcs = ["print", "printList", "printRefs"]
+          builtinFns = ["getRefs"]
+      in if s `elem` keywords then TokenKeyword s
+          else if s `elem` builtinProcs then TokenBuiltinProc s 
+          else if s `elem` builtinFns then TokenBuiltinFn s 
           else TokenIdentifier s 
     }
   $digit+ { \s -> TokenNumber (read s) }
@@ -87,7 +89,8 @@ data Token =
   | TokenLabel String
   | TokenIdentifier String
   | TokenKeyword String
-  | TokenBuiltin String
+  | TokenBuiltinProc String
+  | TokenBuiltinFn String
   | TokenNumber Int
   | TokenError
   deriving (Show, Eq)

@@ -16,7 +16,8 @@ import Tokens
     L { TokenKeyword "L"}
     Pg { TokenKeyword "Pg"}
     not { TokenKeyword "not"}
-    builtin { TokenBuiltin $$ }
+    builtinProc { TokenBuiltinProc $$ }
+    builtinFn { TokenBuiltinFn $$ }
     Nil { TokenKeyword "Nil" }
     lab { TokenLabel $$ }
 
@@ -78,7 +79,7 @@ stmtSep : ';' { () }
       | ','   { () }
 
 stmt : '!' { Stop }
-    | builtin Exp { BuiltinFunc $1 [$2] }
+    | builtinProc Exp { BuiltinProc $1 [$2] }
     | subprogCallSt { $1 }
     | exchangeSt { $1 }
     | predicateSt { $1 }
@@ -141,6 +142,7 @@ Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
     | int                    { Lit $1 }
     | var                    { Var $1 }
     | Nil                    { Nil }
+    | builtinFn Exp        { BuiltinFn $1 [$2] }
 
 
 {
@@ -168,6 +170,7 @@ data Expr
   | Deref Expr
   | MulDeref Expr Expr
   | Nil
+  | BuiltinFn String [Expr]
   deriving (Eq, Show)
 
 data LoopEnd = LoopEndValue Expr | LoopEndCondition Expr deriving (Eq, Show)
@@ -182,7 +185,7 @@ data Statement
   | LoopComplex Expr Expr LoopEnd Expr (Maybe String) (Maybe String)
   | LoopCommon Statement Statement Expr Expr (Maybe String) (Maybe String)
   | SubprogramCall String [Expr] (Maybe String)
-  | BuiltinFunc String [Expr]
+  | BuiltinProc String [Expr]
   | Jump String
   | CompJump Expr
   | Ret
