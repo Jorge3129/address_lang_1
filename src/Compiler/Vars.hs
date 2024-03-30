@@ -11,16 +11,14 @@ import qualified Data.Map as Map
 import Grammar
 import Value.Core
 
-type VarsState = (String, FnVarMap)
-
 collectProgVars :: Program -> FnVarMap
 collectProgVars pg = snd $ collectVars (pLines pg) ("", Map.singleton "" [])
 
-collectVars :: [ProgLine] -> VarsState -> VarsState
+collectVars :: [ProgLine] -> (String, FnVarMap) -> (String, FnVarMap)
 collectVars (l : ls) = collectLineVars l >>> collectVars ls
 collectVars [] = id
 
-collectLineVars :: ProgLine -> VarsState -> VarsState
+collectLineVars :: ProgLine -> (String, FnVarMap) -> (String, FnVarMap)
 collectLineVars (ProgLine {labels = (fnName : _), stmts = args@(Send Nil (Var _) : _)}) (_, varMap) =
   let argVars = nub $ concatMap exprVars (concatMap stmtExprs args)
    in (fnName, Map.insert fnName argVars varMap)
@@ -32,6 +30,20 @@ collectLineVars (ProgLine {stmts}) (fnName, varMap) =
       newVars = nub $ concatMap exprVars (concatMap stmtExprs stmts)
       newSet = nub $ oldSet ++ newVars
    in (fnName, Map.insert fnName newSet varMap)
+
+collectProgFns :: Program -> LineFnMap
+collectProgFns pg = snd $ collectFns (pLines pg) ("", Map.empty)
+
+collectFns :: [ProgLine] -> (String, LineFnMap) -> (String, LineFnMap)
+collectFns (l : ls) = collectLineFns l >>> collectFns ls
+collectFns [] = id
+
+collectLineFns :: ProgLine -> (String, LineFnMap) -> (String, LineFnMap)
+collectLineFns (ProgLine {lineNum, labels = (fnName : _), stmts = (Send Nil (Var _) : _)}) (_, fnMap) =
+  (fnName, Map.insert lineNum fnName fnMap)
+collectLineFns (ProgLine {lineNum, stmts = [Ret]}) (fnName, fnMap) = ("", Map.insert lineNum fnName fnMap)
+collectLineFns (ProgLine {lineNum}) (fnName, varMap) =
+  (fnName, Map.insert lineNum fnName varMap)
 
 compileVars :: [String] -> CompState -> IO CompState
 compileVars vars cs = do

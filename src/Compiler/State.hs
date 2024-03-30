@@ -11,6 +11,8 @@ type LabelOffsetMap = Map String Int
 
 type FnVarMap = Map String [String]
 
+type LineFnMap = Map Int String
+
 data LoopPatch = LoopPatch
   { scopeLabel :: Maybe String,
     nextLabel :: Maybe String,
@@ -26,7 +28,8 @@ data CompState = CompState
     labelOffsetMap :: LabelOffsetMap,
     labelJumpsToPatch :: [(Int, String)],
     loopPatches :: [LoopPatch],
-    csFnVars :: FnVarMap
+    csFnVars :: FnVarMap,
+    csFnMap :: LineFnMap
   }
   deriving (Eq, Show)
 
@@ -38,7 +41,8 @@ initCs =
       labelOffsetMap = Data.Map.empty,
       labelJumpsToPatch = [],
       loopPatches = [],
-      csFnVars = Data.Map.empty
+      csFnVars = Data.Map.empty,
+      csFnMap = Data.Map.empty
     }
 
 emitByte :: Int -> CompState -> CompState

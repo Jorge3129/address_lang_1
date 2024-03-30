@@ -18,7 +18,8 @@ compileProg :: Program -> IO Chunk
 compileProg pg1 = do
   let pg@(Program {pLines}) = numerateLines pg1
       fnVars = collectProgVars pg
-      cs = initCs {csFnVars = fnVars}
+      fnMap = collectProgFns pg
+      cs = initCs {csFnVars = fnVars, csFnMap = fnMap}
   csv <- compileVars (fnVars ! "") cs
   cs1 <- compileLines pLines csv
   let cs2 = patchLabelJumps cs1
