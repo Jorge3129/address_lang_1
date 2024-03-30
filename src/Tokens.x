@@ -12,7 +12,7 @@ $white_no_nl = [\ \t]
 $lf = \n
 $cr = \r
 @eol_pattern = $lf | $cr $lf | $cr $lf
-@id = $letter ($letter | $digit)*
+@id = $letter ($letter | $digit | _)*
 
 tokens :-
   $white_no_nl+ ;
@@ -43,7 +43,7 @@ tokens :-
   "->"      { \_ -> TokenMinusGreater }
   "=>"      { \_ -> TokenEqualGreater }
   "<=>"     { \_ -> TokenLessEqualGreater }
-  "@" @id $white_no_nl* "..." { \s -> TokenLabel (takeWhile isAlphaNum (tail s)) }
+  "@" @id $white_no_nl* "..." { \s -> TokenLabel (takeWhile (\c -> isAlphaNum c || c `elem` "_") (tail s)) }
   @id { \s -> 
       let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "not"]
           builtinProcs = ["print", "printList", "printRefs"]

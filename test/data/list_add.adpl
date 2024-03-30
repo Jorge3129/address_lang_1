@@ -1,26 +1,44 @@
-Pg range { 1, 1, 5, list1 }
+Pg list_range { 1, 1, 5, list1 }
 printList list1
 
 !
-
-@range ... Nil => start, Nil => step, Nil => end, Nil => resAddr
-    Pg listEmpty { 'resAddr }
+// list_range
+// Generates a list containing values within a given range
+//
+// Args:
+//  'start: starting value of the range
+//  'step: the step for the range
+//  'end: the end value of the range (exclusive)
+//  'resAddr: the address of the head of the generated list 
+@list_range ... Nil => start, Nil => step, Nil => end, Nil => resAddr
+    Pg list_empty { 'resAddr }
     L { 'start ('step) 'end - 1 => i } l1
-        Pg listAdd { 'i, 'resAddr }
+        Pg list_add { 'i, 'resAddr }
     @l1 ...
     Ret
 
-@listEmpty ... Nil => targetAddr
+// list_empty
+// Creates an empty list []
+//
+// Args:
+//  'targetAddr: the address of the head of the new list 
+@list_empty ... Nil => targetAddr
     0 => 'targetAddr
     Ret
 
-@listAdd ... Nil => val, Nil => listAddr
+// list_add
+// Adds an element to a list
+//
+// Args:
+//  'val: the value to add to list
+//  'listAddr: the address of the head of the list 
+@list_add ... Nil => val, Nil => listAddr
     h = 'listAddr
-    P { 'h == 0 } caseEmpty | caseNonEmpty
-    @caseEmpty ...
+    P { 'h == 0 } then | else
+    @then ...
         curAddr = h;
         end
-    @caseNonEmpty ...
+    @else ...
         L { 'h, 'Nil, P { ''j /= 0 } => j } l1
         @l1 ...
         curAddr = 'j;
