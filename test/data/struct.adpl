@@ -1,0 +1,25 @@
+Pg Rect { 2, 3, rect1 }
+Pg Rect { 8, 6, rect2 }
+print ''rect1
+print ''rect2
+
+Pg rect_area { 'rect1, rect1_area }
+Pg rect_area { 'rect2, rect2_area }
+
+print 'rect1_area
+print 'rect2_area
+
+!
+
+@Rect ... Nil => height, Nil => width, Nil => res_addr
+    new_addr = alloc 2
+    'height => new_addr + 0
+    'width => new_addr + 1
+    new_addr => 'res_addr + 0
+    Ret
+
+@rect_area ... Nil => rect_addr, Nil => res_addr
+    height = '('rect_addr)
+    width = '('rect_addr + 1)
+    height * width => 'res_addr
+    Ret
