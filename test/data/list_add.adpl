@@ -1,13 +1,14 @@
-Pg listEmpty { list1 }
-printList list1
-Pg listAdd { 1, list1 }
-printList list1
-Pg listAdd { 2, list1 }
-printList list1
-Pg listAdd { 3, list1 }
+Pg range { 1, 1, 5, list1 }
 printList list1
 
 !
+
+@range ... Nil => start, Nil => step, Nil => end, Nil => resAddr
+    Pg listEmpty { 'resAddr }
+    L { 'start ('step) 'end - 1 => i } rangeLoop
+        Pg listAdd { 'i, 'resAddr }
+    @rangeLoop ...
+    Ret
 
 @listEmpty ... Nil => targetAddr
     0 => 'targetAddr
@@ -22,8 +23,8 @@ printList list1
         listAddCommon
 
     @listAddNonEmpty ...
-        L { 'h, 'Nil, P { ''j /= 0 } => j } b
-        @b ...
+        L { 'h, 'Nil, P { ''j /= 0 } => j } listAddLoop
+        @listAddLoop ...
         curAddr = 'j;
         listAddCommon
 
