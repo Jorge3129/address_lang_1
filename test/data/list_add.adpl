@@ -2,9 +2,7 @@ Pg list_range { 1, 1, 5, list1 }
 printList list1
 
 !
-// list_range
 // Generates a list containing values within a given range
-//
 // Args:
 //  'start: starting value of the range
 //  'step: the step for the range
@@ -17,18 +15,14 @@ printList list1
     @l1 ...
     Ret
 
-// list_empty
 // Creates an empty list []
-//
 // Args:
 //  'targetAddr: the address of the head of the new list 
 @list_empty ... Nil => targetAddr
     0 => 'targetAddr
     Ret
 
-// list_add
 // Adds an element to a list
-//
 // Args:
 //  'val: the value to add to list
 //  'listAddr: the address of the head of the list 
