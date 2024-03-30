@@ -25,6 +25,7 @@ compileProg pg1 = do
   let cs2 = patchLabelJumps cs1
       ch = curChunk cs2
       ch1 = ch {chLabelMap = labelOffsetMap cs2}
+  print $ labelOffsetMap cs2
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
 
 numerateLines :: Program -> Program
@@ -56,9 +57,9 @@ patchLoops (lp : lps) pl@(ProgLine {labels}) cs =
 patchLoops [] _ cs = cs
 
 compileLineLabels :: [String] -> CompState -> CompState
-compileLineLabels lbls cs@(CompState {labelOffsetMap, curChunk}) =
-  let offset = length $ code $ curChunk
-      newLblMap = foldl' (\lblMap lbl -> insert lbl offset lblMap) labelOffsetMap lbls
+compileLineLabels lbls cs@(CompState {labelOffsetMap}) =
+  let offset = curChunkCount cs
+      newLblMap = foldl' (\lblMap lbl -> insert (scopedLabel lbl cs) offset lblMap) labelOffsetMap lbls
    in cs {labelOffsetMap = newLblMap}
 
 compileStmts :: [Statement] -> CompState -> IO CompState
@@ -110,7 +111,7 @@ compileStmt (Exchange a b) cs = do
   return $ emitOpCode OP_EXCHANGE cs2
 --
 compileStmt (Jump lbl) cs = do
-  let cs1 = addLabelPatch (curChunkCount cs) lbl cs
+  let cs1 = addLabelPatch (curChunkCount cs) (scopedLabel lbl cs) cs
       cs2 = emitOpCode OP_JUMP cs1
   return $ emitByte 0 cs2
 --

@@ -39,8 +39,8 @@ collectFns (l : ls) = collectLineFns l >>> collectFns ls
 collectFns [] = id
 
 collectLineFns :: ProgLine -> (String, LineFnMap) -> (String, LineFnMap)
-collectLineFns (ProgLine {lineNum, labels = (fnName : _), stmts = (Send Nil (Var _) : _)}) (_, fnMap) =
-  (fnName, Map.insert lineNum fnName fnMap)
+collectLineFns (ProgLine {lineNum, labels = (fnName : _), stmts = (Send Nil (Var _) : _)}) (prevFnName, fnMap) =
+  (fnName, Map.insert lineNum prevFnName fnMap)
 collectLineFns (ProgLine {lineNum, stmts = [Ret]}) (fnName, fnMap) = ("", Map.insert lineNum fnName fnMap)
 collectLineFns (ProgLine {lineNum}) (fnName, varMap) =
   (fnName, Map.insert lineNum fnName varMap)
@@ -63,3 +63,10 @@ compileVarInit name cs =
       (cs2, constant) = addConstantToCs (StringVal name) cs1
       cs3 = emitOpCode OP_SET_VAR cs2
    in emitByte constant cs3
+
+scopedLabel :: String -> CompState -> String
+scopedLabel lbl (CompState {curLine, csFnMap}) =
+  let curFn = csFnMap Map.! curLine
+   in if null curFn
+        then lbl
+        else curFn ++ "." ++ lbl

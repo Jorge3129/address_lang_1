@@ -5,9 +5,9 @@ printList list1
 
 @range ... Nil => start, Nil => step, Nil => end, Nil => resAddr
     Pg listEmpty { 'resAddr }
-    L { 'start ('step) 'end - 1 => i } rangeLoop
+    L { 'start ('step) 'end - 1 => i } l1
         Pg listAdd { 'i, 'resAddr }
-    @rangeLoop ...
+    @l1 ...
     Ret
 
 @listEmpty ... Nil => targetAddr
@@ -16,19 +16,16 @@ printList list1
 
 @listAdd ... Nil => val, Nil => listAddr
     h = 'listAddr
-    P { 'h == 0 } listAddEmpty | listAddNonEmpty
-
-    @listAddEmpty ...
+    P { 'h == 0 } caseEmpty | caseNonEmpty
+    @caseEmpty ...
         curAddr = h;
-        listAddCommon
-
-    @listAddNonEmpty ...
-        L { 'h, 'Nil, P { ''j /= 0 } => j } listAddLoop
-        @listAddLoop ...
+        end
+    @caseNonEmpty ...
+        L { 'h, 'Nil, P { ''j /= 0 } => j } l1
+        @l1 ...
         curAddr = 'j;
-        listAddCommon
-
-    @listAddCommon ...
+        end
+    @end ...
         nextNode = alloc 2;
         nextNode => curAddr
         'val => nextNode + 1
