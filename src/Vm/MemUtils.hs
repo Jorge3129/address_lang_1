@@ -2,6 +2,7 @@
 
 module Vm.MemUtils where
 
+import Data.List (foldl')
 import qualified Data.Map as Map
 import Value.Core
 import Vm.State
@@ -18,19 +19,50 @@ allocN n values = allocHelper values 0 0
       | x == NilVal = allocHelper xs (currentIndex + 1) (count + 1)
       | otherwise = allocHelper xs (currentIndex + 1) 0
 
+allocNInit :: Int -> VM -> (Int, VM)
+allocNInit n vm =
+  let freeAddr = allocN n (memory vm)
+      vm1 =
+        foldl'
+          ( \vm_ offset ->
+              memSet (freeAddr + offset) 0 vm_
+          )
+          vm
+          [0 .. (n - 1)]
+   in (freeAddr, vm1)
+
 parseList :: Value -> VM -> [Value]
 parseList val vm =
   let firstAddr = asInt $ memory vm !! asInt val
    in if firstAddr == 0
         then []
         else parseList' firstAddr [] vm
+  where
+    parseList' :: Int -> [Value] -> VM -> [Value]
+    parseList' 0 acc _ = acc
+    parseList' curAddr acc vm_ =
+      let nextAddr = asInt $ memory vm_ !! curAddr
+          curVal = memory vm_ !! (curAddr + 1)
+       in parseList' nextAddr (acc ++ [curVal]) vm_
 
-parseList' :: Int -> [Value] -> VM -> [Value]
-parseList' 0 acc _ = acc
-parseList' curAddr acc vm =
-  let nextAddr = asInt $ memory vm !! curAddr
-      curVal = memory vm !! (curAddr + 1)
-   in parseList' nextAddr (acc ++ [curVal]) vm
+constructList :: [Value] -> VM -> IO (Value, VM)
+constructList [] vm = do
+  let (freeAddr, vm1) = allocNInit 1 vm
+  return (PointerVal freeAddr, vm1)
+--
+constructList vals vm = do
+  let (freeAddr, vm1) = allocNInit 1 vm
+  vm2 <- consList' freeAddr vals vm1
+  return (PointerVal freeAddr, vm2)
+  where
+    consList' :: Int -> [Value] -> VM -> IO VM
+    consList' prevAddr (x : xs) vm_ = do
+      let newAddr = allocN 2 (memory vm_)
+          vm1_ = memSet prevAddr (PointerVal newAddr) vm_
+          vm2_ = memSet newAddr (PointerVal 0) vm1_
+          vm3_ = memSet (newAddr + 1) x vm2_
+      consList' newAddr xs vm3_
+    consList' _ [] vm_ = return vm_
 
 freeVars :: VM -> VM
 freeVars vm =

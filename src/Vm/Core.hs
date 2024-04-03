@@ -81,19 +81,24 @@ execInstruction OP_PRINT_REFS vm = do
   putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
   return' newVm
 --
+-- execInstruction OP_GET_REFS vm = do
+--   let (addr, vm1) = popMap asInt vm
+--   let refs = getRefsToAddr addr vm
+--       n = length refs
+--       arrStart = allocN n (memory vm)
+--       vm2 =
+--         foldl'
+--           ( \vm_ offset ->
+--               memSet (arrStart + offset) (IntVal (refs !! offset)) vm_
+--           )
+--           vm1
+--           [0 .. (n - 1)]
+--   return' $ push vm2 (PointerVal arrStart)
 execInstruction OP_GET_REFS vm = do
   let (addr, vm1) = popMap asInt vm
   let refs = getRefsToAddr addr vm
-      n = length refs
-      arrStart = allocN n (memory vm)
-      vm2 =
-        foldl'
-          ( \vm_ offset ->
-              memSet (arrStart + offset) (IntVal (refs !! offset)) vm_
-          )
-          vm1
-          [0 .. (n - 1)]
-  return' $ push vm2 (PointerVal arrStart)
+  (listHead, vm2) <- constructList (map IntVal refs) vm1
+  return' $ push vm2 listHead
 --
 execInstruction OP_SEND vm = do
   let (addr, vm1) = popMap asInt vm
@@ -177,14 +182,12 @@ execInstruction OP_MAKE_POINTER vm = do
   return' $ memSet addr (asPointer oldVal) vm
 --
 execInstruction OP_ALLOC vm = do
-  let freeAddr = allocN 1 (memory vm)
-      vm1 = memSet freeAddr 0 vm
+  let (freeAddr, vm1) = allocNInit 1 vm
   return' $ push vm1 (IntVal freeAddr)
 --
 execInstruction OP_ALLOC_N vm = do
   let (n, vm1) = popMap asInt vm
-      freeAddr = allocN 1 (memory vm)
-      vm2 = foldl' (\vm_ offset -> memSet (freeAddr + offset) 0 vm_) vm1 [0 .. (n - 1)]
+      (freeAddr, vm2) = allocNInit n vm1
   return' $ push vm2 (PointerVal freeAddr)
 --
 execInstruction OP_CALL vm = do
