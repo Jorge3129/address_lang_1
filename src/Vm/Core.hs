@@ -81,23 +81,10 @@ execInstruction OP_PRINT_REFS vm = do
   putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
   return' newVm
 --
--- execInstruction OP_GET_REFS vm = do
---   let (addr, vm1) = popMap asInt vm
---   let refs = getRefsToAddr addr vm
---       n = length refs
---       arrStart = allocN n (memory vm)
---       vm2 =
---         foldl'
---           ( \vm_ offset ->
---               memSet (arrStart + offset) (IntVal (refs !! offset)) vm_
---           )
---           vm1
---           [0 .. (n - 1)]
---   return' $ push vm2 (PointerVal arrStart)
 execInstruction OP_GET_REFS vm = do
   let (addr, vm1) = popMap asInt vm
   let refs = getRefsToAddr addr vm
-  (listHead, vm2) <- constructList (map IntVal refs) vm1
+  let (listHead, vm2) = constructList (map IntVal refs) vm1
   return' $ push vm2 listHead
 --
 execInstruction OP_SEND vm = do

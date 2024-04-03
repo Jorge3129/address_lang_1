@@ -45,24 +45,23 @@ parseList val vm =
           curVal = memory vm_ !! (curAddr + 1)
        in parseList' nextAddr (acc ++ [curVal]) vm_
 
-constructList :: [Value] -> VM -> IO (Value, VM)
-constructList [] vm = do
+constructList :: [Value] -> VM -> (Value, VM)
+constructList [] vm =
   let (freeAddr, vm1) = allocNInit 1 vm
-  return (PointerVal freeAddr, vm1)
---
-constructList vals vm = do
+   in (PointerVal freeAddr, vm1)
+constructList vals vm =
   let (freeAddr, vm1) = allocNInit 1 vm
-  vm2 <- consList' freeAddr vals vm1
-  return (PointerVal freeAddr, vm2)
+      vm2 = consList' freeAddr vals vm1
+   in (PointerVal freeAddr, vm2)
   where
-    consList' :: Int -> [Value] -> VM -> IO VM
-    consList' prevAddr (x : xs) vm_ = do
+    consList' :: Int -> [Value] -> VM -> VM
+    consList' prevAddr (x : xs) vm_ =
       let newAddr = allocN 2 (memory vm_)
           vm1_ = memSet prevAddr (PointerVal newAddr) vm_
           vm2_ = memSet newAddr (PointerVal 0) vm1_
           vm3_ = memSet (newAddr + 1) x vm2_
-      consList' newAddr xs vm3_
-    consList' _ [] vm_ = return vm_
+       in consList' newAddr xs vm3_
+    consList' _ [] vm_ = vm_
 
 freeVars :: VM -> VM
 freeVars vm =
