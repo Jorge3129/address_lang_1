@@ -29,6 +29,7 @@ data OpCode
   | OP_GET_VAR
   | OP_ALLOC
   | OP_ALLOC_N
+  | OP_GET_REFS
   | OP_MAKE_VAR_POINTER
   | OP_MAKE_POINTER
   | OP_CALL

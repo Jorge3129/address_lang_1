@@ -1,0 +1,10 @@
+root = 100
+0 => c1
+0 => c2
+c1 = 100
+c2 = 100
+
+rootRefs = getRefs root
+L { 0 (1) 1 => i } a
+    print '(rootRefs + 'i )
+@a...

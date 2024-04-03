@@ -31,7 +31,7 @@ runStep (vm, _) = do
   (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) newVm) (handler lineNum)
   -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
-  -- print $ map (second (memory resVM !!)) (toList (varsMap resVM))
+  -- print $ map (second (memory resVM !!)) (Map.toList (varsMap resVM))
   -- print $ vmCalls resVM
   -- print $ stack resVM
   return (resVM, intRes)
@@ -41,26 +41,6 @@ runStep (vm, _) = do
       putStrLn $ "Runtime error at line " ++ show lineNum
       putStrLn msg
       return (vm, Just RUNTIME_ERR)
-
-freeVars :: VM -> VM
-freeVars vm =
-  let curScope = length (vmCalls vm)
-      locals = [addr | (varName, addr) <- Map.toList (varsMap vm), getVarScope varName == curScope]
-   in vm {memory = [if addr `elem` locals then NilVal else val | (addr, val) <- zip [0 ..] (memory vm)]}
-
-parseList :: Value -> VM -> [Value]
-parseList val vm =
-  let firstAddr = asInt $ memory vm !! asInt val
-   in if firstAddr == 0
-        then []
-        else parseList' firstAddr [] vm
-
-parseList' :: Int -> [Value] -> VM -> [Value]
-parseList' 0 acc _ = acc
-parseList' curAddr acc vm =
-  let nextAddr = asInt $ memory vm !! curAddr
-      curVal = memory vm !! (curAddr + 1)
-   in parseList' nextAddr (acc ++ [curVal]) vm
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm@(VM {vmCalls = []}) = returnOk vm
@@ -97,9 +77,23 @@ execInstruction OP_PRINT_LIST vm = do
 --
 execInstruction OP_PRINT_REFS vm = do
   let (addr, newVm) = popMap asInt vm
-  let refs = [i | (c, i) <- zip (memory vm) [0 :: Int ..], isPointer c && asInt c == addr]
+  let refs = getRefsToAddr addr vm
   putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
   return' newVm
+--
+execInstruction OP_GET_REFS vm = do
+  let (addr, vm1) = popMap asInt vm
+  let refs = getRefsToAddr addr vm
+      n = length refs
+      arrStart = allocN n (memory vm)
+      vm2 =
+        foldl'
+          ( \vm_ offset ->
+              memSet (arrStart + offset) (IntVal (refs !! offset)) vm_
+          )
+          vm1
+          [0 .. (n - 1)]
+  return' $ push vm2 (PointerVal arrStart)
 --
 execInstruction OP_SEND vm = do
   let (addr, vm1) = popMap asInt vm

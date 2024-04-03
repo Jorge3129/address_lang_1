@@ -2,7 +2,9 @@
 
 module Vm.MemUtils where
 
+import qualified Data.Map as Map
 import Value.Core
+import Vm.State
 
 allocN :: Int -> [Value] -> Int
 allocN n values = allocHelper values 0 0
@@ -16,19 +18,25 @@ allocN n values = allocHelper values 0 0
       | x == NilVal = allocHelper xs (currentIndex + 1) (count + 1)
       | otherwise = allocHelper xs (currentIndex + 1) 0
 
--- allocNewVal :: [Value] -> Int
--- allocNewVal mem =
---   let freeStart = findFreeCells mem
---    in case freeStart of
---         (Just start) -> start + 1
---         Nothing -> error $ "Out of free memory"
+parseList :: Value -> VM -> [Value]
+parseList val vm =
+  let firstAddr = asInt $ memory vm !! asInt val
+   in if firstAddr == 0
+        then []
+        else parseList' firstAddr [] vm
 
--- findFreeCells :: [Value] -> Maybe Int
--- findFreeCells = findZeros 0
---   where
---     findZeros _ [] = Nothing
---     findZeros _ [_] = Nothing
---     findZeros _ [_, _] = Nothing
---     findZeros index (x : y : z : xs)
---       | x == NilVal && y == NilVal && z == NilVal = Just index
---       | otherwise = findZeros (index + 1) (y : z : xs)
+parseList' :: Int -> [Value] -> VM -> [Value]
+parseList' 0 acc _ = acc
+parseList' curAddr acc vm =
+  let nextAddr = asInt $ memory vm !! curAddr
+      curVal = memory vm !! (curAddr + 1)
+   in parseList' nextAddr (acc ++ [curVal]) vm
+
+freeVars :: VM -> VM
+freeVars vm =
+  let curScope = length (vmCalls vm)
+      locals = [addr | (varName, addr) <- Map.toList (varsMap vm), getVarScope varName == curScope]
+   in vm {memory = [if addr `elem` locals then NilVal else val | (addr, val) <- zip [0 ..] (memory vm)]}
+
+getRefsToAddr :: Int -> VM -> [Int]
+getRefsToAddr addr vm = [i | (c, i) <- zip (memory vm) [0 :: Int ..], isPointer c && asInt c == addr]

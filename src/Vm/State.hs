@@ -37,7 +37,7 @@ initVM ch =
     { chunk = ch,
       ip = 0,
       stack = [],
-      memory = replicate memMax NilVal,
+      memory = 0 : replicate (memMax - 1) NilVal,
       varsMap = Data.Map.empty,
       vmCalls = []
     }
