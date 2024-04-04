@@ -9,7 +9,6 @@ c3 = 100
 c4 = 100
 
 rootRefs = getRefs root
-printList rootRefs
-// L { 0 (1) 1 => i } a
-//     print '(rootRefs + 'i )
-// @a...
+L { 'rootRefs, 'Nil, P { 'i /= 0 } => i } b
+    print '('i + 1)
+@b ...

@@ -8,7 +8,6 @@ data Value
   | DoubleVal !Double
   | StringVal !String
   | NilVal
-  deriving (Eq)
 
 instance Show Value where
   show (IntVal v) = show v
@@ -16,6 +15,27 @@ instance Show Value where
   show (DoubleVal v) = show v
   show (StringVal s) = s
   show NilVal = "N"
+
+instance Eq Value where
+  (==) :: Value -> Value -> Bool
+  -- a + a
+  (==) (IntVal a) (IntVal b) = a == b
+  (==) (DoubleVal a) (DoubleVal b) = a == b
+  (==) (PointerVal a) (PointerVal b) = a == b
+  (==) (StringVal a) (StringVal b) = a == b
+  (==) NilVal NilVal = True
+  -- Int + Double
+  (==) (IntVal a) (DoubleVal b) = fromIntegral a == b
+  (==) (DoubleVal a) (IntVal b) = a == fromIntegral b
+  -- Int + Pointer
+  (==) (IntVal a) (PointerVal b) = a == b
+  (==) (PointerVal a) (IntVal b) = a == b
+  -- Pointer + Double
+  (==) (PointerVal a) (DoubleVal b) = fromIntegral a == b
+  (==) (DoubleVal a) (PointerVal b) = a == fromIntegral b
+  (==) _ _ = False
+
+-- (==) a b = error $ "cannot check equality for " ++ show a ++ " and " ++ show b
 
 instance Ord Value where
   compare :: Value -> Value -> Ordering
