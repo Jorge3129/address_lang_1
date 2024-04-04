@@ -1,8 +1,8 @@
 Pg create_root { 10, root }
 
 Pg insert { 5, 'root }
-Pg insert { 15, 'root }
 Pg insert { 2, 'root }
+Pg insert { 15, 'root }
 Pg insert { 8, 'root }
 
 Pg traverse { 'root }
@@ -28,20 +28,16 @@ Pg traverse { 'root }
 @insert ... Nil => val, Nil => node
     node_addr = 'node
     node_val = '(node_addr + 1)
+
     P { 'val == node_val } Ret |
 
-    children = getRefs node_addr
-    left = 0
-    right = 0
-    L { 'children, 'Nil, P { 'i /= 0 } => i } b
-        child_addr = '('i + 1)
-        child_val = '(child_addr + 1)
-        P { child_val < node_val } left = child_addr | right = child_addr
-    @b ...
+    // print 'val
+    Pg find_children { node_addr, left, right }
+    // print 'val
 
     is_left = 'val < node_val
 
-    P { is_left } cur_child = left | cur_child = right
+    P { is_left } cur_child = 'left | cur_child = 'right
 
     P { cur_child == 0 } case_create | case_insert
     @case_create ...
@@ -58,6 +54,26 @@ Pg traverse { 'root }
     node_addr = 'node
     node_val = '(node_addr + 1)
 
+    Pg find_children { node_addr, left, right }
+
+    P { 'left /= 0 } case_left | case_left_end
+    @case_left ...
+        Pg traverse { 'left }
+    @case_left_end ...
+
+    print node_val
+
+    P { 'right /= 0 } case_right | case_right_end
+    @case_right ...
+        Pg traverse { 'right }
+    @case_right_end ...
+    Ret
+
+@find_children ... Nil => node, Nil => left_addr, Nil => right_addr
+    node_addr = 'node
+    node_val = '(node_addr + 1)
+    // print node_val
+
     children = getRefs node_addr
     left = 0
     right = 0
@@ -67,15 +83,9 @@ Pg traverse { 'root }
         P { child_val < node_val } left = child_addr | right = child_addr
     @b ...
 
-    P { left /= 0 } case_left | case_left_end
-    @case_left ...
-        Pg traverse { left }
-    @case_left_end ...
+    // print left
+    // print right
 
-    print node_val
-
-    P { right /= 0 } case_right | case_right_end
-    @case_right ...
-        Pg traverse { right }
-    @case_right_end ...
+    left => 'left_addr + 0
+    right => 'right_addr + 0
     Ret

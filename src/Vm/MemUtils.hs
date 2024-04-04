@@ -64,10 +64,12 @@ constructList vals vm =
     consList' _ [] vm_ = vm_
 
 freeVars :: VM -> VM
-freeVars vm =
-  let curScope = length (vmCalls vm)
-      locals = [addr | (varName, addr) <- Map.toList (varsMap vm), getVarScope varName == curScope]
-   in vm {memory = [if addr `elem` locals then NilVal else val | (addr, val) <- zip [0 ..] (memory vm)]}
+freeVars vm = vm
+
+-- freeVars vm =
+--   let curScope = length (vmCalls vm)
+--       locals = [addr | (varName, addr) <- Map.toList (varsMap vm), getVarScope varName == curScope]
+--    in vm {memory = [if addr `elem` locals then NilVal else val | (addr, val) <- zip [0 ..] (memory vm)]}
 
 getRefsToAddr :: Int -> VM -> [Int]
 getRefsToAddr addr vm = [i | (c, i) <- zip (memory vm) [0 :: Int ..], isPointer c && asInt c == addr]
