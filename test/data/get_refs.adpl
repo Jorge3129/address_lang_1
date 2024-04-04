@@ -31,9 +31,7 @@ Pg traverse { 'root }
 
     P { 'val == node_val } Ret |
 
-    // print 'val
     Pg find_children { node_addr, left, right }
-    // print 'val
 
     is_left = 'val < node_val
 
@@ -72,7 +70,6 @@ Pg traverse { 'root }
 @find_children ... Nil => node, Nil => left_addr, Nil => right_addr
     node_addr = 'node
     node_val = '(node_addr + 1)
-    // print node_val
 
     children = getRefs node_addr
     left = 0
@@ -83,9 +80,6 @@ Pg traverse { 'root }
         P { child_val < node_val } left = child_addr | right = child_addr
     @b ...
 
-    // print left
-    // print right
-
-    left => 'left_addr + 0
-    right => 'right_addr + 0
+    left => 'left_addr
+    right => 'right_addr
     Ret
