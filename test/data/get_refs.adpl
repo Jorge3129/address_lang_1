@@ -1,10 +1,5 @@
 Pg create_root { 10, root }
 
-// Pg create_child { 5, 'root, c1 }
-// Pg create_child { 15, 'root, c2 }
-
-// Pg create_child { 2, 'c1, c1_c1 }
-// Pg create_child { 8, 'c1, c1_c2 }
 Pg insert { 5, 'root }
 Pg insert { 15, 'root }
 Pg insert { 2, 'root }
@@ -46,25 +41,15 @@ Pg traverse { 'root }
 
     is_left = 'val < node_val
 
-    P { is_left } case_left | case_right
+    P { is_left } cur_child = left | cur_child = right
 
-    @case_left ...
-        P { left == 0 } case_create_left | case_insert_left
-        @case_create_left ...
-            Pg create_child { 'val, node_addr, left_new }
-            end
-        @case_insert_left ...
-            Pg insert { 'val, left }
-            end
-
-    @case_right ...
-        P { right == 0 } case_create_right | case_insert_right
-        @case_create_right ...
-            Pg create_child { 'val, node_addr, right_new }
-            end
-        @case_insert_right ...
-            Pg insert { 'val, right }
-            end
+    P { cur_child == 0 } case_create | case_insert
+    @case_create ...
+        Pg create_child { 'val, node_addr, cur_child_new }
+        end
+    @case_insert ...
+        Pg insert { 'val, cur_child }
+        end
 
     @end ...
     Ret
