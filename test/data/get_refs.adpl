@@ -1,31 +1,64 @@
-root = 100
+Pg create_root { 10, root }
 
-// c1 = (alloc 2) + 0
-// alloc 1 => c1 + 0
-// root => c1 + 0
-// 2 => c1 + 1
-Pg create_child { 2, root, c1 }
-Pg create_child { 3, root, c2 }
-print 'c1
-print 'c2
+Pg create_child { 5, 'root, c1 }
+Pg create_child { 15, 'root, c2 }
 
-Pg create_child { 4, 'c1, c1_c1 }
-Pg create_child { 5, 'c2, c1_c1 }
-print 'c1_c1
-print 'c1_c1
+Pg create_child { 2, 'c1, c1_c1 }
+Pg create_child { 8, 'c1, c1_c2 }
 
-rootRefs = getRefs root
-L { 'rootRefs, 'Nil, P { 'i /= 0 } => i } b
-    print '('i + 1)
-@b ...
+// L { '(getRefs 'root), 'Nil, P { 'i /= 0 } => i } b
+//     print '('i + 1)
+// @b ...
+
+// rootRefs = getRefs 'root
+// L { '(getRefs 'c1), 'Nil, P { 'i /= 0 } => i } b
+//     print '('i + 1)
+// @b ...
+Pg traverse { 'root }
 
 !
+
+@create_root ... Nil => val, Nil => res_addr
+    c1 = (alloc 2) + 0
+    alloc 1 => c1 + 0
+    0 => c1 + 0
+    'val => c1 + 1
+    c1 => 'res_addr
+    Ret
+
 @create_child ... Nil => val, Nil => parent_addr, Nil => res_addr
     c1 = (alloc 2) + 0
     alloc 1 => c1 + 0
     'parent_addr => c1 + 0
     'val => c1 + 1
     c1 => 'res_addr
+    Ret
+
+@traverse ... Nil => node
+    node_addr = 'node
+    node_val = '(node_addr + 1)
+
+    children = getRefs node_addr
+    left = 0
+    right = 0
+    L { 'children, 'Nil, P { 'i /= 0 } => i } b
+        child_addr = '('i + 1)
+        child_val = '(child_addr + 1)
+        // print child_val
+        P { child_val < node_val } left = child_addr | right = child_addr
+    @b ...
+
+    P { left /= 0 } case_left | case_left_end
+    @case_left ...
+        Pg traverse { left }
+    @case_left_end ...
+
+    print node_val
+
+    P { right /= 0 } case_right | case_right_end
+    @case_right ...
+        Pg traverse { right }
+    @case_right_end ...
     Ret
 
 @insert ... Nil => val, Nil => node
