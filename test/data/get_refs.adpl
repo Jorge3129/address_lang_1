@@ -1,19 +1,15 @@
 Pg create_root { 10, root }
 
-Pg create_child { 5, 'root, c1 }
-Pg create_child { 15, 'root, c2 }
+// Pg create_child { 5, 'root, c1 }
+// Pg create_child { 15, 'root, c2 }
 
-Pg create_child { 2, 'c1, c1_c1 }
-Pg create_child { 8, 'c1, c1_c2 }
+// Pg create_child { 2, 'c1, c1_c1 }
+// Pg create_child { 8, 'c1, c1_c2 }
+Pg insert { 5, 'root }
+Pg insert { 15, 'root }
+Pg insert { 2, 'root }
+Pg insert { 8, 'root }
 
-// L { '(getRefs 'root), 'Nil, P { 'i /= 0 } => i } b
-//     print '('i + 1)
-// @b ...
-
-// rootRefs = getRefs 'root
-// L { '(getRefs 'c1), 'Nil, P { 'i /= 0 } => i } b
-//     print '('i + 1)
-// @b ...
 Pg traverse { 'root }
 
 !
@@ -34,6 +30,45 @@ Pg traverse { 'root }
     c1 => 'res_addr
     Ret
 
+@insert ... Nil => val, Nil => node
+    node_addr = 'node
+    node_val = '(node_addr + 1)
+    P { 'val == node_val } Ret |
+
+    children = getRefs node_addr
+    left = 0
+    right = 0
+    L { 'children, 'Nil, P { 'i /= 0 } => i } b
+        child_addr = '('i + 1)
+        child_val = '(child_addr + 1)
+        P { child_val < node_val } left = child_addr | right = child_addr
+    @b ...
+
+    is_left = 'val < node_val
+
+    P { is_left } case_left | case_right
+
+    @case_left ...
+        P { left == 0 } case_create_left | case_insert_left
+        @case_create_left ...
+            Pg create_child { 'val, node_addr, left_new }
+            end
+        @case_insert_left ...
+            Pg insert { 'val, left }
+            end
+
+    @case_right ...
+        P { right == 0 } case_create_right | case_insert_right
+        @case_create_right ...
+            Pg create_child { 'val, node_addr, right_new }
+            end
+        @case_insert_right ...
+            Pg insert { 'val, right }
+            end
+
+    @end ...
+    Ret
+
 @traverse ... Nil => node
     node_addr = 'node
     node_val = '(node_addr + 1)
@@ -44,7 +79,6 @@ Pg traverse { 'root }
     L { 'children, 'Nil, P { 'i /= 0 } => i } b
         child_addr = '('i + 1)
         child_val = '(child_addr + 1)
-        // print child_val
         P { child_val < node_val } left = child_addr | right = child_addr
     @b ...
 
@@ -59,17 +93,4 @@ Pg traverse { 'root }
     @case_right ...
         Pg traverse { right }
     @case_right_end ...
-    Ret
-
-@insert ... Nil => val, Nil => node
-    node_addr = 'node
-    node_val = '(node_addr + 1)
-    P { 'val == node_val } Ret |
-    children = getRefs node_addr
-    left = 0
-    right = 0
-    L { 'children, 'Nil, P { 'i /= 0 } => i } b
-        child_addr = '('i + 1)
-        child_val = '(child_val + 1)
-    @b ...
     Ret
