@@ -1,14 +1,42 @@
 root = 100
-0 => c1
-0 => c2
-0 => c3
-0 => c4
-c1 = 100
-c2 = 100
-c3 = 100
-c4 = 100
+
+// c1 = (alloc 2) + 0
+// alloc 1 => c1 + 0
+// root => c1 + 0
+// 2 => c1 + 1
+Pg create_child { 2, root, c1 }
+Pg create_child { 3, root, c2 }
+print 'c1
+print 'c2
+
+Pg create_child { 4, 'c1, c1_c1 }
+Pg create_child { 5, 'c2, c1_c1 }
+print 'c1_c1
+print 'c1_c1
 
 rootRefs = getRefs root
 L { 'rootRefs, 'Nil, P { 'i /= 0 } => i } b
     print '('i + 1)
 @b ...
+
+!
+@create_child ... Nil => val, Nil => parent_addr, Nil => res_addr
+    c1 = (alloc 2) + 0
+    alloc 1 => c1 + 0
+    'parent_addr => c1 + 0
+    'val => c1 + 1
+    c1 => 'res_addr
+    Ret
+
+@insert ... Nil => val, Nil => node
+    node_addr = 'node
+    node_val = '(node_addr + 1)
+    P { 'val == node_val } Ret |
+    children = getRefs node_addr
+    left = 0
+    right = 0
+    L { 'children, 'Nil, P { 'i /= 0 } => i } b
+        child_addr = '('i + 1)
+        child_val = '(child_val + 1)
+    @b ...
+    Ret
