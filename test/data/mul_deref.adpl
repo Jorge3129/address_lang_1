@@ -1,10 +1,17 @@
-Pg list_range { 1, 1, 5, list1 }
+
+
+Pg list_range { 2, 2, 10, list1 }
 printList list1
+
+L { 1(1)5 => i} b
+    n = 'i
+    print '(`n`list1 + 1)
+@b ...
 
 !
 @list_range ... Nil => start, Nil => step, Nil => end, Nil => resAddr
     Pg list_empty { 'resAddr }
-    L { 'start ('step) 'end - 1 => i } l1
+    L { 'start ('step) 'end => i } l1
         Pg list_add { 'i, 'resAddr }
     @l1 ...
     Ret

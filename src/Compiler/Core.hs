@@ -197,14 +197,18 @@ compileExpr (Deref ex) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_DEREF cs1
 --
+compileExpr (MulDeref countEx innerEx) cs = do
+  cs1 <- compileExpr countEx cs
+  cs2 <- compileExpr innerEx cs1
+  return $ emitOpCode OP_MUL_DEREF cs2
+--
 compileExpr (Var name) cs = do
   let (cs1, constant) = addConstantToCs (StringVal name) cs
       cs2 = emitOpCode OP_GET_VAR cs1
       cs3 = emitByte constant cs2
   return cs3
 --
-compileExpr Nil cs = do
-  return cs
+compileExpr Nil cs = return cs
 --
 compileExpr (BuiltinFn "alloc" [ex]) cs = do
   cs1 <- compileExpr ex cs

@@ -75,3 +75,14 @@ freeVars vm =
 
 getRefsToAddr :: Int -> VM -> [Int]
 getRefsToAddr addr vm = [i | (c, i) <- zip (memory vm) [0 :: Int ..], isPointer c && asInt c == addr]
+
+deref :: Int -> VM -> Value
+deref addr vm
+  | addr > 0 = memory vm !! addr
+  | otherwise = error $ "Cannot dereference memory at " ++ show addr
+
+mulDeref :: Int -> Value -> VM -> Value
+mulDeref count addrVal vm
+  | count < 0 = error $ "Cannot execute multi-stroke operation for a negative number " ++ show count
+  | count == 0 = addrVal
+  | otherwise = mulDeref (count - 1) (deref (asInt addrVal) vm) vm

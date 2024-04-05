@@ -100,13 +100,15 @@ execInstruction OP_SEND vm = do
   return' vm3
 --
 execInstruction OP_DEREF vm = do
-  let (addr, newVm) = popMap asInt vm
-      val =
-        if addr > 0
-          then memory vm !! addr
-          else error $ "Cannot dereference memory at " ++ show addr
-      newVm1 = val `seq` push newVm val
-  return' newVm1
+  let (addr, vm1) = popMap asInt vm
+      val = deref addr vm1
+  return' $ val `seq` push vm1 val
+--
+execInstruction OP_MUL_DEREF vm = do
+  let (addrVal, vm1) = pop vm
+      (count, vm2) = popMap asInt vm1
+      val = mulDeref count addrVal vm2
+  return' $ val `seq` push vm2 val
 --
 execInstruction OP_EXCHANGE vm = do
   let (addrB, vm1) = popMap asInt vm
