@@ -1,11 +1,25 @@
-Pg create_root { 10, root }
+// Pg create_root { 10, root }
 
-Pg insert { 5, 'root }
-Pg insert { 2, 'root }
-Pg insert { 15, 'root }
-Pg insert { 8, 'root }
+// Pg insert { 5, 'root }
+// Pg insert { 2, 'root }
+// Pg insert { 15, 'root }
+// Pg insert { 8, 'root }
 
-Pg traverse { 'root }
+Pg list_empty { list1 }
+Pg list_add { 10, list1 }
+Pg list_add { 5, list1 }
+Pg list_add { 2, list1 }
+Pg list_add { 15, list1 }
+Pg list_add { 8, list1 }
+printList list1
+
+Pg from_list { list1, root }
+
+// Pg traverse { 'root }
+
+Pg to_list { 'root, tree_list }
+
+printList tree_list
 
 !
 
@@ -23,6 +37,23 @@ Pg traverse { 'root }
     'parent_addr => c1 + 0
     'val => c1 + 1
     c1 => 'res_addr
+    Ret
+
+@find_children ... Nil => node, Nil => left_addr, Nil => right_addr
+    node_addr = 'node
+    node_val = '(node_addr + 1)
+
+    children = getRefs node_addr
+    left = 0
+    right = 0
+    L { 'children, 'Nil, P { 'i /= 0 } => i } b
+        child_addr = '('i + 1)
+        child_val = '(child_addr + 1)
+        P { child_val < node_val } left = child_addr | right = child_addr
+    @b ...
+
+    left => 'left_addr
+    right => 'right_addr
     Ret
 
 @insert ... Nil => val, Nil => node
@@ -67,19 +98,63 @@ Pg traverse { 'root }
     @case_right_end ...
     Ret
 
-@find_children ... Nil => node, Nil => left_addr, Nil => right_addr
+@to_list ... Nil => node, Nil => res_addr
+    Pg list_empty { 'res_addr }
+    Pg to_list_helper { 'node, 'res_addr }
+    Ret
+
+@to_list_helper ... Nil => node, Nil => list_addr
     node_addr = 'node
     node_val = '(node_addr + 1)
 
-    children = getRefs node_addr
-    left = 0
-    right = 0
-    L { 'children, 'Nil, P { 'i /= 0 } => i } b
-        child_addr = '('i + 1)
-        child_val = '(child_addr + 1)
-        P { child_val < node_val } left = child_addr | right = child_addr
-    @b ...
+    Pg find_children { node_addr, left, right }
 
-    left => 'left_addr
-    right => 'right_addr
+    P { 'left /= 0 } case_left | case_left_end
+    @case_left ...
+        Pg to_list_helper { 'left, 'list_addr }
+    @case_left_end ...
+
+    Pg list_add { node_val, 'list_addr }
+
+    P { 'right /= 0 } case_right | case_right_end
+    @case_right ...
+        Pg to_list_helper { 'right, 'list_addr }
+    @case_right_end ...
+    Ret
+
+@from_list ... Nil => list_addr, Nil => res_addr
+    h = 'list_addr
+    root = 'res_addr
+
+    P { 'h == 0 } 0 => root; Ret |
+
+    head = '('h + 1)
+    Pg create_root { head, root }
+    
+    L { ''h, 'Nil, P { 'i /= 0 } => i } b
+        val = '('i + 1)
+        Pg insert { val, 'root }
+    @b ...
+    Ret
+
+// Lists
+@list_empty ... Nil => targetAddr
+    0 => 'targetAddr
+    Ret
+
+@list_add ... Nil => val, Nil => listAddr
+    h = 'listAddr
+    P { 'h == 0 } then | else
+    @then ...
+        curAddr = h;
+        end
+    @else ...
+        L { 'h, 'Nil, P { ''j /= 0 } => j } l1
+        @l1 ...
+        curAddr = 'j;
+        end
+    @end ...
+        nextNode = alloc 2;
+        nextNode => curAddr
+        'val => nextNode + 1
     Ret
