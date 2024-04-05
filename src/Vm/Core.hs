@@ -90,13 +90,10 @@ execInstruction OP_GET_REFS vm = do
 execInstruction OP_SEND vm = do
   let (addr, vm1) = popMap asInt vm
       (val, vm2) = pop vm1
-      oldVal = memory vm2 !! addr
+      destAddr = checkAddrForSend addr
+      oldVal = deref addr vm2
       castVal = if isPointer oldVal then asPointer val else val
-      destAddr =
-        if addr > 0
-          then addr
-          else error $ "Cannot send to memory at " ++ show addr
-      vm3 = destAddr `seq` memSet destAddr castVal vm2
+      vm3 = destAddr `seq` castVal `seq` memSet destAddr castVal vm2
   return' vm3
 --
 execInstruction OP_DEREF vm = do

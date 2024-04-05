@@ -33,7 +33,7 @@ allocNInit n vm =
 
 parseList :: Value -> VM -> [Value]
 parseList val vm =
-  let firstAddr = asInt $ memory vm !! asInt val
+  let firstAddr = asInt $ deref (asInt val) vm
    in if firstAddr == 0
         then []
         else parseList' firstAddr [] vm
@@ -41,9 +41,9 @@ parseList val vm =
     parseList' :: Int -> [Value] -> VM -> [Value]
     parseList' 0 acc _ = acc
     parseList' curAddr acc vm_ =
-      let nextAddr = asInt $ memory vm_ !! curAddr
-          curVal = memory vm_ !! (curAddr + 1)
-       in parseList' nextAddr (acc ++ [curVal]) vm_
+      let nextAddr = deref curAddr vm_
+          curVal = deref (curAddr + 1) vm_
+       in parseList' (asInt nextAddr) (acc ++ [curVal]) vm_
 
 constructList :: [Value] -> VM -> (Value, VM)
 constructList [] vm =
@@ -86,3 +86,8 @@ mulDeref count addrVal vm
   | count < 0 = error $ "Cannot execute multi-stroke operation for a negative number " ++ show count
   | count == 0 = addrVal
   | otherwise = mulDeref (count - 1) (deref (asInt addrVal) vm) vm
+
+checkAddrForSend :: Int -> Int
+checkAddrForSend addr
+  | addr > 0 = addr
+  | otherwise = error $ "Cannot send to memory at " ++ show addr

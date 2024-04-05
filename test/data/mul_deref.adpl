@@ -8,6 +8,8 @@ L { 1(1)5 => i} b
     print '(`n`list1 + 1)
 @b ...
 
+10 => -1
+
 !
 @list_range ... Nil => start, Nil => step, Nil => end, Nil => resAddr
     Pg list_empty { 'resAddr }
