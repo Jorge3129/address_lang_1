@@ -50,7 +50,7 @@ tokens :-
   @id { \s -> 
       let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "not"]
           builtinProcs = ["print", "printList", "printRefs"]
-          builtinFns = ["getRefs", "alloc"]
+          builtinFns = ["getRefs", "alloc", "ptr"]
       in if s `elem` keywords then TokenKeyword s
           else if s `elem` builtinProcs then TokenBuiltinProc s 
           else if s `elem` builtinFns then TokenBuiltinFn s 

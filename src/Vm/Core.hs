@@ -181,6 +181,10 @@ execInstruction OP_MAKE_POINTER vm = do
       oldVal = deref addr vm
   return' $ memSet addr (asPointer oldVal) vm
 --
+execInstruction OP_CAST_AS_PTR vm = do
+  let (oldVal, vm1) = pop vm
+  return' $ push vm1 (asPointer oldVal)
+--
 execInstruction OP_ALLOC vm = do
   let (freeAddr, vm1) = allocNInit 1 vm
   return' $ push vm1 (IntVal freeAddr)

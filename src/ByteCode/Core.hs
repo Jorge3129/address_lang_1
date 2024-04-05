@@ -35,6 +35,7 @@ data OpCode
   | OP_GET_REFS
   | OP_MAKE_VAR_POINTER
   | OP_MAKE_POINTER
+  | OP_CAST_AS_PTR
   | OP_CALL
   | OP_EXCHANGE
   deriving (Eq, Show, Enum)

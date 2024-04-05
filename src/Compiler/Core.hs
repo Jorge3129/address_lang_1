@@ -223,6 +223,10 @@ compileExpr (BuiltinFn "constrList" args) cs = do
   cs2 <- compileExpr (Lit (IntVal (length args))) cs1
   return $ emitOpCode OP_CONSTR_LIST cs2
 --
+compileExpr (BuiltinFn "ptr" [ex]) cs = do
+  cs1 <- compileExpr ex cs
+  return $ emitOpCode OP_CAST_AS_PTR cs1
+--
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
 emitJump :: OpCode -> CompState -> (CompState, Int)

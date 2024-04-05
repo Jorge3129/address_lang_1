@@ -10,16 +10,14 @@ printList tree_list
 
 @create_root ... Nil => val, Nil => res_addr
     c1 = (alloc 2) + 0
-    alloc 1 => c1 + 0
-    0 => c1 + 0
+    ptr(0) => c1 + 0
     'val => c1 + 1
     c1 => 'res_addr
     Ret
 
 @create_child ... Nil => val, Nil => parent_addr, Nil => res_addr
     c1 = (alloc 2) + 0
-    alloc 1 => c1 + 0
-    'parent_addr => c1 + 0
+    ptr('parent_addr) => c1 + 0
     'val => c1 + 1
     c1 => 'res_addr
     Ret
