@@ -91,3 +91,8 @@ checkAddrForSend :: Int -> Int
 checkAddrForSend addr
   | addr > 0 = addr
   | otherwise = error $ "Cannot send to memory at " ++ show addr
+
+castAsType :: Value -> Value -> Value
+castAsType oldVal val
+  | isPointer oldVal = asPointer val
+  | otherwise = val

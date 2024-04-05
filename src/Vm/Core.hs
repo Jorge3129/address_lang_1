@@ -92,7 +92,7 @@ execInstruction OP_SEND vm = do
       (val, vm2) = pop vm1
       destAddr = checkAddrForSend addr
       oldVal = deref addr vm2
-      castVal = if isPointer oldVal then asPointer val else val
+      castVal = castAsType oldVal val
       vm3 = destAddr `seq` castVal `seq` memSet destAddr castVal vm2
   return' vm3
 --
@@ -161,7 +161,7 @@ execInstruction OP_SET_VAR vm = do
       addr = varsMap vm1 Map.! scopedVar vm name
       oldVal = memory vm1 !! addr
       (val, vm2) = pop vm1
-      castVal = if isPointer oldVal then asPointer val else val
+      castVal = castAsType oldVal val
   return' $ memSet addr castVal vm2
 --
 execInstruction OP_MAKE_VAR_POINTER vm = do
