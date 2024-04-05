@@ -4,6 +4,8 @@ Pg list_add { 5, list1 }
 Pg list_add { 2, list1 }
 Pg list_add { 15, list1 }
 Pg list_add { 8, list1 }
+Pg list_add { 0.0, list1 }
+Pg list_add { (0-200), list1 }
 printList list1
 
 Pg from_list { list1, root }

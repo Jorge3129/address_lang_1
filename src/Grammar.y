@@ -9,7 +9,8 @@ import Value.Core
 %error { parseError }
 
 %token
-    int { TokenNumber $$ }
+    constInt { TokenInt $$ }
+    constFloat { TokenFloat $$ }
     var { TokenIdentifier $$ }
     eol { TokenNewLine }
     Ret { TokenKeyword "Ret"}
@@ -137,14 +138,14 @@ Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
     | Exp '*' Exp            { BinOpApp Mul $1 $3 }
     | Exp '/' Exp            { BinOpApp Div $1 $3 }
     | '(' Exp ')'            { $2 }
-    -- | '-' Exp %prec NEG      { Negate $2 }
-    | "'" Exp %prec DEREF    { Deref $2 }
+--     | '-' Exp %prec NEG      { Negate $2 }
+    | "'" Exp %prec DEREF            { Deref $2 }
     | "`" Exp "`" Exp %prec DEREF    { MulDeref $2 $4 }
-    | int                    { Lit (IntVal $1) }
-    | var                    { Var $1 }
-    | Nil                    { Nil }
-    | builtinFn Exp        { BuiltinFn $1 [$2] }
-
+    | constInt                       { Lit (IntVal $1) }
+    | constFloat                     { Lit (DoubleVal $1) }
+    | var                            { Var $1 }
+    | Nil                            { Nil }
+    | builtinFn Exp                  { BuiltinFn $1 [$2] }
 
 {
 

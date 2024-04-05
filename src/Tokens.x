@@ -13,6 +13,7 @@ $lf = \n
 $cr = \r
 @eol_pattern = $lf | $cr $lf | $cr $lf
 @id = $letter ($letter | $digit | _)*
+@decimal = $digit+
 
 tokens :-
   $white_no_nl+ ;
@@ -53,8 +54,9 @@ tokens :-
           else if s `elem` builtinFns then TokenBuiltinFn s 
           else TokenIdentifier s 
     }
-  $digit+ { \s -> TokenNumber (read s) }
-  _         { \_ -> TokenError }
+  @decimal              { \s -> TokenInt (read s) }
+  @decimal \. @decimal  { \s -> TokenFloat (read s) }
+  _                     { \_ -> TokenError }
 
 {
 
@@ -91,7 +93,8 @@ data Token =
   | TokenKeyword String
   | TokenBuiltinProc String
   | TokenBuiltinFn String
-  | TokenNumber Int
+  | TokenInt Int
+  | TokenFloat Double
   | TokenError
   deriving (Show, Eq)
 
