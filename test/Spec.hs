@@ -14,7 +14,7 @@ main = do
   tokens <- scanTokens <$> readFile (basePath ++ "/" ++ fileName ++ ".adpl")
   -- print tokens
   let progAst = parseProg tokens
-  print progAst
+  -- print progAst
   ch <- compileProg progAst
   disassembleChunk ch "test chunk"
   res <- run (initVM ch)

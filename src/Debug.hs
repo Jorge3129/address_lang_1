@@ -52,6 +52,8 @@ disassembleInstruction chunk offset = do
     OP_LESS -> simpleInstruction "OP_LESS" offset
     --
     OP_NOT -> simpleInstruction "OP_NOT" offset
+    OP_NEGATE -> simpleInstruction "OP_NEGATE" offset
+    --
     OP_PRINT -> simpleInstruction "OP_PRINT" offset
     OP_PRINT_REFS -> simpleInstruction "OP_PRINT_REFS" offset
     OP_PRINT_LIST -> simpleInstruction "OP_PRINT_LIST" offset

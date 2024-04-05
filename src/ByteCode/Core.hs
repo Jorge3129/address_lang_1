@@ -9,6 +9,7 @@ data OpCode
   = OP_RETURN
   | OP_CONSTANT
   | OP_NOT
+  | OP_NEGATE
   | OP_ADD
   | OP_SUB
   | OP_MUL

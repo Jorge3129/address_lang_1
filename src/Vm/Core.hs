@@ -123,6 +123,12 @@ execInstruction OP_NOT vm = do
       newVm1 = newVal `seq` push newVm newVal
   return' newVm1
 --
+execInstruction OP_NEGATE vm = do
+  let (val, newVm) = pop vm
+      newVal = negate val
+      newVm1 = newVal `seq` push newVm newVal
+  return' newVm1
+--
 execInstruction OP_POP vm = do
   let (_, newVm) = pop vm
   return' newVm

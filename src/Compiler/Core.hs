@@ -189,6 +189,10 @@ compileExpr (BinOpApp op a b) cs = do
   cs2 <- compileExpr b cs1
   return $ emitOpCodes (binOpToOpCode op) cs2
 --
+compileExpr (Negate ex) cs = do
+  cs1 <- compileExpr ex cs
+  return $ emitOpCode OP_NEGATE cs1
+--
 compileExpr (Deref ex) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_DEREF cs1

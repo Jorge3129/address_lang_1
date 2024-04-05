@@ -138,7 +138,7 @@ Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
     | Exp '*' Exp            { BinOpApp Mul $1 $3 }
     | Exp '/' Exp            { BinOpApp Div $1 $3 }
     | '(' Exp ')'            { $2 }
---     | '-' Exp %prec NEG      { Negate $2 }
+    | '-' Exp %prec NEG      { Negate $2 }
     | "'" Exp %prec DEREF            { Deref $2 }
     | "`" Exp "`" Exp %prec DEREF    { MulDeref $2 $4 }
     | constInt                       { Lit (IntVal $1) }
@@ -169,6 +169,7 @@ data Expr
   = Lit Value
   | Var String
   | BinOpApp BinOp Expr Expr
+  | Negate Expr
   | Deref Expr
   | MulDeref Expr Expr
   | Nil
