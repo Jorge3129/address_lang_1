@@ -16,6 +16,7 @@ main = do
   let progAst = parseProg tokens
   -- print progAst
   ch <- compileProg progAst
-  disassembleChunk ch "test chunk"
+  -- disassembleChunk ch "test chunk"
   res <- run (initVM ch)
-  print res
+  -- print res
+  return ()

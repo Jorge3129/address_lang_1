@@ -18,7 +18,7 @@ compileProg :: Program -> IO Chunk
 compileProg pg1 = do
   let pg@(Program {pLines}) = numerateLines pg1
       fnVars = collectProgVars pg
-  print fnVars
+  -- print fnVars
   let fnMap = collectProgFns pg
       cs = initCs {csFnVars = fnVars, csFnMap = fnMap}
   csv <- compileVars (fnVars ! "") cs
