@@ -1,6 +1,7 @@
 {
 module Grammar where
 import Tokens
+import Value.Core
 }
 
 %name parseProg
@@ -139,7 +140,7 @@ Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
     -- | '-' Exp %prec NEG      { Negate $2 }
     | "'" Exp %prec DEREF    { Deref $2 }
     | "`" Exp "`" Exp %prec DEREF    { MulDeref $2 $4 }
-    | int                    { Lit $1 }
+    | int                    { Lit (IntVal $1) }
     | var                    { Var $1 }
     | Nil                    { Nil }
     | builtinFn Exp        { BuiltinFn $1 [$2] }
@@ -164,7 +165,7 @@ data BinOp
   deriving (Eq, Show)
 
 data Expr
-  = Lit Int
+  = Lit Value
   | Var String
   | BinOpApp BinOp Expr Expr
   | Deref Expr

@@ -180,7 +180,7 @@ compileExprs [] cs = return cs
 
 compileExpr :: Expr -> CompState -> IO CompState
 compileExpr (Lit val) cs = do
-  let (cs1, constant) = addConstantToCs (IntVal val) cs
+  let (cs1, constant) = addConstantToCs val cs
       cs2 = emitOpCode OP_CONSTANT cs1
   return $ emitByte constant cs2
 --
