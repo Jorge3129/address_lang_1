@@ -4,6 +4,7 @@ printList list1
 L { 1(1)5 => i} b
     n = 'i
     print '(`n`list1 + 1)
+    printList `n`list1
 @b ...
 
 !
