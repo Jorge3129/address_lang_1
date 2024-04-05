@@ -35,6 +35,8 @@ import Value.Core
     ')' { TokenRightParen }
     '{' { TokenLeftCurly }
     '}' { TokenRightCurly }
+    '[' { TokenLeftBracket }
+    ']' { TokenRightBracket }
     '!' { TokenBang }
     '=' { TokenEqual }
     "==" { TokenEqualEqual }
@@ -127,6 +129,8 @@ exprs : exprs ',' Exp   { $1 ++ [$3] }
       | Exp			{ [$1] }
       | {- empty -}	{ [] }
 
+listExp : '[' exprs ']' { BuiltinFn "constrList" $2 }
+
 Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
     | Exp "/=" Exp           { BinOpApp NotEqual $1 $3 }
     | Exp "<=" Exp           { BinOpApp LessEqual $1 $3 }
@@ -146,6 +150,7 @@ Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
     | var                            { Var $1 }
     | Nil                            { Nil }
     | builtinFn Exp                  { BuiltinFn $1 [$2] }
+    | listExp                        { $1 }
 
 {
 

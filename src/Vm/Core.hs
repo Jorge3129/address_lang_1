@@ -83,9 +83,15 @@ execInstruction OP_PRINT_REFS vm = do
 --
 execInstruction OP_GET_REFS vm = do
   let (addr, vm1) = popMap asInt vm
-  let refs = getRefsToAddr addr vm
+  let refs = getRefsToAddr addr vm1
   let (listHead, vm2) = constructList (map IntVal refs) vm1
   return' $ push vm2 listHead
+--
+execInstruction OP_CONSTR_LIST vm = do
+  let (len, vm1) = popMap asInt vm
+  let (elems, vm2) = popN len vm1
+  let (listHead, vm3) = constructList (reverse elems) vm2
+  return' $ push vm3 listHead
 --
 execInstruction OP_SEND vm = do
   let (addr, vm1) = popMap asInt vm

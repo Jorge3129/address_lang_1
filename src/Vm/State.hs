@@ -59,6 +59,13 @@ popMap f vm =
       res = f val
    in res `seq` (f val, vm1)
 
+popN :: Int -> VM -> ([Value], VM)
+popN 0 vm = ([], vm)
+popN n vm =
+  let (val, vm1) = pop vm
+      (restValues, vm2) = popN (n - 1) vm1
+   in (val : restValues, vm2)
+
 peek :: Int -> VM -> Value
 peek offset (VM {stack}) = stack !! offset
 

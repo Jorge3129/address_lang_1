@@ -218,6 +218,11 @@ compileExpr (BuiltinFn "getRefs" [ex]) cs = do
   cs1 <- compileExpr ex cs
   return $ emitOpCode OP_GET_REFS cs1
 --
+compileExpr (BuiltinFn "constrList" args) cs = do
+  cs1 <- compileExprs args cs
+  cs2 <- compileExpr (Lit (IntVal (length args))) cs1
+  return $ emitOpCode OP_CONSTR_LIST cs2
+--
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
 emitJump :: OpCode -> CompState -> (CompState, Int)

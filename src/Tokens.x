@@ -31,6 +31,8 @@ tokens :-
   ")"       { \_ -> TokenRightParen }
   "{"       { \_ -> TokenLeftCurly }
   "}"       { \_ -> TokenRightCurly }
+  "["       { \_ -> TokenLeftBracket }
+  "]"       { \_ -> TokenRightBracket }
   "!"       { \_ -> TokenBang }
   "="       { \_ -> TokenEqual }
   "=="      { \_ -> TokenEqualEqual }
@@ -74,6 +76,8 @@ data Token =
   | TokenRightParen
   | TokenLeftCurly
   | TokenRightCurly
+  | TokenLeftBracket
+  | TokenRightBracket
   | TokenHorizontal
   | TokenBang
   | TokenEqual

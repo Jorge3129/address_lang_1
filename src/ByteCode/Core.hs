@@ -20,6 +20,7 @@ data OpCode
   | OP_PRINT
   | OP_PRINT_LIST
   | OP_PRINT_REFS
+  | OP_CONSTR_LIST
   | OP_POP
   | OP_JUMP
   | OP_JUMP_IF_FALSE
