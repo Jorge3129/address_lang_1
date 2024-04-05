@@ -85,8 +85,9 @@ readStr vm =
    in res `seq` (res, vm1)
 
 memSet :: Int -> Value -> VM -> VM
-memSet addr val vm =
-  vm {memory = replace addr val (memory vm)}
+memSet addr val vm
+  | addr > 0 = vm {memory = replace addr val (memory vm)}
+  | otherwise = error $ "Cannot set memory at address " ++ show addr
 
 scopedVar :: VM -> String -> String
 scopedVar vm name =

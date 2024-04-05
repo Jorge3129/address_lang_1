@@ -110,8 +110,8 @@ execInstruction OP_MUL_DEREF vm = do
 execInstruction OP_EXCHANGE vm = do
   let (addrB, vm1) = popMap asInt vm
       (addrA, vm2) = popMap asInt vm1
-      valA = memory vm2 !! addrA
-      valB = memory vm2 !! addrB
+      valA = deref addrA vm2
+      valB = deref addrB vm2
       vm3 = valB `seq` memSet addrA valB vm2
       vm4 = valA `seq` memSet addrB valA vm3
   return' vm4
@@ -153,13 +153,13 @@ execInstruction OP_DEFINE_VAR vm = do
 execInstruction OP_GET_VAR vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 Map.! scopedVar vm name
-      val = memory vm1 !! addr
+      val = deref addr vm1
   return' $ push vm1 val
 --
 execInstruction OP_SET_VAR vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 Map.! scopedVar vm name
-      oldVal = memory vm1 !! addr
+      oldVal = deref addr vm1
       (val, vm2) = pop vm1
       castVal = castAsType oldVal val
   return' $ memSet addr castVal vm2
@@ -167,12 +167,12 @@ execInstruction OP_SET_VAR vm = do
 execInstruction OP_MAKE_VAR_POINTER vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 Map.! scopedVar vm name
-      oldVal = memory vm1 !! addr
+      oldVal = deref addr vm1
   return' $ memSet addr (asPointer oldVal) vm1
 --
 execInstruction OP_MAKE_POINTER vm = do
   let addr = asInt (peek 0 vm)
-      oldVal = memory vm !! addr
+      oldVal = deref addr vm
   return' $ memSet addr (asPointer oldVal) vm
 --
 execInstruction OP_ALLOC vm = do
