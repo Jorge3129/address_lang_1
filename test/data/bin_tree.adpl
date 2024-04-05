@@ -1,11 +1,4 @@
-Pg list_empty { list1 }
-Pg list_add { 10, list1 }
-Pg list_add { 5, list1 }
-Pg list_add { 2, list1 }
-Pg list_add { 15, list1 }
-Pg list_add { 8, list1 }
-Pg list_add { 0.0, list1 }
-Pg list_add { -200, list1 }
+list1 = [10, 5, 2, 15, 8, 0.0, -200]
 printList list1
 
 Pg from_list { list1, root }
