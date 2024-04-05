@@ -1,10 +1,3 @@
-// Pg create_root { 10, root }
-
-// Pg insert { 5, 'root }
-// Pg insert { 2, 'root }
-// Pg insert { 15, 'root }
-// Pg insert { 8, 'root }
-
 Pg list_empty { list1 }
 Pg list_add { 10, list1 }
 Pg list_add { 5, list1 }
@@ -14,9 +7,6 @@ Pg list_add { 8, list1 }
 printList list1
 
 Pg from_list { list1, root }
-
-// Pg traverse { 'root }
-
 Pg to_list { 'root, tree_list }
 
 printList tree_list
