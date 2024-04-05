@@ -8,7 +8,7 @@ import Compiler.State
 import Compiler.Vars
 import Control.Arrow ((>>>))
 import Data.List (foldl')
-import Data.Map (insert, (!))
+import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Grammar
 import MyUtils
@@ -21,7 +21,7 @@ compileProg pg1 = do
   -- print fnVars
   let fnMap = collectProgFns pg
       cs = initCs {csFnVars = fnVars, csFnMap = fnMap}
-  csv <- compileVars (fnVars ! "") cs
+  csv <- compileVars (fnVars Map.! "") cs
   cs1 <- compileLines pLines csv
   let cs2 = patchLabelJumps cs1
       ch = curChunk cs2
@@ -41,7 +41,7 @@ compileLines [] cs = return cs
 compileLine :: ProgLine -> CompState -> IO CompState
 compileLine (ProgLine lbls@(fnName : _) args@(Send Nil (Var _) : _) lineNum) cs = do
   let cs1 = compileLineLabels lbls (cs {curLine = lineNum})
-  cs2 <- compileVars (csFnVars cs ! fnName) cs1
+  cs2 <- compileVars (csFnVars cs Map.! fnName) cs1
   compileStmts (reverse args) cs2
 --
 compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
@@ -60,7 +60,7 @@ patchLoops [] _ cs = cs
 compileLineLabels :: [String] -> CompState -> CompState
 compileLineLabels lbls cs@(CompState {labelOffsetMap}) =
   let offset = curChunkCount cs
-      newLblMap = foldl' (\lblMap lbl -> insert (scopedLabel lbl cs) offset lblMap) labelOffsetMap lbls
+      newLblMap = foldl' (\lblMap lbl -> Map.insert (scopedLabel lbl cs) offset lblMap) labelOffsetMap lbls
    in cs {labelOffsetMap = newLblMap}
 
 compileStmts :: [Statement] -> CompState -> IO CompState
@@ -257,7 +257,7 @@ patchLabelJumps cs@(CompState {labelJumpsToPatch, labelOffsetMap, curChunk}) =
   let newCh =
         foldl'
           ( \ch@(Chunk {code}) (curOffset, lbl) ->
-              let jumpToInstr = labelOffsetMap ! lbl
+              let jumpToInstr = labelOffsetMap Map.! lbl
                   jumpOffset = jumpToInstr - curOffset - 2
                in ch {code = replace (curOffset + 1) jumpOffset code}
           )

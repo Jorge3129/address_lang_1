@@ -2,7 +2,7 @@
 
 module ByteCode.Core where
 
-import Data.Map
+import qualified Data.Map as Map
 import Value.Core
 
 data OpCode
@@ -42,7 +42,7 @@ data Chunk = Chunk
   { code :: [Int],
     codeLines :: [Int],
     constants :: [Value],
-    chLabelMap :: Map String Int
+    chLabelMap :: Map.Map String Int
   }
   deriving (Eq, Show)
 
@@ -52,7 +52,7 @@ initChunk =
     { code = [],
       codeLines = [],
       constants = [],
-      chLabelMap = Data.Map.empty
+      chLabelMap = Map.empty
     }
 
 writeChunk :: Int -> Int -> Chunk -> Chunk

@@ -3,7 +3,7 @@
 module Vm.State where
 
 import ByteCode.Core
-import Data.Map (Map, empty)
+import qualified Data.Map as Map
 import Debug (lpad)
 import MyUtils
 import Value.Core
@@ -13,7 +13,7 @@ data VM = VM
     ip :: !Int,
     stack :: ![Value],
     memory :: ![Value],
-    varsMap :: !(Map String Int),
+    varsMap :: !(Map.Map String Int),
     vmCalls :: ![(String, Int)]
   }
   deriving (Eq, Show)
@@ -23,7 +23,7 @@ data VM = VM
 --     ip :: Int,
 --     stack :: [Value],
 --     memory :: [Value],
---     varsMap :: Map String Int,
+--     varsMap :: Map.Map String Int,
 --     vmCalls :: [(String, Int)]
 --   }
 --   deriving (Eq, Show)
@@ -38,7 +38,7 @@ initVM ch =
       ip = 0,
       stack = [],
       memory = 0 : replicate (memMax - 1) NilVal,
-      varsMap = Data.Map.empty,
+      varsMap = Map.empty,
       vmCalls = []
     }
 

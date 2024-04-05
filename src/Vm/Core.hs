@@ -5,7 +5,7 @@ module Vm.Core where
 import ByteCode.Core
 import Control.Exception as Exc
 import Data.Bifunctor
-import Data.Foldable (Foldable (foldl'))
+import Data.List (foldl')
 import qualified Data.Map as Map
 import Data.Maybe (isJust)
 import Debug

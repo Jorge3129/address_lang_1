@@ -4,14 +4,14 @@ module Compiler.State where
 
 import ByteCode.Core
 import Data.List (foldl')
-import Data.Map (Map, empty)
+import qualified Data.Map as Map
 import Value.Core
 
-type LabelOffsetMap = Map String Int
+type LabelOffsetMap = Map.Map String Int
 
-type FnVarMap = Map String [String]
+type FnVarMap = Map.Map String [String]
 
-type LineFnMap = Map Int String
+type LineFnMap = Map.Map Int String
 
 data LoopPatch = LoopPatch
   { scopeLabel :: Maybe String,
@@ -38,11 +38,11 @@ initCs =
   CompState
     { curChunk = initChunk,
       curLine = 0,
-      labelOffsetMap = Data.Map.empty,
+      labelOffsetMap = Map.empty,
       labelJumpsToPatch = [],
       loopPatches = [],
-      csFnVars = Data.Map.empty,
-      csFnMap = Data.Map.empty
+      csFnVars = Map.empty,
+      csFnMap = Map.empty
     }
 
 emitByte :: Int -> CompState -> CompState
