@@ -1,9 +1,11 @@
-list1 = []
+list1 = [2]
 printList list1
 
 Pg from_list { list1, bin_tree }
 Pg to_list { 'bin_tree, tree_list }
 printList tree_list
+Pg min_value { 'bin_tree, min_val1 }
+print 'min_val1
 
 !
 
@@ -19,6 +21,18 @@ printList tree_list
     ptr('parent_addr) => n + 0
     'val => n + 1
     n => 'res_addr
+    Ret
+
+@min_value ... Nil => node, Nil => res_addr
+    current = 'node
+
+    @loop ...
+        Pg find_children { current, left, right }
+        P { 'left == 0 } end |
+        current = 'left
+    loop
+
+    @end ... '(current + 1) => 'res_addr
     Ret
 
 @find_children ... Nil => node, Nil => left_addr, Nil => right_addr
