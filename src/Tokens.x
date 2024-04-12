@@ -43,6 +43,7 @@ tokens :-
   "<="      { \_ -> TokenLessEqual }
   "'"       { \_ -> TokenSingleQuote }
   "`"       { \_ -> TokenBackTick }
+  "m`"       { \_ -> TokenMBackTick }
   "->"      { \_ -> TokenMinusGreater }
   "=>"      { \_ -> TokenEqualGreater }
   "<=>"     { \_ -> TokenLessEqualGreater }
@@ -90,6 +91,7 @@ data Token =
   | TokenLessEqual
   | TokenSingleQuote
   | TokenBackTick
+  | TokenMBackTick
   | TokenEqualGreater
   | TokenLessEqualGreater
   | TokenLabel String

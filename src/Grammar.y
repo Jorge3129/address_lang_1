@@ -47,6 +47,7 @@ import Value.Core
     "<=" { TokenLessEqual }
     "'" { TokenSingleQuote }
     "`" { TokenBackTick }
+    "m`" { TokenMBackTick }
     "=>" { TokenEqualGreater }
     "<=>" { TokenLessEqualGreater }
 
@@ -145,6 +146,7 @@ Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
     | '-' Exp %prec NEG      { Negate $2 }
     | "'" Exp %prec DEREF            { Deref $2 }
     | "`" Exp "`" Exp %prec DEREF    { MulDeref $2 $4 }
+    | "m`" Exp "`" Exp %prec DEREF   { BuiltinFn "getRefs" [$4] }
     | constInt                       { Lit (IntVal $1) }
     | constFloat                     { Lit (DoubleVal $1) }
     | var                            { Var $1 }

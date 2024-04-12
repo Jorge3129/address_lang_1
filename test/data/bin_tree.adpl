@@ -1,34 +1,33 @@
-list1 = [10, 5, 2, 15, 8, 0.0, -200]
+list1 = []
 printList list1
 
-Pg from_list { list1, root }
-Pg to_list { 'root, tree_list }
-
+Pg from_list { list1, bin_tree }
+Pg to_list { 'bin_tree, tree_list }
 printList tree_list
 
 !
 
 @create_root ... Nil => val, Nil => res_addr
-    c1 = (alloc 2) + 0
-    ptr(0) => c1 + 0
-    'val => c1 + 1
-    c1 => 'res_addr
+    n = (alloc 2) + 0
+    ptr(0) => n + 0
+    'val => n + 1
+    n => 'res_addr
     Ret
 
 @create_child ... Nil => val, Nil => parent_addr, Nil => res_addr
-    c1 = (alloc 2) + 0
-    ptr('parent_addr) => c1 + 0
-    'val => c1 + 1
-    c1 => 'res_addr
+    n = (alloc 2) + 0
+    ptr('parent_addr) => n + 0
+    'val => n + 1
+    n => 'res_addr
     Ret
 
 @find_children ... Nil => node, Nil => left_addr, Nil => right_addr
     node_addr = 'node
     node_val = '(node_addr + 1)
 
-    children = getRefs node_addr
-    left = 0
-    right = 0
+    children = m`1`(node_addr)
+    left = 0; right = 0
+
     L { 'children, 'Nil, P { 'i /= 0 } => i } b
         child_addr = '('i + 1)
         child_val = '(child_addr + 1)
@@ -83,6 +82,9 @@ printList tree_list
 
 @to_list ... Nil => node, Nil => res_addr
     Pg list_empty { 'res_addr }
+
+    P { 'node == 0 } Ret |
+
     Pg to_list_helper { 'node, 'res_addr }
     Ret
 
