@@ -5,6 +5,8 @@ Pg from_list { list1, bin_tree }
 Pg to_list { 'bin_tree, tree_list }
 printList tree_list
 Pg delete { 10, 'bin_tree }
+print '('bin_tree + 1)
+print 71000
 Pg to_list { 'bin_tree, tree_list1 }
 printList tree_list1
 
@@ -49,11 +51,11 @@ printList tree_list1
             0 => node_addr
             end
         @case_no_right ...
-        P { 'right == 0 } | case_no_both
+        P { 'right == 0 } | case_both
             Pg set_child { parent_addr, 'left }
             0 => node_addr
             end
-        @case_no_both ...
+        @case_both ...
 
         Pg min_value { 'right, min_val }
         Pg set_value { node_addr, 'min_val }
@@ -89,11 +91,14 @@ printList tree_list1
     children = m`1`(node_addr)
     left = 0; right = 0
 
+    print 5000
     L { 'children, 'Nil, P { 'i /= 0 } => i } b
         child_addr = '('i + 1)
         child_val = '(child_addr + 1)
+        print child_val
         P { child_val < node_val } left = child_addr | right = child_addr
     @b ...
+    print 5001
 
     left => 'left_addr
     right => 'right_addr

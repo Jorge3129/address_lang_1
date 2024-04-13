@@ -14,13 +14,16 @@ $cr = \r
 @eol_pattern = $lf | $cr $lf | $cr $lf
 @id = $letter ($letter | $digit | _)*
 @decimal = $digit+
+@kw = (P|L|Pg|Nil|Ret|Cj|not|and|or)
+@builtinProc = (print|printList|printRefs)
+@builtinFn = (getRefs|alloc|ptr)
 
 tokens :-
   $white_no_nl+ ;
   "//".*        ;
   @eol_pattern      { \_ -> TokenNewLine }
-  "@"      { \_ -> TokenAt }
-  "|"      { \_ -> TokenVerticalBar }
+  "@"       { \_ -> TokenAt }
+  "|"       { \_ -> TokenVerticalBar }
   ";"       { \_ -> TokenSemi }
   ","       { \_ -> TokenComma }
   "+"       { \_ -> TokenPlus }
@@ -43,20 +46,15 @@ tokens :-
   "<="      { \_ -> TokenLessEqual }
   "'"       { \_ -> TokenSingleQuote }
   "`"       { \_ -> TokenBackTick }
-  "m`"       { \_ -> TokenMBackTick }
+  "m`"      { \_ -> TokenMBackTick }
   "->"      { \_ -> TokenMinusGreater }
   "=>"      { \_ -> TokenEqualGreater }
   "<=>"     { \_ -> TokenLessEqualGreater }
   "@" @id $white_no_nl* "..." { \s -> TokenLabel (takeWhile (\c -> isAlphaNum c || c `elem` "_") (tail s)) }
-  @id { \s -> 
-      let keywords = ["P", "L", "Pg", "Nil", "Ret", "Cj", "not"]
-          builtinProcs = ["print", "printList", "printRefs"]
-          builtinFns = ["getRefs", "alloc", "ptr"]
-      in if s `elem` keywords then TokenKeyword s
-          else if s `elem` builtinProcs then TokenBuiltinProc s 
-          else if s `elem` builtinFns then TokenBuiltinFn s 
-          else TokenIdentifier s 
-    }
+  @kw                   { \s -> TokenKeyword s}
+  @builtinProc          { \s -> TokenBuiltinProc s}
+  @builtinFn            { \s -> TokenBuiltinFn s}
+  @id                   { \s -> TokenIdentifier s }
   @decimal              { \s -> TokenInt (read s) }
   @decimal \. @decimal  { \s -> TokenFloat (read s) }
   _                     { \_ -> TokenError }
