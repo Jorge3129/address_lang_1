@@ -4,11 +4,22 @@ printList list1
 Pg from_list { list1, bin_tree }
 Pg to_list { 'bin_tree, tree_list }
 printList tree_list
+
 Pg delete { 10, 'bin_tree }
-print '('bin_tree + 1)
-print 71000
-Pg to_list { 'bin_tree, tree_list1 }
-printList tree_list1
+Pg to_list { 'bin_tree, tree_list }
+printList tree_list
+
+Pg delete { 12, 'bin_tree }
+Pg to_list { 'bin_tree, tree_list }
+printList tree_list
+
+Pg delete { 15, 'bin_tree }
+Pg to_list { 'bin_tree, tree_list }
+printList tree_list
+
+Pg delete { 5, 'bin_tree }
+Pg to_list { 'bin_tree, tree_list }
+printList tree_list
 
 !
 
@@ -45,20 +56,17 @@ printList tree_list1
         end
     @case_cur ...
         parent_addr = 'node_addr
-        P { 'left == 0 and 'right == 0} | case_no_left
+        P { ('left == 0) and ('right == 0) } | case_no_left
             0 => node_addr
             end
 
         @case_no_left ...
         P { 'left == 0 } | case_no_right
-            // P { node_val == 15 } print 4000; print '(parent_addr + 1) |
-            Pg set_child { parent_addr, 'right }
-            0 => node_addr
+            Pg set_child_2 { node_addr, 'right }
             end
         @case_no_right ...
         P { 'right == 0 } | case_both
-            Pg set_child { parent_addr, 'left }
-            0 => node_addr
+            Pg set_child_2 { node_addr, 'left }
             end
         @case_both ...
 
@@ -68,9 +76,31 @@ printList tree_list1
     @end ...
     Ret
 
-@set_child ... Nil => parent_addr, Nil => child_addr
+// @set_child ... Nil => parent_addr, Nil => child_addr
+//     P { 'child_addr == 0 } Ret |
+//     'parent_addr => 'child_addr
+//     Ret
+
+@set_child_2 ... Nil => node, Nil => child
+    node_addr = 'node
+    child_addr = 'child
+    parent_addr = 'node_addr
+
     P { 'child_addr == 0 } Ret |
-    'parent_addr => 'child_addr
+
+    P { parent_addr == 0 } | case_not_root
+        child_val = '(child_addr + 1)
+        Pg set_value { node_addr, child_val }
+        Pg find_children { child_addr, left, right }
+        P { 'left /= 0 }   node_addr => 'left |
+        P { 'right /= 0 }  node_addr => 'right |
+        0 => child_addr
+        end
+
+    @case_not_root ...
+        parent_addr => child_addr
+        0 => node_addr
+    @end ...
     Ret
 
 @set_value ... Nil => node, Nil => val
@@ -96,14 +126,14 @@ printList tree_list1
     children = m`1`(node_addr)
     left = 0; right = 0
 
-    print 5000
+    // print 5000
     L { 'children, 'Nil, P { 'i /= 0 } => i } b
         child_addr = '('i + 1)
         child_val = '(child_addr + 1)
-        print child_val
+        // print child_val
         P { child_val < node_val } left = child_addr | right = child_addr
     @b ...
-    print 5001
+    // print 5001
 
     left => 'left_addr
     right => 'right_addr

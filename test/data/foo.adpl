@@ -1,9 +1,1 @@
-Pg foo { c, d }
-printList m`1`(c) 
-printList m`1`(d) 
-
-!
-
-@foo ... Nil => a, Nil => b
-    'a => 'b
-    Ret
+print (ptr(1) == 1) and (ptr(2) == 23)
