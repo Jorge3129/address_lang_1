@@ -17,10 +17,12 @@ import Value.Core
     P { TokenKeyword "P"}
     L { TokenKeyword "L"}
     Pg { TokenKeyword "Pg"}
-    not { TokenKeyword "not"}
+    "not" { TokenKeyword "not"}
+    "and" { TokenKeyword "and"}
+    "or" { TokenKeyword "or"}
+    Nil { TokenKeyword "Nil" }
     builtinProc { TokenBuiltinProc $$ }
     builtinFn { TokenBuiltinFn $$ }
-    Nil { TokenKeyword "Nil" }
     lab { TokenLabel $$ }
 
     '@' { TokenAt }
@@ -51,6 +53,8 @@ import Value.Core
     "=>" { TokenEqualGreater }
     "<=>" { TokenLessEqualGreater }
 
+%left or
+%left and
 %nonassoc "==" "/="
 %nonassoc '>' '<' "<=" ">="
 %left '+' '-'
@@ -132,7 +136,9 @@ exprs : exprs ',' Exp   { $1 ++ [$3] }
 
 listExp : '[' exprs ']' { BuiltinFn "constrList" $2 }
 
-Exp :  Exp "==" Exp          { BinOpApp Equal $1 $3 }
+Exp :  Exp "or" Exp           { BinOpApp Or $1 $3 }
+    | Exp "and" Exp          { BinOpApp And $1 $3 }
+    | Exp "==" Exp           { BinOpApp Equal $1 $3 }
     | Exp "/=" Exp           { BinOpApp NotEqual $1 $3 }
     | Exp "<=" Exp           { BinOpApp LessEqual $1 $3 }
     | Exp ">=" Exp           { BinOpApp GreaterEqual $1 $3 }
@@ -170,6 +176,8 @@ data BinOp
   | NotEqual
   | GreaterEqual
   | LessEqual
+  | And
+  | Or
   deriving (Eq, Show)
 
 data Expr

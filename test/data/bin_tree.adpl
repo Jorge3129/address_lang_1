@@ -45,6 +45,11 @@ printList tree_list1
         end
     @case_cur ...
         parent_addr = 'node_addr
+        P { 'left == 0 and 'right == 0} | case_no_left
+            0 => node_addr
+            end
+
+        @case_no_left ...
         P { 'left == 0 } | case_no_right
             // P { node_val == 15 } print 4000; print '(parent_addr + 1) |
             Pg set_child { parent_addr, 'right }

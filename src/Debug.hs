@@ -52,6 +52,8 @@ disassembleInstruction chunk offset = do
     OP_LESS -> simpleInstruction "OP_LESS" offset
     --
     OP_NOT -> simpleInstruction "OP_NOT" offset
+    OP_AND -> simpleInstruction "OP_AND" offset
+    OP_OR -> simpleInstruction "OP_OR" offset
     OP_NEGATE -> simpleInstruction "OP_NEGATE" offset
     --
     OP_PRINT -> simpleInstruction "OP_PRINT" offset
@@ -79,9 +81,10 @@ disassembleInstruction chunk offset = do
     OP_SET_VAR -> constantInstruction "OP_SET_VAR" chunk offset
     OP_MAKE_VAR_POINTER -> constantInstruction "OP_MAKE_VAR_POINTER" chunk offset
     OP_CALL -> constantInstruction "OP_CALL" chunk offset
-    _ -> do
-      putStrLn $ "Unknown opcode " ++ show instruction
-      return $ offset + 1
+
+-- _ -> do
+--   putStrLn $ "Unknown opcode " ++ show instruction
+--   return $ offset + 1
 
 simpleInstruction :: String -> Int -> IO Int
 simpleInstruction name offset = do

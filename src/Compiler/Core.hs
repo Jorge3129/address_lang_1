@@ -285,4 +285,6 @@ binOpToOpCode Less = [OP_LESS]
 binOpToOpCode NotEqual = [OP_EQUAL, OP_NOT]
 binOpToOpCode GreaterEqual = [OP_LESS, OP_NOT]
 binOpToOpCode LessEqual = [OP_GREATER, OP_NOT]
+binOpToOpCode And = [OP_AND]
+binOpToOpCode Or = [OP_OR]
 binOpToOpCode _ = undefined

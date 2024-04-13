@@ -107,6 +107,12 @@ isFalsy (PointerVal v) = v == 0
 isFalsy (DoubleVal v) = v == 0
 isFalsy _ = error "isFalsy not implemented"
 
+isTruthy :: Value -> Bool
+isTruthy (IntVal v) = v /= 0
+isTruthy (PointerVal v) = v /= 0
+isTruthy (DoubleVal v) = v /= 0
+isTruthy _ = error "isTruthy not implemented"
+
 addV :: Value -> Value -> Value
 addV (IntVal a) (IntVal b) = IntVal $ a + b
 addV (DoubleVal a) (DoubleVal b) = DoubleVal $ a + b

@@ -64,6 +64,9 @@ execInstruction OP_GREATER vm = compInstr (>) vm
 execInstruction OP_LESS vm = compInstr (<) vm
 execInstruction OP_EQUAL vm = compInstr (==) vm
 --
+execInstruction OP_AND vm = logInstr (&&) vm
+execInstruction OP_OR vm = logInstr (||) vm
+--
 execInstruction OP_PRINT vm = do
   let (val, newVm) = pop vm
   print val
@@ -216,6 +219,14 @@ compInstr op vm = do
   let (b, newVm) = pop vm
       (a, newVm1) = pop newVm
       res = if op a b then 1 else 0
+      newVm2 = res `seq` push newVm1 res
+  return' newVm2
+
+logInstr :: (Bool -> Bool -> Bool) -> VM -> IO (VM, Maybe InterpretResult)
+logInstr op vm = do
+  let (b, newVm) = pop vm
+      (a, newVm1) = pop newVm
+      res = if op (isTruthy a) (isTruthy b) then 1 else 0
       newVm2 = res `seq` push newVm1 res
   return' newVm2
 
