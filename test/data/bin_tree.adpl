@@ -39,27 +39,25 @@ printList tree_list
 
 @delete ... Nil => val, Nil => node
     node_addr = 'node
-
     P { node_addr == 0 } Ret |
-
     node_val = '(node_addr + 1)
 
     Pg find_children { node_addr, left, right }
 
+    @case_left ...
     P { 'val < node_val } | case_right
         Pg delete { 'val, 'left }
         end
-
     @case_right ...
     P { 'val > node_val } | case_cur
         Pg delete { 'val, 'right }
         end
     @case_cur ...
         parent_addr = 'node_addr
+        @case_no_both ...
         P { ('left == 0) and ('right == 0) } | case_no_left
             0 => node_addr
             end
-
         @case_no_left ...
         P { 'left == 0 } | case_no_right
             Pg set_child_2 { node_addr, 'right }
@@ -75,11 +73,6 @@ printList tree_list
         Pg delete { 'min_val, 'right }
     @end ...
     Ret
-
-// @set_child ... Nil => parent_addr, Nil => child_addr
-//     P { 'child_addr == 0 } Ret |
-//     'parent_addr => 'child_addr
-//     Ret
 
 @set_child_2 ... Nil => node, Nil => child
     node_addr = 'node
@@ -126,14 +119,11 @@ printList tree_list
     children = m`1`(node_addr)
     left = 0; right = 0
 
-    // print 5000
     L { 'children, 'Nil, P { 'i /= 0 } => i } b
         child_addr = '('i + 1)
         child_val = '(child_addr + 1)
-        // print child_val
         P { child_val < node_val } left = child_addr | right = child_addr
     @b ...
-    // print 5001
 
     left => 'left_addr
     right => 'right_addr
