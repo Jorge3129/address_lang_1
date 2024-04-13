@@ -29,7 +29,7 @@ data VM = VM
 --   deriving (Eq, Show)
 
 memMax :: Int
-memMax = 2000
+memMax = 5000
 
 initVM :: Chunk -> VM
 initVM ch =

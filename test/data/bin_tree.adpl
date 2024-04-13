@@ -67,7 +67,7 @@ print 'sm
         end
     @case_cur ...
         parent_addr = 'node_addr
-        @case_no_both ...
+        @case_leaf ...
         P { ('left == 0) and ('right == 0) } | case_no_left
             0 => node_addr
             end
@@ -165,22 +165,15 @@ print 'sm
     Ret
 
 @bst_traverse ... Nil => node
+    P { 'node == 0 } Ret |
     node_addr = 'node
     node_val = '(node_addr + 1)
 
     Pg bst_find_children { node_addr, left, right }
 
-    P { 'left /= 0 } case_left | case_left_end
-    @case_left ...
-        Pg bst_traverse { 'left }
-    @case_left_end ...
-
+    Pg bst_traverse { 'left }
     print node_val
-
-    P { 'right /= 0 } case_right | case_right_end
-    @case_right ...
-        Pg bst_traverse { 'right }
-    @case_right_end ...
+    Pg bst_traverse { 'right }
     Ret
 
 @bst_size ... Nil => node, Nil => res_addr
@@ -189,19 +182,14 @@ print 'sm
     Ret
 
 @bst_size_helper ... Nil => node, Nil => res_addr
+    P { 'node == 0 } Ret |
     node_addr = 'node
 
     Pg bst_find_children { node_addr, left, right }
 
-    P { 'left /= 0 } | case_left_end
-        Pg bst_size_helper { 'left, 'res_addr }
-    @case_left_end ...
-
+    Pg bst_size_helper { 'left, 'res_addr }
     ''res_addr + 1 => 'res_addr
-
-    P { 'right /= 0 } | case_right_end
-        Pg bst_size_helper { 'right, 'res_addr }
-    @case_right_end ...
+    Pg bst_size_helper { 'right, 'res_addr }
     Ret
 
 @bst_sum ... Nil => node, Nil => res_addr
@@ -210,45 +198,32 @@ print 'sm
     Ret
 
 @bst_sum_helper ... Nil => node, Nil => res_addr
+    P { 'node == 0 } Ret |
     node_addr = 'node
     node_val = '(node_addr + 1)
 
     Pg bst_find_children { node_addr, left, right }
 
-    P { 'left /= 0 } | case_left_end
-        Pg bst_sum_helper { 'left, 'res_addr }
-    @case_left_end ...
-
+    Pg bst_sum_helper { 'left, 'res_addr }
     ''res_addr + node_val => 'res_addr
-
-    P { 'right /= 0 } | case_right_end
-        Pg bst_sum_helper { 'right, 'res_addr }
-    @case_right_end ...
+    Pg bst_sum_helper { 'right, 'res_addr }
     Ret
 
 @bst_to_list ... Nil => node, Nil => res_addr
     Pg list_empty { 'res_addr }
-    P { 'node == 0 } Ret |
     Pg bst_to_list_helper { 'node, 'res_addr }
     Ret
 
 @bst_to_list_helper ... Nil => node, Nil => list_addr
+    P { 'node == 0 } Ret |
     node_addr = 'node
     node_val = '(node_addr + 1)
 
     Pg bst_find_children { node_addr, left, right }
 
-    P { 'left /= 0 } case_left | case_left_end
-    @case_left ...
-        Pg bst_to_list_helper { 'left, 'list_addr }
-    @case_left_end ...
-
+    Pg bst_to_list_helper { 'left, 'list_addr }
     Pg list_add { node_val, 'list_addr }
-
-    P { 'right /= 0 } case_right | case_right_end
-    @case_right ...
-        Pg bst_to_list_helper { 'right, 'list_addr }
-    @case_right_end ...
+    Pg bst_to_list_helper { 'right, 'list_addr }
     Ret
 
 @bst_from_list ... Nil => list_addr, Nil => res_addr
