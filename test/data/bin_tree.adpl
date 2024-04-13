@@ -1,56 +1,56 @@
 list1 = [10, 5, 15, 2, 8, 12, 20]
 printList list1
 
-Pg from_list { list1, bin_tree }
-Pg to_list { 'bin_tree, tree_list }
+Pg bst_from_list { list1, bst }
+Pg bst_to_list { 'bst, tree_list }
 printList tree_list
 
-Pg delete { 10, 'bin_tree }
-Pg to_list { 'bin_tree, tree_list }
+Pg bst_delete { 10, 'bst }
+Pg bst_to_list { 'bst, tree_list }
 printList tree_list
 
-Pg delete { 12, 'bin_tree }
-Pg to_list { 'bin_tree, tree_list }
+Pg bst_delete { 12, 'bst }
+Pg bst_to_list { 'bst, tree_list }
 printList tree_list
 
-Pg delete { 15, 'bin_tree }
-Pg to_list { 'bin_tree, tree_list }
+Pg bst_delete { 15, 'bst }
+Pg bst_to_list { 'bst, tree_list }
 printList tree_list
 
-Pg delete { 5, 'bin_tree }
-Pg to_list { 'bin_tree, tree_list }
+Pg bst_delete { 5, 'bst }
+Pg bst_to_list { 'bst, tree_list }
 printList tree_list
 
 !
 
-@create_root ... Nil => val, Nil => res_addr
+@bst_create_root ... Nil => val, Nil => res_addr
     n = (alloc 2) + 0
     ptr(0) => n + 0
     'val => n + 1
     n => 'res_addr
     Ret
 
-@create_child ... Nil => val, Nil => parent_addr, Nil => res_addr
+@bst_create_child ... Nil => val, Nil => parent_addr, Nil => res_addr
     n = (alloc 2) + 0
     ptr('parent_addr) => n + 0
     'val => n + 1
     n => 'res_addr
     Ret
 
-@delete ... Nil => val, Nil => node
+@bst_delete ... Nil => val, Nil => node
     node_addr = 'node
     P { node_addr == 0 } Ret |
     node_val = '(node_addr + 1)
 
-    Pg find_children { node_addr, left, right }
+    Pg bst_find_children { node_addr, left, right }
 
     @case_left ...
     P { 'val < node_val } | case_right
-        Pg delete { 'val, 'left }
+        Pg bst_delete { 'val, 'left }
         end
     @case_right ...
     P { 'val > node_val } | case_cur
-        Pg delete { 'val, 'right }
+        Pg bst_delete { 'val, 'right }
         end
     @case_cur ...
         parent_addr = 'node_addr
@@ -60,21 +60,21 @@ printList tree_list
             end
         @case_no_left ...
         P { 'left == 0 } | case_no_right
-            Pg set_child_2 { node_addr, 'right }
+            Pg bst_shift_child { node_addr, 'right }
             end
         @case_no_right ...
         P { 'right == 0 } | case_both
-            Pg set_child_2 { node_addr, 'left }
+            Pg bst_shift_child { node_addr, 'left }
             end
         @case_both ...
 
-        Pg min_value { 'right, min_val }
-        Pg set_value { node_addr, 'min_val }
-        Pg delete { 'min_val, 'right }
+        Pg bst_min_value { 'right, min_val }
+        Pg bst_set_value { node_addr, 'min_val }
+        Pg bst_delete { 'min_val, 'right }
     @end ...
     Ret
 
-@set_child_2 ... Nil => node, Nil => child
+@bst_shift_child ... Nil => node, Nil => child
     node_addr = 'node
     child_addr = 'child
     parent_addr = 'node_addr
@@ -83,8 +83,8 @@ printList tree_list
 
     P { parent_addr == 0 } | case_not_root
         child_val = '(child_addr + 1)
-        Pg set_value { node_addr, child_val }
-        Pg find_children { child_addr, left, right }
+        Pg bst_set_value { node_addr, child_val }
+        Pg bst_find_children { child_addr, left, right }
         P { 'left /= 0 }   node_addr => 'left |
         P { 'right /= 0 }  node_addr => 'right |
         0 => child_addr
@@ -96,15 +96,15 @@ printList tree_list
     @end ...
     Ret
 
-@set_value ... Nil => node, Nil => val
+@bst_set_value ... Nil => node, Nil => val
     'val => 'node + 1
     Ret
 
-@min_value ... Nil => node, Nil => res_addr
+@bst_min_value ... Nil => node, Nil => res_addr
     current = 'node
 
     @loop ...
-        Pg find_children { current, left, right }
+        Pg bst_find_children { current, left, right }
         P { 'left == 0 } end |
         current = 'left
     loop
@@ -112,7 +112,7 @@ printList tree_list
     @end ... '(current + 1) => 'res_addr
     Ret
 
-@find_children ... Nil => node, Nil => left_addr, Nil => right_addr
+@bst_find_children ... Nil => node, Nil => left_addr, Nil => right_addr
     node_addr = 'node
     node_val = '(node_addr + 1)
 
@@ -129,13 +129,13 @@ printList tree_list
     right => 'right_addr
     Ret
 
-@insert ... Nil => val, Nil => node
+@bst_insert ... Nil => val, Nil => node
     node_addr = 'node
     node_val = '(node_addr + 1)
 
     P { 'val == node_val } Ret |
 
-    Pg find_children { node_addr, left, right }
+    Pg bst_find_children { node_addr, left, right }
 
     is_left = 'val < node_val
 
@@ -143,73 +143,73 @@ printList tree_list
 
     P { cur_child == 0 } case_create | case_insert
     @case_create ...
-        Pg create_child { 'val, node_addr, cur_child_new }
+        Pg bst_create_child { 'val, node_addr, cur_child_new }
         end
     @case_insert ...
-        Pg insert { 'val, cur_child }
+        Pg bst_insert { 'val, cur_child }
         end
 
     @end ...
     Ret
 
-@traverse ... Nil => node
+@bst_traverse ... Nil => node
     node_addr = 'node
     node_val = '(node_addr + 1)
 
-    Pg find_children { node_addr, left, right }
+    Pg bst_find_children { node_addr, left, right }
 
     P { 'left /= 0 } case_left | case_left_end
     @case_left ...
-        Pg traverse { 'left }
+        Pg bst_traverse { 'left }
     @case_left_end ...
 
     print node_val
 
     P { 'right /= 0 } case_right | case_right_end
     @case_right ...
-        Pg traverse { 'right }
+        Pg bst_traverse { 'right }
     @case_right_end ...
     Ret
 
-@to_list ... Nil => node, Nil => res_addr
+@bst_to_list ... Nil => node, Nil => res_addr
     Pg list_empty { 'res_addr }
 
     P { 'node == 0 } Ret |
 
-    Pg to_list_helper { 'node, 'res_addr }
+    Pg bst_to_list_helper { 'node, 'res_addr }
     Ret
 
-@to_list_helper ... Nil => node, Nil => list_addr
+@bst_to_list_helper ... Nil => node, Nil => list_addr
     node_addr = 'node
     node_val = '(node_addr + 1)
 
-    Pg find_children { node_addr, left, right }
+    Pg bst_find_children { node_addr, left, right }
 
     P { 'left /= 0 } case_left | case_left_end
     @case_left ...
-        Pg to_list_helper { 'left, 'list_addr }
+        Pg bst_to_list_helper { 'left, 'list_addr }
     @case_left_end ...
 
     Pg list_add { node_val, 'list_addr }
 
     P { 'right /= 0 } case_right | case_right_end
     @case_right ...
-        Pg to_list_helper { 'right, 'list_addr }
+        Pg bst_to_list_helper { 'right, 'list_addr }
     @case_right_end ...
     Ret
 
-@from_list ... Nil => list_addr, Nil => res_addr
+@bst_from_list ... Nil => list_addr, Nil => res_addr
     h = 'list_addr
     root = 'res_addr
 
     P { 'h == 0 } 0 => root; Ret |
 
     head = '('h + 1)
-    Pg create_root { head, root }
+    Pg bst_create_root { head, root }
     
     L { ''h, 'Nil, P { 'i /= 0 } => i } b
         val = '('i + 1)
-        Pg insert { val, 'root }
+        Pg bst_insert { val, 'root }
     @b ...
     Ret
 
