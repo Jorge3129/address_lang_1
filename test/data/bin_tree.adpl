@@ -4,22 +4,32 @@ printList list1
 Pg bst_from_list { list1, bst }
 Pg bst_to_list { 'bst, tree_list }
 printList tree_list
+Pg bst_size { 'bst, sz }
+print 'sz
 
 Pg bst_delete { 10, 'bst }
 Pg bst_to_list { 'bst, tree_list }
 printList tree_list
+Pg bst_size { 'bst, sz }
+print 'sz
 
 Pg bst_delete { 12, 'bst }
 Pg bst_to_list { 'bst, tree_list }
 printList tree_list
+Pg bst_size { 'bst, sz }
+print 'sz
 
 Pg bst_delete { 15, 'bst }
 Pg bst_to_list { 'bst, tree_list }
 printList tree_list
+Pg bst_size { 'bst, sz }
+print 'sz
 
 Pg bst_delete { 5, 'bst }
 Pg bst_to_list { 'bst, tree_list }
 printList tree_list
+Pg bst_size { 'bst, sz }
+print 'sz
 
 !
 
@@ -171,11 +181,30 @@ printList tree_list
     @case_right_end ...
     Ret
 
+@bst_size ... Nil => node, Nil => res_addr
+    0 => 'res_addr + 0
+    Pg bst_size_helper { 'node, 'res_addr }
+    Ret
+
+@bst_size_helper ... Nil => node, Nil => res_addr
+    node_addr = 'node
+
+    Pg bst_find_children { node_addr, left, right }
+
+    P { 'left /= 0 } | case_left_end
+        Pg bst_size_helper { 'left, 'res_addr }
+    @case_left_end ...
+
+    ''res_addr + 1 => 'res_addr
+
+    P { 'right /= 0 } | case_right_end
+        Pg bst_size_helper { 'right, 'res_addr }
+    @case_right_end ...
+    Ret
+
 @bst_to_list ... Nil => node, Nil => res_addr
     Pg list_empty { 'res_addr }
-
     P { 'node == 0 } Ret |
-
     Pg bst_to_list_helper { 'node, 'res_addr }
     Ret
 
