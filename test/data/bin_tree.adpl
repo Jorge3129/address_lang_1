@@ -31,6 +31,9 @@ printList tree_list
 Pg bst_size { 'bst, sz }
 print 'sz
 
+Pg bst_sum { 'bst, sm }
+print 'sm
+
 !
 
 @bst_create_root ... Nil => val, Nil => res_addr
@@ -148,7 +151,6 @@ print 'sz
     Pg bst_find_children { node_addr, left, right }
 
     is_left = 'val < node_val
-
     P { is_left } cur_child = 'left | cur_child = 'right
 
     P { cur_child == 0 } case_create | case_insert
@@ -199,6 +201,28 @@ print 'sz
 
     P { 'right /= 0 } | case_right_end
         Pg bst_size_helper { 'right, 'res_addr }
+    @case_right_end ...
+    Ret
+
+@bst_sum ... Nil => node, Nil => res_addr
+    0 => 'res_addr + 0
+    Pg bst_sum_helper { 'node, 'res_addr }
+    Ret
+
+@bst_sum_helper ... Nil => node, Nil => res_addr
+    node_addr = 'node
+    node_val = '(node_addr + 1)
+
+    Pg bst_find_children { node_addr, left, right }
+
+    P { 'left /= 0 } | case_left_end
+        Pg bst_sum_helper { 'left, 'res_addr }
+    @case_left_end ...
+
+    ''res_addr + node_val => 'res_addr
+
+    P { 'right /= 0 } | case_right_end
+        Pg bst_sum_helper { 'right, 'res_addr }
     @case_right_end ...
     Ret
 
