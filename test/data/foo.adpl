@@ -1,0 +1,9 @@
+Pg foo { c, d }
+printList m`1`(c) 
+printList m`1`(d) 
+
+!
+
+@foo ... Nil => a, Nil => b
+    'a => 'b
+    Ret

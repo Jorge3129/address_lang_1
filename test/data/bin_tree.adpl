@@ -1,11 +1,12 @@
-list1 = [2]
+list1 = [10, 5, 15, 2, 8, 12, 20]
 printList list1
 
 Pg from_list { list1, bin_tree }
 Pg to_list { 'bin_tree, tree_list }
 printList tree_list
-Pg min_value { 'bin_tree, min_val1 }
-print 'min_val1
+Pg delete { 10, 'bin_tree }
+Pg to_list { 'bin_tree, tree_list1 }
+printList tree_list1
 
 !
 
@@ -21,6 +22,52 @@ print 'min_val1
     ptr('parent_addr) => n + 0
     'val => n + 1
     n => 'res_addr
+    Ret
+
+@delete ... Nil => val, Nil => node
+    node_addr = 'node
+
+    P { node_addr == 0 } Ret |
+
+    node_val = '(node_addr + 1)
+
+    Pg find_children { node_addr, left, right }
+
+    P { 'val < node_val } | case_right
+        Pg delete { 'val, 'left }
+        end
+
+    @case_right ...
+    P { 'val > node_val } | case_cur
+        Pg delete { 'val, 'right }
+        end
+    @case_cur ...
+        parent_addr = 'node_addr
+        P { 'left == 0 } | case_no_right
+            // P { node_val == 15 } print 4000; print '(parent_addr + 1) |
+            Pg set_child { parent_addr, 'right }
+            0 => node_addr
+            end
+        @case_no_right ...
+        P { 'right == 0 } | case_no_both
+            Pg set_child { parent_addr, 'left }
+            0 => node_addr
+            end
+        @case_no_both ...
+
+        Pg min_value { 'right, min_val }
+        Pg set_value { node_addr, 'min_val }
+        Pg delete { 'min_val, 'right }
+    @end ...
+    Ret
+
+@set_child ... Nil => parent_addr, Nil => child_addr
+    P { 'child_addr == 0 } Ret |
+    'parent_addr => 'child_addr
+    Ret
+
+@set_value ... Nil => node, Nil => val
+    'val => 'node + 1
     Ret
 
 @min_value ... Nil => node, Nil => res_addr
