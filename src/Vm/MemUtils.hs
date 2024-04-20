@@ -30,7 +30,7 @@ allocNInit n vm = do
   vm1 <-
     foldM
       ( \vm_ offset ->
-          memSet (freeAddr + offset) 0 vm_
+          memSet (freeAddr + offset) 0 vm_ >> return vm_
       )
       vm
       [0 .. (n - 1)]
@@ -62,9 +62,9 @@ constructList vals vm = do
     consList' :: Int -> [Value] -> VM -> IO VM
     consList' prevAddr (x : xs) vm_ = do
       newAddr <- allocN 2 (memory vm_)
-      _ <- memSet prevAddr (PointerVal newAddr) vm_
-      _ <- memSet newAddr (PointerVal 0) vm_
-      _ <- memSet (newAddr + 1) x vm_
+      memSet prevAddr (PointerVal newAddr) vm_
+      memSet newAddr (PointerVal 0) vm_
+      memSet (newAddr + 1) x vm_
       consList' newAddr xs vm_
     consList' _ [] vm_ = return vm_
 
@@ -114,11 +114,9 @@ castAsType oldVal val
   | isPointer oldVal = asPointer val
   | otherwise = val
 
-memSet :: Int -> Value -> VM -> IO VM
+memSet :: Int -> Value -> VM -> IO ()
 memSet addr val vm
-  | addr >= 0 = do
-      IA.writeArray (memory vm) addr val
-      return vm
+  | addr >= 0 = IA.writeArray (memory vm) addr val
   | otherwise = error $ "Cannot set memory at address " ++ show addr
 
 scopedVar :: VM -> String -> String

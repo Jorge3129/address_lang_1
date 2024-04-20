@@ -100,27 +100,27 @@ execInstruction OP_SEND vm = do
       destAddr = checkAddrForSend addr
   oldVal <- deref addr vm2
   let castVal = castAsType oldVal val
-  vm3 <- destAddr `seq` castVal `seq` memSet destAddr castVal vm2
-  return' vm3
+  castVal `seq` memSet destAddr castVal vm2
+  return' vm2
 --
 execInstruction OP_DEREF vm = do
   let (addr, vm1) = popMap asInt vm
   val <- deref addr vm1
-  return' $ val `seq` push vm1 val
+  return' $ push vm1 val
 --
 execInstruction OP_MUL_DEREF vm = do
   let (addrVal, vm1) = pop vm
       (count, vm2) = popMap asInt vm1
   val <- mulDeref count addrVal vm2
-  return' $ val `seq` push vm2 val
+  return' $ push vm2 val
 --
 execInstruction OP_EXCHANGE vm = do
   let (addrB, vm1) = popMap asInt vm
       (addrA, vm2) = popMap asInt vm1
   valA <- deref addrA vm2
   valB <- deref addrB vm2
-  _ <- valB `seq` memSet addrA valB vm2
-  _ <- valA `seq` memSet addrB valA vm2
+  memSet addrA valB vm2
+  memSet addrB valA vm2
   return' vm2
 --
 execInstruction OP_NOT vm = do
@@ -169,18 +169,21 @@ execInstruction OP_SET_VAR vm = do
   oldVal <- deref addr vm1
   let (val, vm2) = pop vm1
       castVal = castAsType oldVal val
-  return'' $ memSet addr castVal vm2
+  memSet addr castVal vm2
+  return' vm2
 --
 execInstruction OP_MAKE_VAR_POINTER vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 Map.! scopedVar vm name
   oldVal <- deref addr vm1
-  return'' $ memSet addr (asPointer oldVal) vm1
+  memSet addr (asPointer oldVal) vm1
+  return' vm1
 --
 execInstruction OP_MAKE_POINTER vm = do
   let addr = asInt (peek 0 vm)
   oldVal <- deref addr vm
-  return'' $ memSet addr (asPointer oldVal) vm
+  memSet addr (asPointer oldVal) vm
+  return' vm
 --
 execInstruction OP_CAST_AS_PTR vm = do
   let (oldVal, vm1) = pop vm

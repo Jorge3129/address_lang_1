@@ -143,10 +143,13 @@ mulV (DoubleVal a) (IntVal b) = DoubleVal $ a * fromIntegral b
 mulV a b = error $ "cannot multiply " ++ show a ++ " and " ++ show b
 
 divV :: Value -> Value -> Value
-divV (IntVal a) (IntVal b) = DoubleVal $ fromIntegral a / fromIntegral b
--- divV (IntVal a) (IntVal b) = IntVal $ a `div` b
+divV _ (IntVal 0) = error "zero division error"
+divV _ (PointerVal 0) = error "zero division error"
+divV _ (DoubleVal 0) = error "zero division error"
+--
+divV (IntVal a) (IntVal b) = IntVal $ a `div` b
 divV (DoubleVal a) (DoubleVal b) = DoubleVal $ a / b
 --
 divV (IntVal a) (DoubleVal b) = DoubleVal $ fromIntegral a / b
 divV (DoubleVal a) (IntVal b) = DoubleVal $ a / fromIntegral b
-divV a b = error $ "cannot divide " ++ show a ++ " and " ++ show b
+divV a b = error $ "cannot divide " ++ show a ++ " by " ++ show b
