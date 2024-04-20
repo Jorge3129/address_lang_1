@@ -1,4 +1,8 @@
 module Main (main) where
 
+import Lib (execFile)
+
 main :: IO ()
-main = return ()
+main = do
+  execFile "bin_tree"
+  return ()
