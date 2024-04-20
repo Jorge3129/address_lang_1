@@ -39,7 +39,6 @@ library
       MyUtils
       Tokens
       Value.Core
-      Value.WordUtils
       Vm.Core
       Vm.MemUtils
       Vm.State

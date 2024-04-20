@@ -6,15 +6,13 @@ import Control.Monad (foldM, forM, forM_)
 import qualified Data.Array.IO as IA
 import Data.List (foldl')
 import qualified Data.Map as Map
-import Data.Word (Word64)
 import MyUtils (lpad)
 import Value.Core
-import Value.WordUtils (valueToWord64, word64ToValue)
 import Vm.State
 
-allocN :: Int -> IA.IOUArray Int Word64 -> IO Int
+allocN :: Int -> VMMemory -> IO Int
 allocN n valuesRaw = do
-  values <- map word64ToValue <$> IA.getElems valuesRaw
+  values <- IA.getElems valuesRaw
   return $ allocHelper values 0 0
   where
     allocHelper :: [Value] -> Int -> Int -> Int
@@ -76,7 +74,7 @@ freeVars vm = do
       locals = [(varName, addr) | (varName, addr) <- Map.toList (varsMap vm), getVarScope varName == curScope]
       localAddrs = map snd locals
   forM_ localAddrs $ \addr -> do
-    IA.writeArray (memory vm) addr (valueToWord64 NilVal)
+    IA.writeArray (memory vm) addr NilVal
   return
     vm
       { varsMap = foldl' (flip Map.delete) (varsMap vm) (map fst locals)
@@ -88,14 +86,14 @@ getRefsToAddr addr vm = do
   let (low, high) = bounds
   indexes <- forM [low + 1 .. high] $ \i -> do
     val <- IA.readArray (memory vm) i
-    if isPointer (word64ToValue val) && asInt (word64ToValue val) == addr
+    if isPointer val && asInt val == addr
       then return i
       else return (-1)
   return $ filter (/= -1) indexes
 
 deref :: Int -> VM -> IO Value
 deref addr vm
-  | addr > 0 = word64ToValue <$> IA.readArray (memory vm) addr
+  | addr > 0 = IA.readArray (memory vm) addr
   | otherwise = error $ "Cannot dereference memory at " ++ show addr
 
 mulDeref :: Int -> Value -> VM -> IO Value
@@ -119,7 +117,7 @@ castAsType oldVal val
 memSet :: Int -> Value -> VM -> IO VM
 memSet addr val vm
   | addr >= 0 = do
-      IA.writeArray (memory vm) addr (valueToWord64 val)
+      IA.writeArray (memory vm) addr val
       return vm
   | otherwise = error $ "Cannot set memory at address " ++ show addr
 

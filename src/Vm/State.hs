@@ -5,15 +5,15 @@ module Vm.State where
 import ByteCode.Core
 import qualified Data.Array.IO as IA
 import qualified Data.Map as Map
-import Data.Word (Word64)
 import Value.Core
-import Value.WordUtils
+
+type VMMemory = IA.IOArray Int Value
 
 data VM = VM
   { chunk :: !Chunk,
     ip :: !Int,
     stack :: ![Value],
-    memory :: !(IA.IOUArray Int Word64),
+    memory :: !VMMemory,
     varsMap :: !(Map.Map String Int),
     vmCalls :: ![(String, Int)]
   }
@@ -21,10 +21,8 @@ data VM = VM
 memMax :: Int
 memMax = 5000
 
-newMemory :: Int -> IO (IA.IOUArray Int Word64)
-newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) nilVal)
-  where
-    nilVal = valueToWord64 NilVal
+newMemory :: Int -> IO VMMemory
+newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
 
 initVM :: Chunk -> IO VM
 initVM ch = do
