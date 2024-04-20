@@ -17,6 +17,7 @@ main = do
   -- print progAst
   ch <- compileProg progAst
   -- disassembleChunk ch "test chunk"
-  res <- run (initVM ch)
+  vm <- initVM ch
+  res <- run vm
   -- print res
   return ()

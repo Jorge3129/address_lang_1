@@ -46,8 +46,8 @@ execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm@(VM {vmCalls = []}) = returnOk vm
 execInstruction OP_RETURN vm@(VM {vmCalls = ((fn, ret) : calls)}) = do
   -- print $ "Returning from " ++ fn
-  let vmFreed = freeVars vm
-      vm1 = vmFreed {vmCalls = calls, ip = ret}
+  vmFreed <- freeVars vm
+  let vm1 = vmFreed {vmCalls = calls, ip = ret}
   return' vm1
 --
 execInstruction OP_CONSTANT vm = do
@@ -74,55 +74,55 @@ execInstruction OP_PRINT vm = do
 --
 execInstruction OP_PRINT_LIST vm = do
   let (val, newVm) = pop vm
-      list = parseList val vm
+  list <- parseList val vm
   print list
   return' newVm
 --
 execInstruction OP_PRINT_REFS vm = do
   let (addr, newVm) = popMap asInt vm
-  let refs = getRefsToAddr addr vm
+  refs <- getRefsToAddr addr vm
   putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
   return' newVm
 --
 execInstruction OP_GET_REFS vm = do
   let (addr, vm1) = popMap asInt vm
-  let refs = getRefsToAddr addr vm1
-  let (listHead, vm2) = constructList (map IntVal refs) vm1
+  refs <- getRefsToAddr addr vm1
+  (listHead, vm2) <- constructList (map IntVal refs) vm1
   return' $ push vm2 listHead
 --
 execInstruction OP_CONSTR_LIST vm = do
   let (len, vm1) = popMap asInt vm
   let (elems, vm2) = popN len vm1
-  let (listHead, vm3) = constructList (reverse elems) vm2
+  (listHead, vm3) <- constructList (reverse elems) vm2
   return' $ push vm3 listHead
 --
 execInstruction OP_SEND vm = do
   let (addr, vm1) = popMap asInt vm
       (val, vm2) = pop vm1
       destAddr = checkAddrForSend addr
-      oldVal = deref addr vm2
-      castVal = castAsType oldVal val
-      vm3 = destAddr `seq` castVal `seq` memSet destAddr castVal vm2
+  oldVal <- deref addr vm2
+  let castVal = castAsType oldVal val
+  vm3 <- destAddr `seq` castVal `seq` memSet destAddr castVal vm2
   return' vm3
 --
 execInstruction OP_DEREF vm = do
   let (addr, vm1) = popMap asInt vm
-      val = deref addr vm1
+  val <- deref addr vm1
   return' $ val `seq` push vm1 val
 --
 execInstruction OP_MUL_DEREF vm = do
   let (addrVal, vm1) = pop vm
       (count, vm2) = popMap asInt vm1
-      val = mulDeref count addrVal vm2
+  val <- mulDeref count addrVal vm2
   return' $ val `seq` push vm2 val
 --
 execInstruction OP_EXCHANGE vm = do
   let (addrB, vm1) = popMap asInt vm
       (addrA, vm2) = popMap asInt vm1
-      valA = deref addrA vm2
-      valB = deref addrB vm2
-      vm3 = valB `seq` memSet addrA valB vm2
-      vm4 = valA `seq` memSet addrB valA vm3
+  valA <- deref addrA vm2
+  valB <- deref addrB vm2
+  vm3 <- valB `seq` memSet addrA valB vm2
+  vm4 <- valA `seq` memSet addrB valA vm3
   return' vm4
 --
 execInstruction OP_NOT vm = do
@@ -162,39 +162,39 @@ execInstruction OP_DEFINE_VAR vm = do
 execInstruction OP_GET_VAR vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 Map.! scopedVar vm name
-      val = deref addr vm1
+  val <- deref addr vm1
   return' $ push vm1 val
 --
 execInstruction OP_SET_VAR vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 Map.! scopedVar vm name
-      oldVal = deref addr vm1
-      (val, vm2) = pop vm1
+  oldVal <- deref addr vm1
+  let (val, vm2) = pop vm1
       castVal = castAsType oldVal val
-  return' $ memSet addr castVal vm2
+  return'' $ memSet addr castVal vm2
 --
 execInstruction OP_MAKE_VAR_POINTER vm = do
   let (name, vm1) = readStr vm
       addr = varsMap vm1 Map.! scopedVar vm name
-      oldVal = deref addr vm1
-  return' $ memSet addr (asPointer oldVal) vm1
+  oldVal <- deref addr vm1
+  return'' $ memSet addr (asPointer oldVal) vm1
 --
 execInstruction OP_MAKE_POINTER vm = do
   let addr = asInt (peek 0 vm)
-      oldVal = deref addr vm
-  return' $ memSet addr (asPointer oldVal) vm
+  oldVal <- deref addr vm
+  return'' $ memSet addr (asPointer oldVal) vm
 --
 execInstruction OP_CAST_AS_PTR vm = do
   let (oldVal, vm1) = pop vm
   return' $ push vm1 (asPointer oldVal)
 --
 execInstruction OP_ALLOC vm = do
-  let (freeAddr, vm1) = allocNInit 1 vm
+  (freeAddr, vm1) <- allocNInit 1 vm
   return' $ push vm1 (IntVal freeAddr)
 --
 execInstruction OP_ALLOC_N vm = do
   let (n, vm1) = popMap asInt vm
-      (freeAddr, vm2) = allocNInit n vm1
+  (freeAddr, vm2) <- allocNInit n vm1
   return' $ push vm2 (PointerVal freeAddr)
 --
 execInstruction OP_CALL vm = do
@@ -233,6 +233,11 @@ logInstr op vm = do
 return' :: VM -> IO (VM, Maybe InterpretResult)
 return' vm = do
   res <- evaluate vm
+  return (res, Nothing)
+
+return'' :: IO VM -> IO (VM, Maybe InterpretResult)
+return'' vm = do
+  res <- vm
   return (res, Nothing)
 
 returnOk :: VM -> IO (VM, Maybe InterpretResult)

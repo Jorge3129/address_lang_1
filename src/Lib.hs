@@ -14,6 +14,7 @@ execFile fileName = do
   tokens <- scanTokens <$> readFile (basePath ++ "/" ++ fileName ++ ".adpl")
   let progAst = parseProg tokens
   ch <- compileProg progAst
-  res <- run (initVM ch)
+  vm <- initVM ch
+  res <- run vm
   print res
   return ()

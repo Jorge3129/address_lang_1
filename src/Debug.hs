@@ -3,6 +3,7 @@
 module Debug where
 
 import ByteCode.Core
+import MyUtils (lpad)
 
 disassembleChunk :: Chunk -> String -> IO ()
 disassembleChunk chunk name = do
@@ -15,11 +16,6 @@ disassembleInstructions chunk offset
       newOffset <- disassembleInstruction chunk offset
       disassembleInstructions chunk newOffset
   | otherwise = return ()
-
-lpad :: a -> Int -> [a] -> [a]
-lpad pad m xs = replicate (m - length ys) pad ++ ys
-  where
-    ys = take m xs
 
 getPrintLineData :: Chunk -> Int -> String
 getPrintLineData (Chunk {codeLines}) offset =

@@ -3,44 +3,41 @@
 module Vm.State where
 
 import ByteCode.Core
+import qualified Data.Array.IO as IA
 import qualified Data.Map as Map
-import Debug (lpad)
-import MyUtils
+import Data.Word (Word64)
 import Value.Core
+import Value.WordUtils
 
 data VM = VM
   { chunk :: !Chunk,
     ip :: !Int,
     stack :: ![Value],
-    memory :: ![Value],
+    memory :: !(IA.IOUArray Int Word64),
     varsMap :: !(Map.Map String Int),
     vmCalls :: ![(String, Int)]
   }
-  deriving (Eq, Show)
-
--- data VM = VM
---   { chunk :: Chunk,
---     ip :: Int,
---     stack :: [Value],
---     memory :: [Value],
---     varsMap :: Map.Map String Int,
---     vmCalls :: [(String, Int)]
---   }
---   deriving (Eq, Show)
 
 memMax :: Int
 memMax = 5000
 
-initVM :: Chunk -> VM
-initVM ch =
-  VM
-    { chunk = ch,
-      ip = 0,
-      stack = [],
-      memory = 0 : replicate (memMax - 1) NilVal,
-      varsMap = Map.empty,
-      vmCalls = []
-    }
+newMemory :: Int -> IO (IA.IOUArray Int Word64)
+newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) nilVal)
+  where
+    nilVal = valueToWord64 NilVal
+
+initVM :: Chunk -> IO VM
+initVM ch = do
+  mem <- newMemory memMax
+  return
+    VM
+      { chunk = ch,
+        ip = 0,
+        stack = [],
+        memory = mem,
+        varsMap = Map.empty,
+        vmCalls = []
+      }
 
 -- TODO change arg order
 push :: VM -> Value -> VM
@@ -90,16 +87,3 @@ readStr vm =
   let (val, vm1) = readConst vm
       res = asStr val
    in res `seq` (res, vm1)
-
-memSet :: Int -> Value -> VM -> VM
-memSet addr val vm
-  | addr > 0 = vm {memory = replace addr val (memory vm)}
-  | otherwise = error $ "Cannot set memory at address " ++ show addr
-
-scopedVar :: VM -> String -> String
-scopedVar vm name =
-  let scope = lpad '0' 8 $ show $ length $ vmCalls vm
-   in scope ++ name
-
-getVarScope :: String -> Int
-getVarScope s = read $ take 8 s

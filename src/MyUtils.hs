@@ -7,3 +7,8 @@ untilM p f x
 
 replace :: Int -> a -> [a] -> [a]
 replace i val xs = [if xi == i then val else x | (x, xi) <- zip xs [0 :: Int ..]]
+
+lpad :: a -> Int -> [a] -> [a]
+lpad pad m xs = replicate (m - length ys) pad ++ ys
+  where
+    ys = take m xs
