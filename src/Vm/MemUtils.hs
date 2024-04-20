@@ -62,10 +62,10 @@ constructList vals vm = do
     consList' :: Int -> [Value] -> VM -> IO VM
     consList' prevAddr (x : xs) vm_ = do
       newAddr <- allocN 2 (memory vm_)
-      vm1_ <- memSet prevAddr (PointerVal newAddr) vm_
-      vm2_ <- memSet newAddr (PointerVal 0) vm1_
-      vm3_ <- memSet (newAddr + 1) x vm2_
-      consList' newAddr xs vm3_
+      _ <- memSet prevAddr (PointerVal newAddr) vm_
+      _ <- memSet newAddr (PointerVal 0) vm_
+      _ <- memSet (newAddr + 1) x vm_
+      consList' newAddr xs vm_
     consList' _ [] vm_ = return vm_
 
 freeVars :: VM -> IO VM

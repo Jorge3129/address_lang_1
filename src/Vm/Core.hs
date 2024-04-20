@@ -1,5 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
-
 module Vm.Core where
 
 import ByteCode.Core
@@ -121,9 +119,9 @@ execInstruction OP_EXCHANGE vm = do
       (addrA, vm2) = popMap asInt vm1
   valA <- deref addrA vm2
   valB <- deref addrB vm2
-  vm3 <- valB `seq` memSet addrA valB vm2
-  vm4 <- valA `seq` memSet addrB valA vm3
-  return' vm4
+  _ <- valB `seq` memSet addrA valB vm2
+  _ <- valA `seq` memSet addrB valA vm2
+  return' vm2
 --
 execInstruction OP_NOT vm = do
   let (val, newVm) = pop vm
