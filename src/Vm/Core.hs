@@ -47,7 +47,7 @@ execInstruction OP_RETURN vm@(VM {vmCalls = []}) = returnOk vm
 execInstruction OP_RETURN vm@(VM {vmCalls = ((_, ret) : calls)}) = do
   vmFreed <- freeVars vm
   let vm1 = vmFreed {vmCalls = calls}
-  setIp ret vm
+  setIp ret vm1
   return' vm1
 --
 execInstruction OP_CONSTANT vm = do
@@ -87,16 +87,16 @@ execInstruction OP_PRINT_REFS vm = do
 execInstruction OP_GET_REFS vm = do
   addr <- asInt <$> pop vm
   refs <- getRefsToAddr addr vm
-  (listHead, vm2) <- constructList (map IntVal refs) vm
-  push vm2 listHead
-  return' vm2
+  listHead <- constructList (map IntVal refs) vm
+  push vm listHead
+  return' vm
 --
 execInstruction OP_CONSTR_LIST vm = do
   len <- asInt <$> pop vm
   elems <- popN len vm
-  (listHead, vm3) <- constructList (reverse elems) vm
-  push vm3 listHead
-  return' vm3
+  listHead <- constructList (reverse elems) vm
+  push vm listHead
+  return' vm
 --
 execInstruction OP_SEND vm = do
   addr <- asInt <$> pop vm
@@ -159,8 +159,8 @@ execInstruction OP_JUMP_IF_FALSE vm = do
 execInstruction OP_DEFINE_VAR vm = do
   name <- readStr vm
   addr <- asInt <$> pop vm
-  let vm3 = vm {varsMap = Map.insert (scopedVar vm name) addr (varsMap vm)}
-  return' vm3
+  let vm1 = vm {varsMap = Map.insert (scopedVar vm name) addr (varsMap vm)}
+  return' vm1
 --
 execInstruction OP_GET_VAR vm = do
   name <- readStr vm
@@ -193,27 +193,27 @@ execInstruction OP_MAKE_POINTER vm = do
 --
 execInstruction OP_CAST_AS_PTR vm = do
   oldVal <- pop vm
-  push vm (asPointer oldVal)
+  push vm $ asPointer oldVal
   return' vm
 --
 execInstruction OP_ALLOC vm = do
-  (freeAddr, vm1) <- allocNInit 1 vm
-  push vm1 (IntVal freeAddr)
-  return' vm1
+  freeAddr <- allocNInit 1 vm
+  push vm $ IntVal freeAddr
+  return' vm
 --
 execInstruction OP_ALLOC_N vm = do
   n <- asInt <$> pop vm
-  (freeAddr, vm2) <- allocNInit n vm
-  push vm2 (PointerVal freeAddr)
-  return' vm2
+  freeAddr <- allocNInit n vm
+  push vm $ PointerVal freeAddr
+  return' vm
 --
 execInstruction OP_CALL vm = do
   fnName <- readStr vm
   let jumpTo = chLabelMap (chunk vm) Map.! fnName
   curIp <- readIp vm
-  let vm2 = vm {vmCalls = (fnName, curIp) : vmCalls vm}
-  setIp jumpTo vm2
-  return' vm2
+  let vm1 = vm {vmCalls = (fnName, curIp) : vmCalls vm}
+  setIp jumpTo vm1
+  return' vm1
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 

@@ -1,8 +1,6 @@
-{-# LANGUAGE BangPatterns #-}
-
 module Vm.MemUtils where
 
-import Control.Monad (foldM, forM, forM_)
+import Control.Monad (forM, forM_)
 import qualified Data.Array.IO as IA
 import Data.List (foldl')
 import qualified Data.Map as Map
@@ -11,30 +9,29 @@ import Value.Core
 import Vm.State
 
 allocN :: Int -> VMMemory -> IO Int
-allocN n valuesRaw = do
-  values <- IA.getElems valuesRaw
-  return $ allocHelper values 0 0
+allocN n vmMemory = do
+  (low, high) <- IA.getBounds vmMemory
+  allocHelper 0 (low + 1) high
   where
-    allocHelper :: [Value] -> Int -> Int -> Int
-    allocHelper [] !currentIndex !count
-      | count >= n = currentIndex - count
-      | otherwise = error $ "Cound not allocate " ++ show n ++ " cells of memory"
-    allocHelper (x : xs) !currentIndex !count
-      | count >= n = currentIndex - count
-      | x == NilVal = allocHelper xs (currentIndex + 1) (count + 1)
-      | otherwise = allocHelper xs (currentIndex + 1) 0
+    allocHelper :: Int -> Int -> Int -> IO Int
+    allocHelper count currentIndex endIndex
+      | currentIndex > endIndex = error $ "Cound not allocate " ++ show n ++ " cells of memory"
+      | count >= n = return $ currentIndex - count
+      | otherwise = do
+          curVal <- IA.readArray vmMemory currentIndex
+          if curVal == NilVal
+            then allocHelper (count + 1) (currentIndex + 1) endIndex
+            else allocHelper 0 (currentIndex + 1) endIndex
 
-allocNInit :: Int -> VM -> IO (Int, VM)
+allocNInit :: Int -> VM -> IO Int
 allocNInit n vm = do
   freeAddr <- allocN n (memory vm)
-  vm1 <-
-    foldM
-      ( \vm_ offset ->
-          memSet (freeAddr + offset) 0 vm_ >> return vm_
-      )
-      vm
-      [0 .. (n - 1)]
-  return (freeAddr, vm1)
+  forM_
+    [0 .. (n - 1)]
+    ( \offset ->
+        memSet (freeAddr + offset) 0 vm
+    )
+  return freeAddr
 
 parseList :: Value -> VM -> IO [Value]
 parseList val vm = do
@@ -50,23 +47,21 @@ parseList val vm = do
       curVal <- deref (curAddr + 1) vm_
       parseList' (asInt nextAddr) (acc ++ [curVal]) vm_
 
-constructList :: [Value] -> VM -> IO (Value, VM)
-constructList [] vm = do
-  (freeAddr, vm1) <- allocNInit 1 vm
-  return (PointerVal freeAddr, vm1)
+constructList :: [Value] -> VM -> IO Value
+constructList [] vm = PointerVal <$> allocNInit 1 vm
 constructList vals vm = do
-  (freeAddr, vm1) <- allocNInit 1 vm
-  vm2 <- consList' freeAddr vals vm1
-  return (PointerVal freeAddr, vm2)
+  freeAddr <- allocNInit 1 vm
+  consList' freeAddr vals vm
+  return $ PointerVal freeAddr
   where
-    consList' :: Int -> [Value] -> VM -> IO VM
+    consList' :: Int -> [Value] -> VM -> IO ()
     consList' prevAddr (x : xs) vm_ = do
       newAddr <- allocN 2 (memory vm_)
       memSet prevAddr (PointerVal newAddr) vm_
       memSet newAddr (PointerVal 0) vm_
       memSet (newAddr + 1) x vm_
       consList' newAddr xs vm_
-    consList' _ [] vm_ = return vm_
+    consList' _ [] _ = return ()
 
 freeVars :: VM -> IO VM
 freeVars vm = do
@@ -82,8 +77,7 @@ freeVars vm = do
 
 getRefsToAddr :: Int -> VM -> IO [Int]
 getRefsToAddr addr vm = do
-  bounds <- IA.getBounds (memory vm)
-  let (low, high) = bounds
+  (low, high) <- IA.getBounds (memory vm)
   indexes <- forM [low + 1 .. high] $ \i -> do
     val <- IA.readArray (memory vm) i
     if isPointer val && asInt val == addr
