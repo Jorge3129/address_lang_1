@@ -14,7 +14,7 @@ $cr = \r
 @eol_pattern = $lf | $cr $lf | $cr $lf
 @id = $letter ($letter | $digit | _)*
 @decimal = $digit+
-@kw = (P|L|Pg|Nil|Ret|Cj|not|and|or)
+@kw = (P|L|R|Pg|Nil|Ret|Cj|not|and|or)
 @builtinProc = (print|printList|printRefs)
 @builtinFn = (getRefs|alloc|ptr)
 
