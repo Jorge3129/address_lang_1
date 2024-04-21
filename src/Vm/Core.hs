@@ -45,8 +45,8 @@ runStep (vm, _) = do
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm@(VM {vmCalls = []}) = returnOk vm
 execInstruction OP_RETURN vm@(VM {vmCalls = ((_, ret) : calls)}) = do
-  vmFreed <- freeVars vm
-  let vm1 = vmFreed {vmCalls = calls}
+  freeVars vm
+  let vm1 = vm {vmCalls = calls}
   setIp ret vm1
   return' vm1
 --
@@ -159,19 +159,19 @@ execInstruction OP_JUMP_IF_FALSE vm = do
 execInstruction OP_DEFINE_VAR vm = do
   name <- readStr vm
   addr <- asInt <$> pop vm
-  let vm1 = vm {varsMap = Map.insert (scopedVar vm name) addr (varsMap vm)}
-  return' vm1
+  defineVar name addr vm
+  return' vm
 --
 execInstruction OP_GET_VAR vm = do
   name <- readStr vm
-  let addr = varsMap vm Map.! scopedVar vm name
+  addr <- getVarAddr name vm
   val <- deref addr vm
   push vm val
   return' vm
 --
 execInstruction OP_SET_VAR vm = do
   name <- readStr vm
-  let addr = varsMap vm Map.! scopedVar vm name
+  addr <- getVarAddr name vm
   oldVal <- deref addr vm
   val <- pop vm
   let castVal = castAsType oldVal val
@@ -180,7 +180,7 @@ execInstruction OP_SET_VAR vm = do
 --
 execInstruction OP_MAKE_VAR_POINTER vm = do
   name <- readStr vm
-  let addr = varsMap vm Map.! scopedVar vm name
+  addr <- getVarAddr name vm
   oldVal <- deref addr vm
   memSet addr (asPointer oldVal) vm
   return' vm

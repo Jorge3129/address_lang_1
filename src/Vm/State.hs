@@ -8,25 +8,27 @@ import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
 import Value.Core
 
-type VMMemory = IA.IOArray Int Value
+type VmMemory = IA.IOArray Int Value
 
 type VmIp = IORef Int
 
 type VmStack = IORef [Value]
 
+type VmVarsMap = IORef (Map.Map String Int)
+
 data VM = VM
   { chunk :: !Chunk,
     ip :: !VmIp,
     stack :: !VmStack,
-    memory :: !VMMemory,
-    varsMap :: !(Map.Map String Int),
+    memory :: !VmMemory,
+    varsMap :: !VmVarsMap,
     vmCalls :: ![(String, Int)]
   }
 
 memMax :: Int
 memMax = 5000
 
-newMemory :: Int -> IO VMMemory
+newMemory :: Int -> IO VmMemory
 newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
 
 initVM :: Chunk -> IO VM
@@ -34,13 +36,14 @@ initVM ch = do
   mem <- newMemory memMax
   ip <- newIORef 0
   stack <- newIORef []
+  varsMap <- newIORef Map.empty
   return
     VM
       { chunk = ch,
         ip = ip,
         stack = stack,
         memory = mem,
-        varsMap = Map.empty,
+        varsMap = varsMap,
         vmCalls = []
       }
 

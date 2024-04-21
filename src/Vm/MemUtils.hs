@@ -2,13 +2,14 @@ module Vm.MemUtils where
 
 import Control.Monad (forM, forM_)
 import qualified Data.Array.IO as IA
+import Data.IORef (modifyIORef, readIORef)
 import Data.List (foldl')
 import qualified Data.Map as Map
 import MyUtils (lpad)
 import Value.Core
 import Vm.State
 
-allocN :: Int -> VMMemory -> IO Int
+allocN :: Int -> VmMemory -> IO Int
 allocN n vmMemory = do
   (low, high) <- IA.getBounds vmMemory
   allocHelper 0 (low + 1) high
@@ -63,17 +64,25 @@ constructList vals vm = do
       consList' newAddr xs vm_
     consList' _ [] _ = return ()
 
-freeVars :: VM -> IO VM
-freeVars vm = do
+defineVar :: String -> Int -> VM -> IO ()
+defineVar nm addr vm =
+  modifyIORef (varsMap vm) (Map.insert (scopedVar vm nm) addr)
+
+getVarAddr :: String -> VM -> IO Int
+getVarAddr name vm = (Map.! scopedVar vm name) <$> readIORef (varsMap vm)
+
+getLocalVars :: VM -> IO [(String, Int)]
+getLocalVars vm = do
   let curScope = length (vmCalls vm)
-      locals = [(varName, addr) | (varName, addr) <- Map.toList (varsMap vm), getVarScope varName == curScope]
-      localAddrs = map snd locals
-  forM_ localAddrs $ \addr -> do
+  allVars <- Map.toList <$> readIORef (varsMap vm)
+  return $ [(nm, add) | (nm, add) <- allVars, getVarScope nm == curScope]
+
+freeVars :: VM -> IO ()
+freeVars vm = do
+  locals <- getLocalVars vm
+  forM_ locals $ \(nm, addr) -> do
+    modifyIORef (varsMap vm) (Map.delete nm)
     IA.writeArray (memory vm) addr NilVal
-  return
-    vm
-      { varsMap = foldl' (flip Map.delete) (varsMap vm) (map fst locals)
-      }
 
 getRefsToAddr :: Int -> VM -> IO [Int]
 getRefsToAddr addr vm = do
