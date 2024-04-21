@@ -2,6 +2,7 @@ module Vm.Core where
 
 import ByteCode.Core
 import Control.Exception as Exc
+import qualified Control.Monad as CM
 import Data.Bifunctor
 import Data.List (foldl')
 import qualified Data.Map as Map
@@ -22,11 +23,12 @@ run vm = do
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) = do
   -- _ <- disassembleInstruction (chunk vm) (ip vm)
-  let lineNum = getLineByOffset (ip vm) (chunk vm) + 1
+  curIp <- readIp vm
+  let lineNum = getLineByOffset curIp (chunk vm) + 1
   -- print $ getLineByOffset (ip vm) (chunk vm) + 1
-  let (instruction, newVm) = readByte vm
+  instruction <- readByte vm
   -- print $ (toEnum instruction :: OpCode)
-  (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) newVm) (handler lineNum)
+  (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) vm) (handler lineNum)
   -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
   -- print $ map (second (memory resVM !!)) (Map.toList (varsMap resVM))
@@ -42,16 +44,15 @@ runStep (vm, _) = do
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm@(VM {vmCalls = []}) = returnOk vm
-execInstruction OP_RETURN vm@(VM {vmCalls = ((fn, ret) : calls)}) = do
-  -- print $ "Returning from " ++ fn
+execInstruction OP_RETURN vm@(VM {vmCalls = ((_, ret) : calls)}) = do
   vmFreed <- freeVars vm
-  let vm1 = vmFreed {vmCalls = calls, ip = ret}
+  let vm1 = vmFreed {vmCalls = calls}
+  setIp ret vm
   return' vm1
 --
 execInstruction OP_CONSTANT vm = do
-  let (val, newVm) = readConst vm
-      newVm1 = val `seq` push newVm val
-  return' newVm1
+  val <- readConst vm
+  return' $ val `seq` push vm val
 --
 execInstruction OP_ADD vm = binaryInstr (+) vm
 execInstruction OP_SUB vm = binaryInstr (-) vm
@@ -140,44 +141,42 @@ execInstruction OP_POP vm = do
   return' newVm
 --
 execInstruction OP_JUMP vm = do
-  let (jumpOffset, newVm) = readByte vm
-  return' $ addIp jumpOffset newVm
+  jumpOffset <- readByte vm
+  addIp jumpOffset vm
+  return' vm
 --
 execInstruction OP_JUMP_IF_FALSE vm = do
-  let (jumpOffset, newVm) = readByte vm
-      newVm1 =
-        if isFalsy (peek 0 vm)
-          then addIp jumpOffset newVm
-          else newVm
-  return' newVm1
+  jumpOffset <- readByte vm
+  CM.when (isFalsy (peek 0 vm)) $ addIp jumpOffset vm
+  return' vm
 --
 execInstruction OP_DEFINE_VAR vm = do
-  let (name, vm1) = readStr vm
-      (addr, vm2) = popMap asInt vm1
+  name <- readStr vm
+  let (addr, vm2) = popMap asInt vm
       vm3 = vm2 {varsMap = Map.insert (scopedVar vm name) addr (varsMap vm2)}
   return' vm3
 --
 execInstruction OP_GET_VAR vm = do
-  let (name, vm1) = readStr vm
-      addr = varsMap vm1 Map.! scopedVar vm name
-  val <- deref addr vm1
-  return' $ push vm1 val
+  name <- readStr vm
+  let addr = varsMap vm Map.! scopedVar vm name
+  val <- deref addr vm
+  return' $ push vm val
 --
 execInstruction OP_SET_VAR vm = do
-  let (name, vm1) = readStr vm
-      addr = varsMap vm1 Map.! scopedVar vm name
-  oldVal <- deref addr vm1
-  let (val, vm2) = pop vm1
+  name <- readStr vm
+  let addr = varsMap vm Map.! scopedVar vm name
+  oldVal <- deref addr vm
+  let (val, vm2) = pop vm
       castVal = castAsType oldVal val
   memSet addr castVal vm2
   return' vm2
 --
 execInstruction OP_MAKE_VAR_POINTER vm = do
-  let (name, vm1) = readStr vm
-      addr = varsMap vm1 Map.! scopedVar vm name
-  oldVal <- deref addr vm1
-  memSet addr (asPointer oldVal) vm1
-  return' vm1
+  name <- readStr vm
+  let addr = varsMap vm Map.! scopedVar vm name
+  oldVal <- deref addr vm
+  memSet addr (asPointer oldVal) vm
+  return' vm
 --
 execInstruction OP_MAKE_POINTER vm = do
   let addr = asInt (peek 0 vm)
@@ -199,11 +198,12 @@ execInstruction OP_ALLOC_N vm = do
   return' $ push vm2 (PointerVal freeAddr)
 --
 execInstruction OP_CALL vm = do
-  let (fnName, vm1) = readStr vm
-  let jumpTo = chLabelMap (chunk vm1) Map.! fnName
-      vm2 = vm1 {vmCalls = (fnName, ip vm1) : vmCalls vm}
-      vm3 = vm2 {ip = jumpTo}
-  return' vm3
+  fnName <- readStr vm
+  let jumpTo = chLabelMap (chunk vm) Map.! fnName
+  curIp <- readIp vm
+  let vm2 = vm {vmCalls = (fnName, curIp) : vmCalls vm}
+  setIp jumpTo vm2
+  return' vm2
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 

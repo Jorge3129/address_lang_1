@@ -4,14 +4,17 @@ module Vm.State where
 
 import ByteCode.Core
 import qualified Data.Array.IO as IA
+import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
 import Value.Core
 
 type VMMemory = IA.IOArray Int Value
 
+type VmIp = IORef Int
+
 data VM = VM
   { chunk :: !Chunk,
-    ip :: !Int,
+    ip :: VmIp,
     stack :: ![Value],
     memory :: !VMMemory,
     varsMap :: !(Map.Map String Int),
@@ -27,10 +30,11 @@ newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
 initVM :: Chunk -> IO VM
 initVM ch = do
   mem <- newMemory memMax
+  ip <- newIORef 0
   return
     VM
       { chunk = ch,
-        ip = 0,
+        ip = ip,
         stack = [],
         memory = mem,
         varsMap = Map.empty,
@@ -64,24 +68,28 @@ popN n vm =
 peek :: Int -> VM -> Value
 peek offset (VM {stack}) = stack !! offset
 
-addIp :: Int -> VM -> VM
-addIp ipOffset vm@(VM {ip}) = vm {ip = ip + ipOffset}
+addIp :: Int -> VM -> IO ()
+addIp ipOffset vm = do
+  modifyIORef (ip vm) (+ ipOffset)
 
-readByte :: VM -> (Int, VM)
-readByte vm@(VM {ip, chunk}) =
-  let (Chunk {code}) = chunk
-      instruction = code !! ip
-      newVm = vm {ip = ip + 1}
-   in (instruction, newVm)
+setIp :: Int -> VM -> IO ()
+setIp val vm = do
+  writeIORef (ip vm) val
 
-readConst :: VM -> (Value, VM)
-readConst vm@(VM {chunk}) =
-  let (Chunk {constants}) = chunk
-      (constPos, newVm) = readByte vm
-   in (constants !! constPos, newVm)
+readIp :: VM -> IO Int
+readIp vm = readIORef (ip vm)
 
-readStr :: VM -> (String, VM)
-readStr vm =
-  let (val, vm1) = readConst vm
-      res = asStr val
-   in res `seq` (res, vm1)
+readByte :: VM -> IO Int
+readByte vm = do
+  curIp <- readIORef (ip vm)
+  let instruction = code (chunk vm) !! curIp
+  addIp 1 vm
+  return instruction
+
+readConst :: VM -> IO Value
+readConst vm@(VM {chunk}) = do
+  constPos <- readByte vm
+  return $ constants chunk !! constPos
+
+readStr :: VM -> IO String
+readStr vm = asStr <$> readConst vm
