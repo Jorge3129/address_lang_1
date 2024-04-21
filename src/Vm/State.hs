@@ -12,10 +12,12 @@ type VMMemory = IA.IOArray Int Value
 
 type VmIp = IORef Int
 
+type VmStack = IORef [Value]
+
 data VM = VM
   { chunk :: !Chunk,
-    ip :: VmIp,
-    stack :: ![Value],
+    ip :: !VmIp,
+    stack :: !VmStack,
     memory :: !VMMemory,
     varsMap :: !(Map.Map String Int),
     vmCalls :: ![(String, Int)]
@@ -31,42 +33,43 @@ initVM :: Chunk -> IO VM
 initVM ch = do
   mem <- newMemory memMax
   ip <- newIORef 0
+  stack <- newIORef []
   return
     VM
       { chunk = ch,
         ip = ip,
-        stack = [],
+        stack = stack,
         memory = mem,
         varsMap = Map.empty,
         vmCalls = []
       }
 
 -- TODO change arg order
-push :: VM -> Value -> VM
-push vm@(VM {stack}) val =
-  vm {stack = val : stack}
+push :: VM -> Value -> IO ()
+push vm val = modifyIORef (stack vm) (val :)
 
-pop :: VM -> (Value, VM)
-pop vm@(VM {stack}) =
-  ( head stack,
-    vm {stack = tail stack}
-  )
+pop :: VM -> IO Value
+pop vm = do
+  curStack <- readIORef (stack vm)
+  let topVal = popStack curStack
+  writeIORef (stack vm) (tail curStack)
+  return topVal
 
-popMap :: (Value -> a) -> VM -> (a, VM)
-popMap f vm =
-  let (val, vm1) = pop vm
-      res = f val
-   in res `seq` (f val, vm1)
+popStack :: [Value] -> Value
+popStack [] = error "operand stack is empty"
+popStack (x : _) = x
 
-popN :: Int -> VM -> ([Value], VM)
-popN 0 vm = ([], vm)
-popN n vm =
-  let (val, vm1) = pop vm
-      (restValues, vm2) = popN (n - 1) vm1
-   in (val : restValues, vm2)
+popN :: Int -> VM -> IO [Value]
+popN 0 _ = return []
+popN n vm = do
+  val <- pop vm
+  restValues <- popN (n - 1) vm
+  return $ val : restValues
 
-peek :: Int -> VM -> Value
-peek offset (VM {stack}) = stack !! offset
+peek :: Int -> VM -> IO Value
+peek offset vm = do
+  curStack <- readIORef (stack vm)
+  return $ curStack !! offset
 
 addIp :: Int -> VM -> IO ()
 addIp ipOffset vm = do
