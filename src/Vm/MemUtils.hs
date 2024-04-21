@@ -27,11 +27,8 @@ allocN n vmMemory = do
 allocNInit :: Int -> VM -> IO Int
 allocNInit n vm = do
   freeAddr <- allocN n (memory vm)
-  forM_
-    [0 .. (n - 1)]
-    ( \offset ->
-        memSet (freeAddr + offset) 0 vm
-    )
+  forM_ [0 .. (n - 1)] $ \offset ->
+    memSet (freeAddr + offset) 0 vm
   return freeAddr
 
 parseList :: Value -> VM -> IO [Value]
@@ -65,15 +62,18 @@ constructList vals vm = do
     consList' _ [] _ = return ()
 
 defineVar :: String -> Int -> VM -> IO ()
-defineVar nm addr vm =
-  modifyIORef (varsMap vm) (Map.insert (scopedVar vm nm) addr)
+defineVar nm addr vm = do
+  curScope <- length <$> readCalls vm
+  modifyIORef (varsMap vm) (Map.insert (scopedVar curScope nm) addr)
 
 getVarAddr :: String -> VM -> IO Int
-getVarAddr name vm = (Map.! scopedVar vm name) <$> readIORef (varsMap vm)
+getVarAddr name vm = do
+  curScope <- length <$> readCalls vm
+  (Map.! scopedVar curScope name) <$> readIORef (varsMap vm)
 
 getLocalVars :: VM -> IO [(String, Int)]
 getLocalVars vm = do
-  let curScope = length (vmCalls vm)
+  curScope <- length <$> readCalls vm
   allVars <- Map.toList <$> readIORef (varsMap vm)
   return $ [(nm, add) | (nm, add) <- allVars, getVarScope nm == curScope]
 
@@ -122,9 +122,9 @@ memSet addr val vm
   | addr >= 0 = IA.writeArray (memory vm) addr val
   | otherwise = error $ "Cannot set memory at address " ++ show addr
 
-scopedVar :: VM -> String -> String
-scopedVar vm name =
-  let scope = lpad '0' 8 $ show $ length $ vmCalls vm
+scopedVar :: Int -> String -> String
+scopedVar scopeNum name =
+  let scope = lpad '0' 8 $ show scopeNum
    in scope ++ name
 
 getVarScope :: String -> Int

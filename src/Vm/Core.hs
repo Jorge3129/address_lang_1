@@ -42,13 +42,18 @@ runStep (vm, _) = do
       putStrLn msg
       return (vm, Just RUNTIME_ERR)
 
-execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
-execInstruction OP_RETURN vm@(VM {vmCalls = []}) = returnOk vm
-execInstruction OP_RETURN vm@(VM {vmCalls = ((_, ret) : calls)}) = do
+execReturn :: [(String, Int)] -> VM -> IO (VM, Maybe InterpretResult)
+execReturn [] vm = returnOk vm
+execReturn ((_, ret) : _) vm = do
   freeVars vm
-  let vm1 = vm {vmCalls = calls}
-  setIp ret vm1
-  return' vm1
+  popCall vm
+  setIp ret vm
+  return' vm
+
+execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
+execInstruction OP_RETURN vm = do
+  curVmCalls <- readCalls vm
+  execReturn curVmCalls vm
 --
 execInstruction OP_CONSTANT vm = do
   val <- readConst vm
@@ -211,9 +216,9 @@ execInstruction OP_CALL vm = do
   fnName <- readStr vm
   let jumpTo = chLabelMap (chunk vm) Map.! fnName
   curIp <- readIp vm
-  let vm1 = vm {vmCalls = (fnName, curIp) : vmCalls vm}
-  setIp jumpTo vm1
-  return' vm1
+  pushCall (fnName, curIp) vm
+  setIp jumpTo vm
+  return' vm
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 

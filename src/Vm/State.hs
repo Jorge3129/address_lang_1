@@ -16,13 +16,15 @@ type VmStack = IORef [Value]
 
 type VmVarsMap = IORef (Map.Map String Int)
 
+type VmCalls = IORef [(String, Int)]
+
 data VM = VM
   { chunk :: !Chunk,
     ip :: !VmIp,
     stack :: !VmStack,
     memory :: !VmMemory,
     varsMap :: !VmVarsMap,
-    vmCalls :: ![(String, Int)]
+    vmCalls :: !VmCalls
   }
 
 memMax :: Int
@@ -37,6 +39,7 @@ initVM ch = do
   ip <- newIORef 0
   stack <- newIORef []
   varsMap <- newIORef Map.empty
+  vmCalls <- newIORef []
   return
     VM
       { chunk = ch,
@@ -44,7 +47,7 @@ initVM ch = do
         stack = stack,
         memory = mem,
         varsMap = varsMap,
-        vmCalls = []
+        vmCalls = vmCalls
       }
 
 -- TODO change arg order
@@ -84,6 +87,15 @@ setIp val vm = do
 
 readIp :: VM -> IO Int
 readIp vm = readIORef (ip vm)
+
+readCalls :: VM -> IO [(String, Int)]
+readCalls vm = readIORef (vmCalls vm)
+
+pushCall :: (String, Int) -> VM -> IO ()
+pushCall call vm = modifyIORef (vmCalls vm) (call :)
+
+popCall :: VM -> IO ()
+popCall vm = modifyIORef (vmCalls vm) tail
 
 readByte :: VM -> IO Int
 readByte vm = do
