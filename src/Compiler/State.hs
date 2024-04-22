@@ -31,7 +31,8 @@ data CompState = CompState
     loopPatches :: [LoopPatch],
     csFnVars :: FnVarMap,
     csFnMap :: LineFnMap,
-    csProg :: Program
+    csProg :: Program,
+    csRepls :: [Int]
   }
   deriving (Eq, Show)
 
@@ -45,7 +46,8 @@ initCs prog =
       loopPatches = [],
       csFnVars = Map.empty,
       csFnMap = Map.empty,
-      csProg = prog
+      csProg = prog,
+      csRepls = []
     }
 
 emitByte :: Int -> CompState -> CompState

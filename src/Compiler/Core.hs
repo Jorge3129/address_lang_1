@@ -52,7 +52,8 @@ compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
 
 patchLoops :: [LoopPatch] -> ProgLine -> CompState -> CompState
 patchLoops (lp : lps) pl@(ProgLine {labels}) cs =
-  let shouldPatch = fromMaybe "" (scopeLabel lp) `elem` labels
+  let scopedLabel = toScopedLabel (fromMaybe "" (scopeLabel lp)) cs
+      shouldPatch = scopedLabel `elem` map (`toScopedLabel` cs) labels
    in if shouldPatch
         then patchLoops lps pl (patchLoop lp (cs {loopPatches = lps}))
         else cs
@@ -61,7 +62,7 @@ patchLoops [] _ cs = cs
 compileLineLabels :: [String] -> CompState -> CompState
 compileLineLabels lbls cs@(CompState {labelOffsetMap}) =
   let offset = curChunkCount cs
-      newLblMap = foldl' (\lblMap lbl -> Map.insert (scopedLabel lbl cs) offset lblMap) labelOffsetMap lbls
+      newLblMap = foldl' (\lblMap lbl -> Map.insert (toScopedLabel lbl cs) offset lblMap) labelOffsetMap lbls
    in cs {labelOffsetMap = newLblMap}
 
 compileStmts :: [Statement] -> CompState -> IO CompState
@@ -113,7 +114,7 @@ compileStmt (Exchange a b) cs = do
   return $ emitOpCode OP_EXCHANGE cs2
 --
 compileStmt (Jump lbl) cs = do
-  let cs1 = addLabelPatch (curChunkCount cs) (scopedLabel lbl cs) cs
+  let cs1 = addLabelPatch (curChunkCount cs) (toScopedLabel lbl cs) cs
       cs2 = emitOpCode OP_JUMP cs1
   return $ emitByte 0 cs2
 --
@@ -173,8 +174,15 @@ compileStmt (SubprogramCall name args _) cs = do
 --
 compileStmt (Replace repls start end) cs = do
   repLines <- findReplaceRange start end cs
+  let curLn = curLine cs
   let newRLines = map (`lineReplacements` repls) repLines
-  compileLines newRLines cs
+  let newLblLines = map (\rLine -> rLine {labels = map (\lb -> "$replace_" ++ show curLn ++ "." ++ lb) (labels rLine)}) newRLines
+  let oldLbls = concatMap labels newRLines
+  let newLbls = concatMap labels newLblLines
+  let lblRepls = zipWith (\a b -> StmtReplace (Jump a) (Jump b)) oldLbls newLbls
+  let newRepLblLines = map (`lineReplacements` lblRepls) newLblLines
+  print newRepLblLines
+  compileLines newRepLblLines cs
 --
 compileStmt Ret cs = return $ emitOpCode OP_RETURN cs
 --

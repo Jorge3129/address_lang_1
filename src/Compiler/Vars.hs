@@ -6,7 +6,7 @@ import ByteCode.Core
 import Compiler.ProgTreeUtils
 import Compiler.State
 import Control.Arrow ((>>>))
-import Data.List (foldl', nub)
+import Data.List (foldl', intercalate, nub)
 import qualified Data.Map as Map
 import Grammar
 import Value.Core
@@ -64,9 +64,12 @@ compileVarInit name cs =
       cs3 = emitOpCode OP_SET_VAR cs2
    in emitByte constant cs3
 
-scopedLabel :: String -> CompState -> String
-scopedLabel lbl (CompState {curLine, csFnMap}) =
+toScopedLabel :: String -> CompState -> String
+toScopedLabel lbl cs =
+  let scopes = getCurScopes cs
+   in intercalate "." (scopes ++ [lbl])
+
+getCurScopes :: CompState -> [String]
+getCurScopes (CompState {curLine, csFnMap, csRepls}) =
   let curFn = csFnMap Map.! curLine
-   in if null curFn
-        then lbl
-        else curFn ++ "." ++ lbl
+   in [curFn | not (null curFn)] ++ map (("$r_" ++) . show) csRepls

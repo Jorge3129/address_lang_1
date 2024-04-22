@@ -1,0 +1,74 @@
+list1 = [1,2,3,4,5]
+printList list1
+R { h -> list1; v => nv -> Pg double { v, nv }; r -> list1_1 } map, map_end
+printList list1_1
+// R { h -> list1_1; v => nv -> Pg is_gt_3 { v, nv }; r -> list1_2 } filter, filter_end
+// printList list1_2
+
+// list2 = []
+// printList list2
+// R { h -> list2; v => nv -> Pg double { v, nv }; r -> list2_1 } map, map_end
+// printList list2_1
+
+!
+@map ...
+    Pg list_empty { r }
+
+    P { 'h == 0 } map_end_1 |
+
+    L { 'h, 'Nil, P { 'i /= 0 } => i } b
+        v = '('i + 1)
+        print v
+        v => nv
+        Pg list_add { 'nv, r }
+    @b ...
+
+    @map_end_1 ...
+@map_end ...
+
+// @filter ...
+//     Pg list_empty { r }
+
+//     P { 'h == 0 } filter_end_1 |
+
+//     L { 'h, 'Nil, P { 'i /= 0 } => i } b1
+//         v = '('i + 1)
+//         v => nv
+//         P { 'nv } | continue
+//         Pg list_add { v, r }
+        
+//         @continue ...
+//     @b1 ...
+
+//     @filter_end_1 ...
+// @filter_end ...
+
+!
+@double ... Nil => val, Nil => res_addr
+    ('val) * 2 => 'res_addr
+    Ret
+
+@is_gt_3 ... Nil => val, Nil => res_addr
+    ('val) > 3 => 'res_addr
+    Ret
+
+@list_empty ... Nil => targetAddr
+    0 => 'targetAddr
+    Ret
+
+@list_add ... Nil => val, Nil => listAddr
+    h = 'listAddr
+    P { 'h == 0 } then | else
+    @then ...
+        curAddr = h;
+        end
+    @else ...
+        L { 'h, 'Nil, P { ''j /= 0 } => j } l1
+        @l1 ...
+        curAddr = 'j;
+        end
+    @end ...
+        nextNode = alloc 2;
+        nextNode => curAddr
+        'val => nextNode + 1
+    Ret

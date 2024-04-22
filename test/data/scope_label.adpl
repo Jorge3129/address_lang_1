@@ -1,0 +1,12 @@
+Pg foo { 1 }
+
+!
+@foo ... Nil => a
+    h = [1,2,3,4,5]
+     L { 'h, 'Nil, P { 'i /= 0 } => i } b
+        v = '('i + 1)
+        print v
+    @b ...
+    Ret
+
+@b ...
