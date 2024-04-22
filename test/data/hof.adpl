@@ -2,7 +2,7 @@ list1 = [1,2,3,4,5]
 printList list1
 R { h -> list1; v => nv -> Pg double { v, nv }; r -> list1_1 } map, map_end
 printList list1_1
-R { h -> list1_1; v => nv -> v /= 8 => nv; r -> list1_2 } filter, filter_end
+R { h -> list1_1; v => nv -> v > 5 and v < 9 => nv; r -> list1_2 } filter, filter_end
 printList list1_2
 
 list2 = []
