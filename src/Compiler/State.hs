@@ -3,8 +3,8 @@
 module Compiler.State where
 
 import ByteCode.Core
-import Control.Monad (foldM)
-import Data.IORef (IORef, newIORef, readIORef, writeIORef)
+import Control.Monad (foldM, foldM_)
+import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
 import Grammar (Program)
 import Value.Core
@@ -25,7 +25,7 @@ data LoopPatch = LoopPatch
   deriving (Eq, Show)
 
 data CompState = CompState
-  { curChunk :: Chunk,
+  { curChunk :: IORef Chunk,
     curLine :: IORef Int,
     labelOffsetMap :: LabelOffsetMap,
     labelJumpsToPatch :: [(Int, String)],
@@ -39,9 +39,10 @@ data CompState = CompState
 initCs :: Program -> IO CompState
 initCs prog = do
   curLine <- newIORef 0
+  curChunk <- newIORef initChunk
   return $
     CompState
-      { curChunk = initChunk,
+      { curChunk = curChunk,
         curLine = curLine,
         labelOffsetMap = Map.empty,
         labelJumpsToPatch = [],
@@ -58,25 +59,29 @@ getCurLine cs = readIORef (curLine cs)
 setCurLine :: Int -> CompState -> IO ()
 setCurLine v cs = writeIORef (curLine cs) v
 
-emitByte :: Int -> CompState -> IO CompState
-emitByte byte cs = do
-  let chunk = curChunk cs
-  curLn <- getCurLine cs
-  return $
-    cs
-      { curChunk = writeChunk (fromEnum byte) curLn chunk
-      }
+getCurChunk :: CompState -> IO Chunk
+getCurChunk cs = readIORef (curChunk cs)
 
-emitOpCode :: OpCode -> CompState -> IO CompState
+updateChunk :: (Chunk -> Chunk) -> CompState -> IO ()
+updateChunk f cs = modifyIORef (curChunk cs) f
+
+emitByte :: Int -> CompState -> IO ()
+emitByte byte cs = do
+  curLn <- getCurLine cs
+  modifyIORef (curChunk cs) (writeChunk byte curLn)
+
+emitOpCode :: OpCode -> CompState -> IO ()
 emitOpCode op = emitByte (fromEnum op)
 
-emitOpCodes :: [OpCode] -> CompState -> IO CompState
-emitOpCodes ops cs = foldM (flip emitOpCode) cs ops
+emitOpCodes :: [OpCode] -> CompState -> IO ()
+emitOpCodes ops cs = foldM_ (\cs_ op -> emitOpCode op cs_ >> return cs_) cs ops
 
-addConstantToCs :: Value -> CompState -> (CompState, Int)
-addConstantToCs val cs@(CompState {curChunk}) =
-  let (newCh, constant) = addConstant val curChunk
-   in (cs {curChunk = newCh}, constant)
+addConstantToCs :: Value -> CompState -> IO (CompState, Int)
+addConstantToCs val cs = do
+  ch <- getCurChunk cs
+  let (newCh, constant) = addConstant val ch
+  writeIORef (curChunk cs) newCh
+  return (cs, constant)
 
-curChunkCount :: CompState -> Int
-curChunkCount = length . code . curChunk
+curChunkCount :: CompState -> IO Int
+curChunkCount cs = length . code <$> getCurChunk cs
