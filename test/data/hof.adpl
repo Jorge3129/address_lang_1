@@ -2,13 +2,13 @@ list1 = [1,2,3,4,5]
 printList list1
 R { h -> list1; v => nv -> Pg double { v, nv }; r -> list1_1 } map, map_end
 printList list1_1
-// R { h -> list1_1; v => nv -> Pg is_gt_3 { v, nv }; r -> list1_2 } filter, filter_end
-// printList list1_2
+R { h -> list1_1; v => nv -> v /= 8 => nv; r -> list1_2 } filter, filter_end
+printList list1_2
 
-// list2 = []
-// printList list2
-// R { h -> list2; v => nv -> Pg double { v, nv }; r -> list2_1 } map, map_end
-// printList list2_1
+list2 = []
+printList list2
+R { h -> list2; v => nv -> Pg double { v, nv }; r -> list2_1 } map, map_end
+printList list2_1
 
 !
 @map ...
@@ -18,7 +18,6 @@ printList list1_1
 
     L { 'h, 'Nil, P { 'i /= 0 } => i } b
         v = '('i + 1)
-        print v
         v => nv
         Pg list_add { 'nv, r }
     @b ...
@@ -26,22 +25,22 @@ printList list1_1
     @map_end_1 ...
 @map_end ...
 
-// @filter ...
-//     Pg list_empty { r }
+@filter ...
+    Pg list_empty { r }
 
-//     P { 'h == 0 } filter_end_1 |
+    P { 'h == 0 } filter_end_1 |
 
-//     L { 'h, 'Nil, P { 'i /= 0 } => i } b1
-//         v = '('i + 1)
-//         v => nv
-//         P { 'nv } | continue
-//         Pg list_add { v, r }
+    L { 'h, 'Nil, P { 'i /= 0 } => i } b1
+        v = '('i + 1)
+        v => nv
+        P { 'nv } | continue
+        Pg list_add { v, r }
         
-//         @continue ...
-//     @b1 ...
+        @continue ...
+    @b1 ...
 
-//     @filter_end_1 ...
-// @filter_end ...
+    @filter_end_1 ...
+@filter_end ...
 
 !
 @double ... Nil => val, Nil => res_addr

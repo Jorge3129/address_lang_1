@@ -174,15 +174,10 @@ compileStmt (SubprogramCall name args _) cs = do
 --
 compileStmt (Replace repls start end) cs = do
   repLines <- findReplaceRange start end cs
-  let curLn = curLine cs
   let newRLines = map (`lineReplacements` repls) repLines
-  let newLblLines = map (\rLine -> rLine {labels = map (\lb -> "$replace_" ++ show curLn ++ "." ++ lb) (labels rLine)}) newRLines
-  let oldLbls = concatMap labels newRLines
-  let newLbls = concatMap labels newLblLines
-  let lblRepls = zipWith (\a b -> StmtReplace (Jump a) (Jump b)) oldLbls newLbls
-  let newRepLblLines = map (`lineReplacements` lblRepls) newLblLines
-  print newRepLblLines
-  compileLines newRepLblLines cs
+  let cs1 = cs {csRepls = curLine cs : csRepls cs}
+  cs2 <- compileLines newRLines cs1
+  return $ cs2 {csRepls = tail (csRepls cs2)}
 --
 compileStmt Ret cs = return $ emitOpCode OP_RETURN cs
 --

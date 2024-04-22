@@ -72,4 +72,4 @@ toScopedLabel lbl cs =
 getCurScopes :: CompState -> [String]
 getCurScopes (CompState {curLine, csFnMap, csRepls}) =
   let curFn = csFnMap Map.! curLine
-   in [curFn | not (null curFn)] ++ map (("$r_" ++) . show) csRepls
+   in [curFn | not (null curFn)] ++ map (("$r_" ++) . show) (reverse csRepls)
