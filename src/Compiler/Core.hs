@@ -111,10 +111,10 @@ compileStmt (Send valEx (Var name)) cs = do
   cs1 <- compileExpr valEx cs
   cs2 <- compileExpr (Var name) cs1
   emitOpCode OP_SEND cs2
-  (cs4, arg) <- addConstantToCs (StringVal name) cs2
-  emitOpCode OP_MAKE_VAR_POINTER cs4
-  emitByte arg cs4
-  return cs4
+  arg <- addConstantToCs (StringVal name) cs2
+  emitOpCode OP_MAKE_VAR_POINTER cs2
+  emitByte arg cs2
+  return cs2
 --
 -- compileStmt (Send valEx (Deref innerExpr)) cs = do
 --   cs1 <- compileExpr valEx cs
@@ -188,17 +188,17 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
 --
 compileStmt (Assignment (Var name) lhs) cs = do
   csEx <- compileExpr lhs cs
-  (cs1, arg) <- addConstantToCs (StringVal name) csEx
-  emitOpCode OP_SET_VAR cs1
-  emitByte arg cs1
-  return cs1
+  arg <- addConstantToCs (StringVal name) csEx
+  emitOpCode OP_SET_VAR cs
+  emitByte arg cs
+  return cs
 --
 compileStmt (SubprogramCall name args _) cs = do
   cs1 <- compileExprs args cs
-  (cs2, constant) <- addConstantToCs (StringVal name) cs1
-  emitOpCode OP_CALL cs2
-  emitByte constant cs2
-  return cs2
+  constant <- addConstantToCs (StringVal name) cs1
+  emitOpCode OP_CALL cs
+  emitByte constant cs
+  return cs
 --
 compileStmt (Replace repls start end) cs = do
   repLines <- findReplaceRange start end cs
@@ -244,10 +244,10 @@ compileExprs [] cs = return cs
 
 compileExpr :: Expr -> CompState -> IO CompState
 compileExpr (Lit val) cs = do
-  (cs1, constant) <- addConstantToCs val cs
-  emitOpCode OP_CONSTANT cs1
-  emitByte constant cs1
-  return cs1
+  constant <- addConstantToCs val cs
+  emitOpCode OP_CONSTANT cs
+  emitByte constant cs
+  return cs
 --
 compileExpr (BinOpApp op a b) cs = do
   cs1 <- compileExpr a cs
@@ -272,10 +272,10 @@ compileExpr (MulDeref countEx innerEx) cs = do
   return cs2
 --
 compileExpr (Var name) cs = do
-  (cs1, constant) <- addConstantToCs (StringVal name) cs
-  emitOpCode OP_GET_VAR cs1
-  emitByte constant cs1
-  return cs1
+  constant <- addConstantToCs (StringVal name) cs
+  emitOpCode OP_GET_VAR cs
+  emitByte constant cs
+  return cs
 --
 compileExpr Nil cs = return cs
 --

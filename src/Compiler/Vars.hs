@@ -54,18 +54,18 @@ compileVars vars cs = do
 compileVar :: String -> CompState -> IO CompState
 compileVar name cs = do
   emitOpCode OP_ALLOC cs
-  (cs2, constant) <- addConstantToCs (StringVal name) cs
-  emitOpCode OP_DEFINE_VAR cs2
-  emitByte constant cs2
-  return cs2
+  constant <- addConstantToCs (StringVal name) cs
+  emitOpCode OP_DEFINE_VAR cs
+  emitByte constant cs
+  return cs
 
 compileVarInit :: String -> CompState -> IO CompState
 compileVarInit name cs = do
   emitOpCode OP_ALLOC cs
-  (cs2, constant) <- addConstantToCs (StringVal name) cs
-  emitOpCode OP_SET_VAR cs2
-  emitByte constant cs2
-  return cs2
+  constant <- addConstantToCs (StringVal name) cs
+  emitOpCode OP_SET_VAR cs
+  emitByte constant cs
+  return cs
 
 toScopedLabel :: String -> CompState -> IO String
 toScopedLabel lbl cs = do

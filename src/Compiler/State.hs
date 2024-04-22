@@ -76,12 +76,12 @@ emitOpCode op = emitByte (fromEnum op)
 emitOpCodes :: [OpCode] -> CompState -> IO ()
 emitOpCodes ops cs = foldM_ (\cs_ op -> emitOpCode op cs_ >> return cs_) cs ops
 
-addConstantToCs :: Value -> CompState -> IO (CompState, Int)
+addConstantToCs :: Value -> CompState -> IO Int
 addConstantToCs val cs = do
   ch <- getCurChunk cs
   let (newCh, constant) = addConstant val ch
   writeIORef (curChunk cs) newCh
-  return (cs, constant)
+  return constant
 
 curChunkCount :: CompState -> IO Int
 curChunkCount cs = length . code <$> getCurChunk cs
