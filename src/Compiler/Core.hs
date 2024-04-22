@@ -61,8 +61,8 @@ patchLoops (lp : lps) pl cs = do
   if shouldPatch
     then do
       setLoopPatches lps cs
-      cs1 <- patchLoop lp cs
-      patchLoops lps pl cs1
+      patchLoop lp cs
+      patchLoops lps pl cs
     else return cs
 patchLoops [] _ cs = return cs
 
@@ -140,10 +140,10 @@ compileStmt (Exchange a b) cs = do
 compileStmt (Jump lbl) cs = do
   scLbl <- toScopedLabel lbl cs
   chCnt <- curChunkCount cs
-  let cs1 = addLabelPatch chCnt scLbl cs
-  emitOpCode OP_JUMP cs1
-  emitByte 0 cs1
-  return cs1
+  addLabelPatch chCnt scLbl cs
+  emitOpCode OP_JUMP cs
+  emitByte 0 cs
+  return cs
 --
 compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   -- condition
@@ -174,9 +174,9 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
   (cs5, bodyJump) <- emitJump OP_JUMP cs3
   stepStart <- curChunkCount cs5
   cs6 <- compileStmt stepStmt cs5
-  cs7 <- emitLoop loopStart cs6
-  patchJump bodyJump cs7
-  curLn <- getCurLine cs7
+  emitLoop loopStart cs6
+  patchJump bodyJump cs6
+  curLn <- getCurLine cs6
   addLoopPatch
     ( LoopPatch
         { scopeLabel = scope,
@@ -186,8 +186,8 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
           loopLine = curLn
         }
     )
-    cs7
-  return cs7
+    cs6
+  return cs6
 --
 compileStmt (Assignment (Var name) lhs) cs = do
   csEx <- compileExpr lhs cs
@@ -312,13 +312,12 @@ emitJump op cs = do
   chCnt <- curChunkCount cs
   return (cs, chCnt - 1)
 
-emitLoop :: Int -> CompState -> IO CompState
+emitLoop :: Int -> CompState -> IO ()
 emitLoop jumpToInstr cs = do
   chCnt <- curChunkCount cs
   let jumpOffset = jumpToInstr - chCnt - 2
   emitOpCode OP_JUMP cs
   emitByte jumpOffset cs
-  return cs
 
 patchJump :: Int -> CompState -> IO ()
 patchJump offset cs = do
@@ -326,21 +325,15 @@ patchJump offset cs = do
   let jump = chCnt - offset - 1
   updateChunk (\ch -> ch {code = replace offset jump (code ch)}) cs
 
-patchLoop :: LoopPatch -> CompState -> IO CompState
+patchLoop :: LoopPatch -> CompState -> IO ()
 patchLoop (LoopPatch {stepStart, exitJump}) cs = do
-  cs1 <- emitLoop stepStart cs
-  patchJump exitJump cs1
-  emitOpCode OP_POP cs1
-  return cs1
-
-addLabelPatch :: Int -> String -> CompState -> CompState
-addLabelPatch curOffset lbl cs@(CompState {labelJumpsToPatch}) =
-  cs
-    { labelJumpsToPatch = labelJumpsToPatch ++ [(curOffset, lbl)]
-    }
+  emitLoop stepStart cs
+  patchJump exitJump cs
+  emitOpCode OP_POP cs
 
 patchLabelJumps :: CompState -> IO CompState
-patchLabelJumps cs@(CompState {labelJumpsToPatch, labelOffsetMap}) = do
+patchLabelJumps cs@(CompState {labelOffsetMap}) = do
+  jumps <- getLabelPatches cs
   updateChunk
     ( \curCh ->
         foldl'
@@ -350,7 +343,7 @@ patchLabelJumps cs@(CompState {labelJumpsToPatch, labelOffsetMap}) = do
                in ch {code = replace (curOffset + 1) jumpOffset code}
           )
           curCh
-          labelJumpsToPatch
+          jumps
     )
     cs
   return cs

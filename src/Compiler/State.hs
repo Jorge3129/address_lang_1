@@ -28,7 +28,7 @@ data CompState = CompState
   { curChunk :: IORef Chunk,
     curLine :: IORef Int,
     labelOffsetMap :: LabelOffsetMap,
-    labelJumpsToPatch :: [(Int, String)],
+    labelJumpsToPatch :: IORef [(Int, String)],
     loopPatches :: IORef [LoopPatch],
     csFnVars :: FnVarMap,
     csFnMap :: LineFnMap,
@@ -41,12 +41,13 @@ initCs prog = do
   curLine <- newIORef 0
   curChunk <- newIORef initChunk
   loopPatches <- newIORef []
+  labelJumpsToPatch <- newIORef []
   return $
     CompState
       { curChunk = curChunk,
         curLine = curLine,
         labelOffsetMap = Map.empty,
-        labelJumpsToPatch = [],
+        labelJumpsToPatch = labelJumpsToPatch,
         loopPatches = loopPatches,
         csFnVars = Map.empty,
         csFnMap = Map.empty,
@@ -74,6 +75,13 @@ setLoopPatches v cs = writeIORef (loopPatches cs) v
 
 addLoopPatch :: LoopPatch -> CompState -> IO ()
 addLoopPatch p cs = modifyIORef (loopPatches cs) (p :)
+
+getLabelPatches :: CompState -> IO [(Int, String)]
+getLabelPatches cs = readIORef (labelJumpsToPatch cs)
+
+addLabelPatch :: Int -> String -> CompState -> IO ()
+addLabelPatch curOffset lbl cs = do
+  modifyIORef (labelJumpsToPatch cs) (++ [(curOffset, lbl)])
 
 emitByte :: Int -> CompState -> IO ()
 emitByte byte cs = do
