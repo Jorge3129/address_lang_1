@@ -4,10 +4,11 @@ module Compiler.Core where
 
 import ByteCode.Core
 import Compiler.LoopUtils
+import Compiler.ProgTreeUtils (replaceOpStmt)
 import Compiler.State
 import Compiler.Vars
 import Control.Arrow ((>>>))
-import Data.List (foldl')
+import Data.List (find, foldl')
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Grammar
@@ -20,7 +21,7 @@ compileProg pg1 = do
       fnVars = collectProgVars pg
   -- print fnVars
   let fnMap = collectProgFns pg
-      cs = initCs {csFnVars = fnVars, csFnMap = fnMap}
+      cs = (initCs pg) {csFnVars = fnVars, csFnMap = fnMap}
   csv <- compileVars (fnVars Map.! "") cs
   cs1 <- compileLines pLines csv
   let cs2 = patchLabelJumps cs1
@@ -170,9 +171,38 @@ compileStmt (SubprogramCall name args _) cs = do
   let cs3 = emitOpCode OP_CALL cs2
   return $ emitByte constant cs3
 --
+compileStmt (Replace repls start end) cs = do
+  repLines <- findReplaceRange start end cs
+  let newRLines =
+        map
+          ( \rLine ->
+              rLine
+                { stmts =
+                    map
+                      (\rSt -> replaceOpStmt rSt (head repls))
+                      (stmts rLine)
+                }
+          )
+          repLines
+  print newRLines
+  compileLines newRLines cs
+--
 compileStmt Ret cs = return $ emitOpCode OP_RETURN cs
 --
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
+
+findReplaceRange :: String -> String -> CompState -> IO [ProgLine]
+findReplaceRange start end cs = do
+  let progLines = pLines (csProg cs)
+  let startLine = find (\ln -> start `elem` labels ln) progLines
+  let endLine = find (\ln -> end `elem` labels ln) progLines
+  let (startLn, endLn) = case (startLine, endLine) of
+        (Just s, Just e) -> (lineNum s, lineNum e)
+        (_, _) -> error $ "Invalid replacement range: " ++ start ++ ", " ++ end
+  return $ slice startLn endLn progLines
+
+slice :: Int -> Int -> [a] -> [a]
+slice start end xs = take (end - start) (drop start xs)
 
 compileExprs :: [Expr] -> CompState -> IO CompState
 compileExprs (ex : exs) cs = compileExpr ex cs >>= compileExprs exs

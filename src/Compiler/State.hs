@@ -5,6 +5,7 @@ module Compiler.State where
 import ByteCode.Core
 import Data.List (foldl')
 import qualified Data.Map as Map
+import Grammar (Program)
 import Value.Core
 
 type LabelOffsetMap = Map.Map String Int
@@ -29,12 +30,13 @@ data CompState = CompState
     labelJumpsToPatch :: [(Int, String)],
     loopPatches :: [LoopPatch],
     csFnVars :: FnVarMap,
-    csFnMap :: LineFnMap
+    csFnMap :: LineFnMap,
+    csProg :: Program
   }
   deriving (Eq, Show)
 
-initCs :: CompState
-initCs =
+initCs :: Program -> CompState
+initCs prog =
   CompState
     { curChunk = initChunk,
       curLine = 0,
@@ -42,7 +44,8 @@ initCs =
       labelJumpsToPatch = [],
       loopPatches = [],
       csFnVars = Map.empty,
-      csFnMap = Map.empty
+      csFnMap = Map.empty,
+      csProg = prog
     }
 
 emitByte :: Int -> CompState -> CompState
