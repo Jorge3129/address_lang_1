@@ -1,10 +1,11 @@
 module Compiler.State where
 
 import ByteCode.Core
-import Control.Monad (foldM_)
+import Control.Monad (foldM_, forM_)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
 import Grammar (Program)
+import MyUtils (replace)
 import Value.Core
 
 type LabelOffsetMap = Map.Map String Int
@@ -26,7 +27,7 @@ data CompState = CompState
   { curChunk :: IORef Chunk,
     curLine :: IORef Int,
     labelOffsetMap :: LabelOffsetMap,
-    labelJumpsToPatch :: IORef [(Int, String)],
+    jumpPatches :: IORef [(Int, String)],
     loopPatches :: IORef [LoopPatch],
     csFnVars :: FnVarMap,
     csFnMap :: LineFnMap,
@@ -39,13 +40,13 @@ initCs prog = do
   initCurLine <- newIORef 0
   initCurChunk <- newIORef initChunk
   initLoopPatches <- newIORef []
-  initLabelJumpsToPatch <- newIORef []
+  initJumpPatches <- newIORef []
   return $
     CompState
       { curChunk = initCurChunk,
         curLine = initCurLine,
         labelOffsetMap = Map.empty,
-        labelJumpsToPatch = initLabelJumpsToPatch,
+        jumpPatches = initJumpPatches,
         loopPatches = initLoopPatches,
         csFnVars = Map.empty,
         csFnMap = Map.empty,
@@ -65,6 +66,9 @@ getCurChunk cs = readIORef (curChunk cs)
 updateChunk :: (Chunk -> Chunk) -> CompState -> IO ()
 updateChunk f cs = modifyIORef (curChunk cs) f
 
+patchChunkCode :: Int -> Int -> CompState -> IO ()
+patchChunkCode offset value = updateChunk (\ch -> ch {code = replace offset value (code ch)})
+
 getLoopPatches :: CompState -> IO [LoopPatch]
 getLoopPatches cs = readIORef (loopPatches cs)
 
@@ -74,12 +78,12 @@ setLoopPatches v cs = writeIORef (loopPatches cs) v
 addLoopPatch :: LoopPatch -> CompState -> IO ()
 addLoopPatch p cs = modifyIORef (loopPatches cs) (p :)
 
-getLabelPatches :: CompState -> IO [(Int, String)]
-getLabelPatches cs = readIORef (labelJumpsToPatch cs)
+getJumpPatches :: CompState -> IO [(Int, String)]
+getJumpPatches cs = readIORef (jumpPatches cs)
 
-addLabelPatch :: Int -> String -> CompState -> IO ()
-addLabelPatch curOffset lbl cs = do
-  modifyIORef (labelJumpsToPatch cs) (++ [(curOffset, lbl)])
+addJumpPatch :: Int -> String -> CompState -> IO ()
+addJumpPatch curOffset lbl cs = do
+  modifyIORef (jumpPatches cs) (++ [(curOffset, lbl)])
 
 emitByte :: Int -> CompState -> IO ()
 emitByte byte cs = do
@@ -90,7 +94,7 @@ emitOpCode :: OpCode -> CompState -> IO ()
 emitOpCode op = emitByte (fromEnum op)
 
 emitOpCodes :: [OpCode] -> CompState -> IO ()
-emitOpCodes ops cs = foldM_ (\cs_ op -> emitOpCode op cs_ >> return cs_) cs ops
+emitOpCodes ops cs = forM_ ops (`emitOpCode` cs)
 
 addConstantToCs :: Value -> CompState -> IO Int
 addConstantToCs val cs = do

@@ -7,7 +7,7 @@ import Compiler.LoopUtils
 import Compiler.ProgTreeUtils (replaceExprStmt, replaceOpStmt, replaceStmtStmt)
 import Compiler.State
 import Compiler.Vars
-import Control.Monad (foldM)
+import Control.Monad (foldM, when)
 import Data.List (find, foldl')
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
@@ -24,10 +24,9 @@ compileProg pg1 = do
   let cs = inCs {csFnVars = fnVars, csFnMap = fnMap}
   csv <- compileVars (fnVars Map.! "") cs
   cs1 <- compileLines pLines csv
-  cs2 <- patchLabelJumps cs1
-  ch <- getCurChunk cs2
-  let ch1 = ch {chLabelMap = labelOffsetMap cs2}
-  -- print $ labelOffsetMap cs2
+  patchLabelJumps cs1
+  ch <- getCurChunk cs1
+  let ch1 = ch {chLabelMap = labelOffsetMap cs1}
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
 
 numerateLines :: Program -> Program
@@ -50,25 +49,24 @@ compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
   setCurLine lineNum cs
   cs1 <- compileLineLabels labels cs
   lps <- getLoopPatches cs1
-  cs2 <- patchLoops lps pl cs1
-  compileStmts stmts cs2
+  patchLoops lps pl cs1
+  compileStmts stmts cs1
 
-patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO CompState
+patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO ()
 patchLoops (lp : lps) pl cs = do
   scLbl <- toScopedLabel (fromMaybe "" (scopeLabel lp)) cs
   lnScLbls <- mapM (`toScopedLabel` cs) (labels pl)
   let shouldPatch = scLbl `elem` lnScLbls
-  if shouldPatch
-    then do
-      setLoopPatches lps cs
-      patchLoop lp cs
-      patchLoops lps pl cs
-    else return cs
-patchLoops [] _ cs = return cs
+  Control.Monad.when shouldPatch $ do
+    setLoopPatches lps cs
+    patchLoop lp cs
+    patchLoops lps pl cs
+patchLoops [] _ _ = return ()
 
 compileLineLabels :: [String] -> CompState -> IO CompState
-compileLineLabels lbls cs@(CompState {labelOffsetMap}) = do
+compileLineLabels lbls cs = do
   offset <- curChunkCount cs
+  let curLblMap = labelOffsetMap cs
   newLblMap <-
     foldM
       ( \lblMap lbl ->
@@ -76,7 +74,7 @@ compileLineLabels lbls cs@(CompState {labelOffsetMap}) = do
             scLbl <- toScopedLabel lbl cs
             return $ Map.insert scLbl offset lblMap
       )
-      labelOffsetMap
+      curLblMap
       lbls
   return $ cs {labelOffsetMap = newLblMap}
 
@@ -140,7 +138,7 @@ compileStmt (Exchange a b) cs = do
 compileStmt (Jump lbl) cs = do
   scLbl <- toScopedLabel lbl cs
   chCnt <- curChunkCount cs
-  addLabelPatch chCnt scLbl cs
+  addJumpPatch chCnt scLbl cs
   emitOpCode OP_JUMP cs
   emitByte 0 cs
   return cs
@@ -323,7 +321,7 @@ patchJump :: Int -> CompState -> IO ()
 patchJump offset cs = do
   chCnt <- curChunkCount cs
   let jump = chCnt - offset - 1
-  updateChunk (\ch -> ch {code = replace offset jump (code ch)}) cs
+  patchChunkCode offset jump cs
 
 patchLoop :: LoopPatch -> CompState -> IO ()
 patchLoop (LoopPatch {stepStart, exitJump}) cs = do
@@ -331,22 +329,22 @@ patchLoop (LoopPatch {stepStart, exitJump}) cs = do
   patchJump exitJump cs
   emitOpCode OP_POP cs
 
-patchLabelJumps :: CompState -> IO CompState
-patchLabelJumps cs@(CompState {labelOffsetMap}) = do
-  jumps <- getLabelPatches cs
+patchLabelJumps :: CompState -> IO ()
+patchLabelJumps cs = do
+  let curLblMap = labelOffsetMap cs
+  jumps <- getJumpPatches cs
   updateChunk
     ( \curCh ->
         foldl'
-          ( \ch@(Chunk {code}) (curOffset, lbl) ->
-              let jumpToInstr = labelOffsetMap Map.! lbl
+          ( \ch (curOffset, lbl) ->
+              let jumpToInstr = curLblMap Map.! lbl
                   jumpOffset = jumpToInstr - curOffset - 2
-               in ch {code = replace (curOffset + 1) jumpOffset code}
+               in ch {code = replace (curOffset + 1) jumpOffset (code ch)}
           )
           curCh
           jumps
     )
     cs
-  return cs
 
 binOpToOpCode :: BinOp -> [OpCode]
 binOpToOpCode Add = [OP_ADD]
