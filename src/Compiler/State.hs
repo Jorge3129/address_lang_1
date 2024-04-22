@@ -15,7 +15,7 @@ type FnVarMap = Map.Map String [String]
 type LineFnMap = Map.Map Int String
 
 data LoopPatch = LoopPatch
-  { scopeLabel :: Maybe String,
+  { endLabel :: Maybe String,
     nextLabel :: Maybe String,
     loopLine :: Int,
     stepStart :: Int,

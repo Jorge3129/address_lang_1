@@ -54,9 +54,9 @@ compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
 
 patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO ()
 patchLoops (lp : lps) pl cs = do
-  scLbl <- toScopedLabel (fromMaybe "" (scopeLabel lp)) cs
-  lnScLbls <- mapM (`toScopedLabel` cs) (labels pl)
-  let shouldPatch = scLbl `elem` lnScLbls
+  scopedLabel <- toScopedLabel (fromMaybe "" (endLabel lp)) cs
+  lineScopedLabels <- mapM (`toScopedLabel` cs) (labels pl)
+  let shouldPatch = scopedLabel `elem` lineScopedLabels
   Control.Monad.when shouldPatch $ do
     setLoopPatches lps cs
     patchLoop lp cs
@@ -71,8 +71,8 @@ compileLineLabels lbls cs = do
     foldM
       ( \lblMap lbl ->
           do
-            scLbl <- toScopedLabel lbl cs
-            return $ Map.insert scLbl offset lblMap
+            scopedLabel <- toScopedLabel lbl cs
+            return $ Map.insert scopedLabel offset lblMap
       )
       curLblMap
       lbls
@@ -128,9 +128,9 @@ compileStmt (Exchange a b) cs = do
   emitOpCode OP_EXCHANGE cs
 --
 compileStmt (Jump lbl) cs = do
-  scLbl <- toScopedLabel lbl cs
-  chCnt <- curChunkCount cs
-  addJumpPatch chCnt scLbl cs
+  scopedLabel <- toScopedLabel lbl cs
+  chunkCount <- curChunkCount cs
+  addJumpPatch chunkCount scopedLabel cs
   emitOpCode OP_JUMP cs
   emitByte 0 cs
 --
@@ -172,7 +172,7 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
   curLn <- getCurLine cs
   addLoopPatch
     ( LoopPatch
-        { scopeLabel = scope,
+        { endLabel = scope,
           nextLabel = next,
           stepStart = stepStart,
           exitJump = exitJump,
@@ -288,20 +288,20 @@ emitJump :: OpCode -> CompState -> IO Int
 emitJump op cs = do
   emitOpCode op cs
   emitByte 0 cs
-  chCnt <- curChunkCount cs
-  return $ chCnt - 1
+  chunkCount <- curChunkCount cs
+  return $ chunkCount - 1
 
 emitLoop :: Int -> CompState -> IO ()
 emitLoop jumpToInstr cs = do
-  chCnt <- curChunkCount cs
-  let jumpOffset = jumpToInstr - chCnt - 2
+  chunkCount <- curChunkCount cs
+  let jumpOffset = jumpToInstr - chunkCount - 2
   emitOpCode OP_JUMP cs
   emitByte jumpOffset cs
 
 patchJump :: Int -> CompState -> IO ()
 patchJump offset cs = do
-  chCnt <- curChunkCount cs
-  let jump = chCnt - offset - 1
+  chunkCount <- curChunkCount cs
+  let jump = chunkCount - offset - 1
   patchChunkCode offset jump cs
 
 patchLoop :: LoopPatch -> CompState -> IO ()
