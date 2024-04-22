@@ -6,6 +6,9 @@ printList list1_1
 R { h -> list1_1; v => nv -> v > 5 and v < 9 => nv; r -> list1_2 } filter, filter_end
 printList list1_2
 
+R { h -> list1; v => nv -> v % 2 /= 0 => nv; r -> list1_3 } filter, filter_end
+printList list1_3
+
 R { h -> list1_1; v => acc -> 'acc + v => acc; init_val -> 0 } fold, fold_end
 print 'acc
 

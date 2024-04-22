@@ -33,6 +33,7 @@ import Value.Core
     '-'           { TokenMinus }
     '*'           { TokenStar }
     '/'           { TokenSlash }
+    '%'           { TokenPercent }
     '('           { TokenLeftParen }
     ')'           { TokenRightParen }
     '{'           { TokenLeftCurly }
@@ -59,7 +60,7 @@ import Value.Core
 %nonassoc "==" "/="
 %nonassoc '>' '<' "<=" ">="
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
 %left NEG
 %left DEREF
 
@@ -116,6 +117,7 @@ binOp : '+'                                     { Add }
     | '-'                                       { Sub }
     | '*'                                       { Mul }
     | '/'                                       { Div }
+    | '%'                                       { Mod }
 
 exchangeSt : Exp "<=>" Exp                      { Exchange $1 $3 }
 
@@ -165,6 +167,7 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | Exp '-' Exp                               { BinOpApp Sub $1 $3 }
     | Exp '*' Exp                               { BinOpApp Mul $1 $3 }
     | Exp '/' Exp                               { BinOpApp Div $1 $3 }
+    | Exp '%' Exp                               { BinOpApp Mod $1 $3 }
     | '(' Exp ')'                               { $2 }
     | '-' Exp %prec NEG                         { Negate $2 }
     | "'" Exp %prec DEREF                       { Deref $2 }
@@ -187,6 +190,7 @@ data BinOp
   | Sub
   | Mul
   | Div
+  | Mod
   | Greater
   | Less
   | Equal

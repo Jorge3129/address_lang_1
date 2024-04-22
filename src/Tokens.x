@@ -30,6 +30,7 @@ tokens :-
   "-"       { \_ -> TokenMinus }
   "*"       { \_ -> TokenStar }
   "/"       { \_ -> TokenSlash }
+  "%"       { \_ -> TokenPercent }
   "("       { \_ -> TokenLeftParen }
   ")"       { \_ -> TokenRightParen }
   "{"       { \_ -> TokenLeftCurly }
@@ -71,6 +72,7 @@ data Token =
   | TokenMinus
   | TokenStar
   | TokenSlash
+  | TokenPercent
   | TokenLeftParen
   | TokenRightParen
   | TokenLeftCurly

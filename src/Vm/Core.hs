@@ -64,6 +64,7 @@ execInstruction OP_ADD vm = binaryInstr (+) vm
 execInstruction OP_SUB vm = binaryInstr (-) vm
 execInstruction OP_MUL vm = binaryInstr (*) vm
 execInstruction OP_DIV vm = binaryInstr (/) vm
+execInstruction OP_MOD vm = binaryInstr (\a b -> IntVal $ asInt a `mod` asInt b) vm
 --
 execInstruction OP_GREATER vm = compInstr (>) vm
 execInstruction OP_LESS vm = compInstr (<) vm

@@ -42,6 +42,7 @@ disassembleInstruction chunk offset = do
     OP_SUB -> simpleInstruction "OP_SUB" offset
     OP_MUL -> simpleInstruction "OP_MUL" offset
     OP_DIV -> simpleInstruction "OP_DIV" offset
+    OP_MOD -> simpleInstruction "OP_MOD" offset
     --
     OP_EQUAL -> simpleInstruction "OP_EQUAL" offset
     OP_GREATER -> simpleInstruction "OP_GREATER" offset
