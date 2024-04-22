@@ -7,7 +7,7 @@ import Compiler.LoopUtils
 import Compiler.ProgTreeUtils (replaceExprStmt, replaceOpStmt, replaceStmtStmt)
 import Compiler.State
 import Compiler.Vars
-import Control.Monad (foldM, when)
+import Control.Monad (foldM, forM_, when)
 import Data.List (find, foldl')
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
@@ -333,18 +333,10 @@ patchLabelJumps :: CompState -> IO ()
 patchLabelJumps cs = do
   let curLblMap = labelOffsetMap cs
   jumps <- getJumpPatches cs
-  updateChunk
-    ( \curCh ->
-        foldl'
-          ( \ch (curOffset, lbl) ->
-              let jumpToInstr = curLblMap Map.! lbl
-                  jumpOffset = jumpToInstr - curOffset - 2
-               in ch {code = replace (curOffset + 1) jumpOffset (code ch)}
-          )
-          curCh
-          jumps
-    )
-    cs
+  forM_ jumps $ \(curOffset, lbl) -> do
+    let jumpToInstr = curLblMap Map.! lbl
+        jumpOffset = jumpToInstr - curOffset - 2
+    patchChunkCode (curOffset + 1) jumpOffset cs
 
 binOpToOpCode :: BinOp -> [OpCode]
 binOpToOpCode Add = [OP_ADD]
