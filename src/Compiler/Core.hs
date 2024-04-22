@@ -7,7 +7,7 @@ import Compiler.LoopUtils
 import Compiler.ProgTreeUtils (replaceExprStmt, replaceOpStmt, replaceStmtStmt)
 import Compiler.State
 import Compiler.Vars
-import Control.Arrow ((>>>))
+import Control.Monad (foldM)
 import Data.List (find, foldl')
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
@@ -19,9 +19,9 @@ compileProg :: Program -> IO Chunk
 compileProg pg1 = do
   let pg@(Program {pLines}) = numerateLines pg1
       fnVars = collectProgVars pg
-  -- print fnVars
   let fnMap = collectProgFns pg
-      cs = (initCs pg) {csFnVars = fnVars, csFnMap = fnMap}
+  inCs <- initCs pg
+  let cs = inCs {csFnVars = fnVars, csFnMap = fnMap}
   csv <- compileVars (fnVars Map.! "") cs
   cs1 <- compileLines pLines csv
   let cs2 = patchLabelJumps cs1
@@ -41,60 +41,73 @@ compileLines [] cs = return cs
 
 compileLine :: ProgLine -> CompState -> IO CompState
 compileLine (ProgLine lbls@(fnName : _) args@(Send Nil (Var _) : _) lineNum) cs = do
-  let cs1 = compileLineLabels lbls (cs {curLine = lineNum})
+  setCurLine lineNum cs
+  cs1 <- compileLineLabels lbls cs
   cs2 <- compileVars (csFnVars cs Map.! fnName) cs1
   compileStmts (reverse args) cs2
 --
 compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
-  let cs1 = compileLineLabels labels (cs {curLine = lineNum})
-      cs2 = patchLoops (loopPatches cs1) pl cs1
+  setCurLine lineNum cs
+  cs1 <- compileLineLabels labels cs
+  cs2 <- patchLoops (loopPatches cs1) pl cs1
   compileStmts stmts cs2
 
-patchLoops :: [LoopPatch] -> ProgLine -> CompState -> CompState
-patchLoops (lp : lps) pl@(ProgLine {labels}) cs =
-  let scopedLabel = toScopedLabel (fromMaybe "" (scopeLabel lp)) cs
-      shouldPatch = scopedLabel `elem` map (`toScopedLabel` cs) labels
-   in if shouldPatch
-        then patchLoops lps pl (patchLoop lp (cs {loopPatches = lps}))
-        else cs
-patchLoops [] _ cs = cs
+patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO CompState
+patchLoops (lp : lps) pl cs = do
+  scLbl <- toScopedLabel (fromMaybe "" (scopeLabel lp)) cs
+  lnScLbls <- mapM (`toScopedLabel` cs) (labels pl)
+  let shouldPatch = scLbl `elem` lnScLbls
+  if shouldPatch
+    then do
+      cs1 <- patchLoop lp (cs {loopPatches = lps})
+      patchLoops lps pl cs1
+    else return cs
+patchLoops [] _ cs = return cs
 
-compileLineLabels :: [String] -> CompState -> CompState
-compileLineLabels lbls cs@(CompState {labelOffsetMap}) =
+compileLineLabels :: [String] -> CompState -> IO CompState
+compileLineLabels lbls cs@(CompState {labelOffsetMap}) = do
   let offset = curChunkCount cs
-      newLblMap = foldl' (\lblMap lbl -> Map.insert (toScopedLabel lbl cs) offset lblMap) labelOffsetMap lbls
-   in cs {labelOffsetMap = newLblMap}
+  newLblMap <-
+    foldM
+      ( \lblMap lbl ->
+          do
+            scLbl <- toScopedLabel lbl cs
+            return $ Map.insert scLbl offset lblMap
+      )
+      labelOffsetMap
+      lbls
+  return $ cs {labelOffsetMap = newLblMap}
 
 compileStmts :: [Statement] -> CompState -> IO CompState
 compileStmts (st : stmts) cs = compileStmt st cs >>= compileStmts stmts
 compileStmts [] cs = return cs
 
 compileStmt :: Statement -> CompState -> IO CompState
-compileStmt Stop cs = return $ emitOpCode OP_RETURN cs
+compileStmt Stop cs = emitOpCode OP_RETURN cs
 --
 compileStmt (BuiltinProc "print" [ex]) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_PRINT cs1
+  emitOpCode OP_PRINT cs1
 --
 compileStmt (BuiltinProc "printList" [ex]) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_PRINT_LIST cs1
+  emitOpCode OP_PRINT_LIST cs1
 --
 compileStmt (BuiltinProc "printRefs" [ex]) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_PRINT_REFS cs1
+  emitOpCode OP_PRINT_REFS cs1
 --
 compileStmt (ExpSt ex) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_POP cs1
+  emitOpCode OP_POP cs1
 --
 compileStmt (Send valEx (Var name)) cs = do
   cs1 <- compileExpr valEx cs
   cs2 <- compileExpr (Var name) cs1
-  let cs3 = emitOpCode OP_SEND cs2
+  cs3 <- emitOpCode OP_SEND cs2
   let (cs4, arg) = addConstantToCs (StringVal name) cs3
-  let cs5 = emitOpCode OP_MAKE_VAR_POINTER cs4
-  return $ emitByte arg cs5
+  cs5 <- emitOpCode OP_MAKE_VAR_POINTER cs4
+  emitByte arg cs5
 --
 -- compileStmt (Send valEx (Deref innerExpr)) cs = do
 --   cs1 <- compileExpr valEx cs
@@ -106,32 +119,33 @@ compileStmt (Send valEx (Var name)) cs = do
 compileStmt (Send valEx addrEx) cs = do
   cs1 <- compileExpr valEx cs
   cs2 <- compileExpr addrEx cs1
-  return $ emitOpCode OP_SEND cs2
+  emitOpCode OP_SEND cs2
 --
 compileStmt (Exchange a b) cs = do
   cs1 <- compileExpr a cs
   cs2 <- compileExpr b cs1
-  return $ emitOpCode OP_EXCHANGE cs2
+  emitOpCode OP_EXCHANGE cs2
 --
 compileStmt (Jump lbl) cs = do
-  let cs1 = addLabelPatch (curChunkCount cs) (toScopedLabel lbl cs) cs
-      cs2 = emitOpCode OP_JUMP cs1
-  return $ emitByte 0 cs2
+  scLbl <- toScopedLabel lbl cs
+  let cs1 = addLabelPatch (curChunkCount cs) scLbl cs
+  cs2 <- emitOpCode OP_JUMP cs1
+  emitByte 0 cs2
 --
 compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   -- condition
   cs1 <- compileExpr ifExp cs
-  let (cs2, toElseJump) = emitJump OP_JUMP_IF_FALSE cs1
+  (cs2, toElseJump) <- emitJump OP_JUMP_IF_FALSE cs1
   -- then clause
-  let cs3 = emitOpCode OP_POP cs2
+  cs3 <- emitOpCode OP_POP cs2
   cs4 <- compileStmts thenStmts cs3
-  let (cs5, toEndJump) = emitJump OP_JUMP cs4
+  (cs5, toEndJump) <- emitJump OP_JUMP cs4
   -- else clause
-  let cs6 = patchJump toElseJump cs5
-      cs7 = emitOpCode OP_POP cs6
+  cs6 <- patchJump toElseJump cs5
+  cs7 <- emitOpCode OP_POP cs6
   cs8 <- compileStmts elseStmts cs7
   -- end
-  return $ patchJump toEndJump cs8
+  patchJump toEndJump cs8
 --
 compileStmt st@(LoopSimple {}) cs = compileStmt (desugarStmt st) cs
 --
@@ -141,13 +155,14 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
   cs1 <- compileStmt initStmt cs
   let loopStart = curChunkCount cs1
   cs2 <- compileExpr endCondition cs1
-  let (cs3, exitJump) = emitJump OP_JUMP_IF_FALSE cs2
-      cs4 = emitOpCode OP_POP cs3
-      (cs5, bodyJump) = emitJump OP_JUMP cs4
-      stepStart = curChunkCount cs5
+  (cs3, exitJump) <- emitJump OP_JUMP_IF_FALSE cs2
+  cs4 <- emitOpCode OP_POP cs3
+  (cs5, bodyJump) <- emitJump OP_JUMP cs4
+  let stepStart = curChunkCount cs5
   cs6 <- compileStmt stepStmt cs5
-  let cs7 = emitLoop loopStart cs6
-      cs8 = patchJump bodyJump cs7
+  cs7 <- emitLoop loopStart cs6
+  cs8 <- patchJump bodyJump cs7
+  curLn <- getCurLine cs8
   return $
     addLoopPatch
       ( LoopPatch
@@ -155,7 +170,7 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
             nextLabel = next,
             stepStart = stepStart,
             exitJump = exitJump,
-            loopLine = curLine cs8
+            loopLine = curLn
           }
       )
       cs8
@@ -163,23 +178,24 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
 compileStmt (Assignment (Var name) lhs) cs = do
   csEx <- compileExpr lhs cs
   let (cs1, arg) = addConstantToCs (StringVal name) csEx
-  let cs2 = emitOpCode OP_SET_VAR cs1
-  return $ emitByte arg cs2
+  cs2 <- emitOpCode OP_SET_VAR cs1
+  emitByte arg cs2
 --
 compileStmt (SubprogramCall name args _) cs = do
   cs1 <- compileExprs args cs
   let (cs2, constant) = addConstantToCs (StringVal name) cs1
-  let cs3 = emitOpCode OP_CALL cs2
-  return $ emitByte constant cs3
+  cs3 <- emitOpCode OP_CALL cs2
+  emitByte constant cs3
 --
 compileStmt (Replace repls start end) cs = do
   repLines <- findReplaceRange start end cs
   let newRLines = map (`lineReplacements` repls) repLines
-  let cs1 = cs {csRepls = curLine cs : csRepls cs}
+  curLn <- getCurLine cs
+  let cs1 = cs {csRepls = curLn : csRepls cs}
   cs2 <- compileLines newRLines cs1
   return $ cs2 {csRepls = tail (csRepls cs2)}
 --
-compileStmt Ret cs = return $ emitOpCode OP_RETURN cs
+compileStmt Ret cs = emitOpCode OP_RETURN cs
 --
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 
@@ -214,76 +230,78 @@ compileExprs [] cs = return cs
 compileExpr :: Expr -> CompState -> IO CompState
 compileExpr (Lit val) cs = do
   let (cs1, constant) = addConstantToCs val cs
-      cs2 = emitOpCode OP_CONSTANT cs1
-  return $ emitByte constant cs2
+  cs2 <- emitOpCode OP_CONSTANT cs1
+  emitByte constant cs2
 --
 compileExpr (BinOpApp op a b) cs = do
   cs1 <- compileExpr a cs
   cs2 <- compileExpr b cs1
-  return $ emitOpCodes (binOpToOpCode op) cs2
+  emitOpCodes (binOpToOpCode op) cs2
 --
 compileExpr (Negate ex) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_NEGATE cs1
+  emitOpCode OP_NEGATE cs1
 --
 compileExpr (Deref ex) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_DEREF cs1
+  emitOpCode OP_DEREF cs1
 --
 compileExpr (MulDeref countEx innerEx) cs = do
   cs1 <- compileExpr countEx cs
   cs2 <- compileExpr innerEx cs1
-  return $ emitOpCode OP_MUL_DEREF cs2
+  emitOpCode OP_MUL_DEREF cs2
 --
 compileExpr (Var name) cs = do
   let (cs1, constant) = addConstantToCs (StringVal name) cs
-      cs2 = emitOpCode OP_GET_VAR cs1
-      cs3 = emitByte constant cs2
+  cs2 <- emitOpCode OP_GET_VAR cs1
+  cs3 <- emitByte constant cs2
   return cs3
 --
 compileExpr Nil cs = return cs
 --
 compileExpr (BuiltinFn "alloc" [ex]) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_ALLOC_N cs1
+  emitOpCode OP_ALLOC_N cs1
 --
 compileExpr (BuiltinFn "getRefs" [ex]) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_GET_REFS cs1
+  emitOpCode OP_GET_REFS cs1
 --
 compileExpr (BuiltinFn "constrList" args) cs = do
   cs1 <- compileExprs args cs
   cs2 <- compileExpr (Lit (IntVal (length args))) cs1
-  return $ emitOpCode OP_CONSTR_LIST cs2
+  emitOpCode OP_CONSTR_LIST cs2
 --
 compileExpr (BuiltinFn "ptr" [ex]) cs = do
   cs1 <- compileExpr ex cs
-  return $ emitOpCode OP_CAST_AS_PTR cs1
+  emitOpCode OP_CAST_AS_PTR cs1
 --
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
-emitJump :: OpCode -> CompState -> (CompState, Int)
-emitJump op cs =
-  let cs1 = (emitOpCode op >>> emitByte 0) cs
-   in (cs1, curChunkCount cs1 - 1)
+emitJump :: OpCode -> CompState -> IO (CompState, Int)
+emitJump op cs = do
+  cs1 <- emitOpCode op cs
+  cs2 <- emitByte 0 cs1
+  return (cs2, curChunkCount cs2 - 1)
 
-emitLoop :: Int -> CompState -> CompState
-emitLoop jumpToInstr cs =
+emitLoop :: Int -> CompState -> IO CompState
+emitLoop jumpToInstr cs = do
   let jumpOffset = jumpToInstr - curChunkCount cs - 2
-   in (emitOpCode OP_JUMP >>> emitByte jumpOffset) cs
+  cs1 <- emitOpCode OP_JUMP cs
+  emitByte jumpOffset cs1
 
-patchJump :: Int -> CompState -> CompState
+patchJump :: Int -> CompState -> IO CompState
 patchJump offset cs =
   let ch = curChunk cs
       jump = curChunkCount cs - offset - 1
       newCh = ch {code = replace offset jump (code ch)}
-   in cs {curChunk = newCh}
+   in return $ cs {curChunk = newCh}
 
-patchLoop :: LoopPatch -> CompState -> CompState
-patchLoop (LoopPatch {stepStart, exitJump}) =
-  emitLoop stepStart
-    >>> patchJump exitJump
-    >>> emitOpCode OP_POP
+patchLoop :: LoopPatch -> CompState -> IO CompState
+patchLoop (LoopPatch {stepStart, exitJump}) cs = do
+  cs1 <- emitLoop stepStart cs
+  cs2 <- patchJump exitJump cs1
+  emitOpCode OP_POP cs2
 
 addLoopPatch :: LoopPatch -> CompState -> CompState
 addLoopPatch p cs = cs {loopPatches = p : loopPatches cs}

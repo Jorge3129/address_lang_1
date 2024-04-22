@@ -6,7 +6,8 @@ import ByteCode.Core
 import Compiler.ProgTreeUtils
 import Compiler.State
 import Control.Arrow ((>>>))
-import Data.List (foldl', intercalate, nub)
+import Control.Monad (foldM)
+import Data.List (intercalate, nub)
 import qualified Data.Map as Map
 import Grammar
 import Value.Core
@@ -47,29 +48,30 @@ collectLineFns (ProgLine {lineNum}) (fnName, varMap) =
 
 compileVars :: [String] -> CompState -> IO CompState
 compileVars vars cs = do
-  let cs1 = foldl' (flip compileVar) cs vars
-  return $ foldl' (flip compileVarInit) cs1 vars
+  cs1 <- foldM (flip compileVar) cs vars
+  foldM (flip compileVarInit) cs1 vars
 
-compileVar :: String -> CompState -> CompState
-compileVar name cs =
-  let cs1 = emitOpCode OP_ALLOC cs
-      (cs2, constant) = addConstantToCs (StringVal name) cs1
-      cs3 = emitOpCode OP_DEFINE_VAR cs2
-   in emitByte constant cs3
+compileVar :: String -> CompState -> IO CompState
+compileVar name cs = do
+  cs1 <- emitOpCode OP_ALLOC cs
+  let (cs2, constant) = addConstantToCs (StringVal name) cs1
+  cs3 <- emitOpCode OP_DEFINE_VAR cs2
+  emitByte constant cs3
 
-compileVarInit :: String -> CompState -> CompState
-compileVarInit name cs =
-  let cs1 = emitOpCode OP_ALLOC cs
-      (cs2, constant) = addConstantToCs (StringVal name) cs1
-      cs3 = emitOpCode OP_SET_VAR cs2
-   in emitByte constant cs3
+compileVarInit :: String -> CompState -> IO CompState
+compileVarInit name cs = do
+  cs1 <- emitOpCode OP_ALLOC cs
+  let (cs2, constant) = addConstantToCs (StringVal name) cs1
+  cs3 <- emitOpCode OP_SET_VAR cs2
+  emitByte constant cs3
 
-toScopedLabel :: String -> CompState -> String
-toScopedLabel lbl cs =
-  let scopes = getCurScopes cs
-   in intercalate "." (scopes ++ [lbl])
+toScopedLabel :: String -> CompState -> IO String
+toScopedLabel lbl cs = do
+  scopes <- getCurScopes cs
+  return $ intercalate "." (scopes ++ [lbl])
 
-getCurScopes :: CompState -> [String]
-getCurScopes (CompState {curLine, csFnMap, csRepls}) =
-  let curFn = csFnMap Map.! curLine
-   in [curFn | not (null curFn)] ++ map (("$r_" ++) . show) (reverse csRepls)
+getCurScopes :: CompState -> IO [String]
+getCurScopes cs@(CompState {csFnMap, csRepls}) = do
+  curLn1 <- getCurLine cs
+  let curFn = csFnMap Map.! curLn1
+  return $ [curFn | not (null curFn)] ++ map (("$r_" ++) . show) (reverse csRepls)

@@ -3,7 +3,8 @@
 module Compiler.State where
 
 import ByteCode.Core
-import Data.List (foldl')
+import Control.Monad (foldM)
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
 import Grammar (Program)
 import Value.Core
@@ -25,7 +26,7 @@ data LoopPatch = LoopPatch
 
 data CompState = CompState
   { curChunk :: Chunk,
-    curLine :: Int,
+    curLine :: IORef Int,
     labelOffsetMap :: LabelOffsetMap,
     labelJumpsToPatch :: [(Int, String)],
     loopPatches :: [LoopPatch],
@@ -34,33 +35,43 @@ data CompState = CompState
     csProg :: Program,
     csRepls :: [Int]
   }
-  deriving (Eq, Show)
 
-initCs :: Program -> CompState
-initCs prog =
-  CompState
-    { curChunk = initChunk,
-      curLine = 0,
-      labelOffsetMap = Map.empty,
-      labelJumpsToPatch = [],
-      loopPatches = [],
-      csFnVars = Map.empty,
-      csFnMap = Map.empty,
-      csProg = prog,
-      csRepls = []
-    }
+initCs :: Program -> IO CompState
+initCs prog = do
+  curLine <- newIORef 0
+  return $
+    CompState
+      { curChunk = initChunk,
+        curLine = curLine,
+        labelOffsetMap = Map.empty,
+        labelJumpsToPatch = [],
+        loopPatches = [],
+        csFnVars = Map.empty,
+        csFnMap = Map.empty,
+        csProg = prog,
+        csRepls = []
+      }
 
-emitByte :: Int -> CompState -> CompState
-emitByte byte cs@(CompState {curChunk, curLine}) =
-  cs
-    { curChunk = writeChunk (fromEnum byte) curLine curChunk
-    }
+getCurLine :: CompState -> IO Int
+getCurLine cs = readIORef (curLine cs)
 
-emitOpCode :: OpCode -> CompState -> CompState
+setCurLine :: Int -> CompState -> IO ()
+setCurLine v cs = writeIORef (curLine cs) v
+
+emitByte :: Int -> CompState -> IO CompState
+emitByte byte cs = do
+  let chunk = curChunk cs
+  curLn <- getCurLine cs
+  return $
+    cs
+      { curChunk = writeChunk (fromEnum byte) curLn chunk
+      }
+
+emitOpCode :: OpCode -> CompState -> IO CompState
 emitOpCode op = emitByte (fromEnum op)
 
-emitOpCodes :: [OpCode] -> CompState -> CompState
-emitOpCodes ops cs = foldl' (flip emitOpCode) cs ops
+emitOpCodes :: [OpCode] -> CompState -> IO CompState
+emitOpCodes ops cs = foldM (flip emitOpCode) cs ops
 
 addConstantToCs :: Value -> CompState -> (CompState, Int)
 addConstantToCs val cs@(CompState {curChunk}) =
