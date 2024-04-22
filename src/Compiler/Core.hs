@@ -207,9 +207,10 @@ compileStmt (Replace repls start end) cs = do
   repLines <- findReplaceRange start end cs
   let newRLines = map (`lineReplacements` repls) repLines
   curLn <- getCurLine cs
-  let cs1 = cs {csRepls = curLn : csRepls cs}
-  cs2 <- compileLines newRLines cs1
-  return $ cs2 {csRepls = tail (csRepls cs2)}
+  pushReplacement curLn cs
+  cs2 <- compileLines newRLines cs
+  popReplacement cs2
+  return cs2
 --
 compileStmt Ret cs = do
   emitOpCode OP_RETURN cs

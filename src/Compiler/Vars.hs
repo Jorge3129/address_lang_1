@@ -73,7 +73,8 @@ toScopedLabel lbl cs = do
   return $ intercalate "." (scopes ++ [lbl])
 
 getCurScopes :: CompState -> IO [String]
-getCurScopes cs@(CompState {csFnMap, csRepls}) = do
-  curLn1 <- getCurLine cs
-  let curFn = csFnMap Map.! curLn1
-  return $ [curFn | not (null curFn)] ++ map (("$r_" ++) . show) (reverse csRepls)
+getCurScopes cs@(CompState {csFnMap}) = do
+  curLn <- getCurLine cs
+  replacements <- reverse <$> getReplacements cs
+  let curFn = csFnMap Map.! curLn
+  return $ [curFn | not (null curFn)] ++ map (("$r_" ++) . show) (reverse replacements)
