@@ -6,7 +6,7 @@ import ByteCode.Core
 import Compiler.ProgTreeUtils
 import Compiler.State
 import Control.Arrow ((>>>))
-import Control.Monad (foldM)
+import Control.Monad (forM_)
 import Data.List (intercalate, nub)
 import qualified Data.Map as Map
 import Grammar
@@ -46,18 +46,17 @@ collectLineFns (ProgLine {lineNum, stmts = [Ret]}) (fnName, fnMap) = ("", Map.in
 collectLineFns (ProgLine {lineNum}) (fnName, varMap) =
   (fnName, Map.insert lineNum fnName varMap)
 
-compileVars :: [String] -> CompState -> IO CompState
+compileVars :: [String] -> CompState -> IO ()
 compileVars vars cs = do
-  cs1 <- foldM (flip compileVar) cs vars
-  foldM (flip compileVarInit) cs1 vars
+  forM_ vars (`compileVar` cs)
+  forM_ vars (`compileVarInit` cs)
 
-compileVar :: String -> CompState -> IO CompState
+compileVar :: String -> CompState -> IO ()
 compileVar name cs = do
   emitOpCode OP_ALLOC cs
   constant <- addConstantToCs (StringVal name) cs
   emitOpCode OP_DEFINE_VAR cs
   emitByte constant cs
-  return cs
 
 compileVarInit :: String -> CompState -> IO CompState
 compileVarInit name cs = do
@@ -73,8 +72,8 @@ toScopedLabel lbl cs = do
   return $ intercalate "." (scopes ++ [lbl])
 
 getCurScopes :: CompState -> IO [String]
-getCurScopes cs@(CompState {csFnMap}) = do
+getCurScopes cs = do
   curLn <- getCurLine cs
   replacements <- reverse <$> getReplacements cs
-  let curFn = csFnMap Map.! curLn
+  let curFn = csFnMap cs Map.! curLn
   return $ [curFn | not (null curFn)] ++ map (("$r_" ++) . show) (reverse replacements)

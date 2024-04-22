@@ -12,7 +12,6 @@ import Data.List (find, foldl')
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Grammar
-import MyUtils
 import Value.Core
 
 compileProg :: Program -> IO Chunk
@@ -22,8 +21,8 @@ compileProg pg1 = do
   let fnMap = collectProgFns pg
   inCs <- initCs pg
   let cs = inCs {csFnVars = fnVars, csFnMap = fnMap}
-  csv <- compileVars (fnVars Map.! "") cs
-  cs1 <- compileLines pLines csv
+  compileVars (fnVars Map.! "") cs
+  cs1 <- compileLines pLines cs
   patchLabelJumps cs1
   ch <- getCurChunk cs1
   curLblMap <- getLabelOffsetMap cs1
@@ -42,16 +41,16 @@ compileLines [] cs = return cs
 compileLine :: ProgLine -> CompState -> IO CompState
 compileLine (ProgLine lbls@(fnName : _) args@(Send Nil (Var _) : _) lineNum) cs = do
   setCurLine lineNum cs
-  cs1 <- compileLineLabels lbls cs
-  cs2 <- compileVars (csFnVars cs Map.! fnName) cs1
-  compileStmts (reverse args) cs2
+  compileLineLabels lbls cs
+  compileVars (csFnVars cs Map.! fnName) cs
+  compileStmts (reverse args) cs
 --
 compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
   setCurLine lineNum cs
-  cs1 <- compileLineLabels labels cs
-  lps <- getLoopPatches cs1
-  patchLoops lps pl cs1
-  compileStmts stmts cs1
+  compileLineLabels labels cs
+  lps <- getLoopPatches cs
+  patchLoops lps pl cs
+  compileStmts stmts cs
 
 patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO ()
 patchLoops (lp : lps) pl cs = do
@@ -64,7 +63,7 @@ patchLoops (lp : lps) pl cs = do
     patchLoops lps pl cs
 patchLoops [] _ _ = return ()
 
-compileLineLabels :: [String] -> CompState -> IO CompState
+compileLineLabels :: [String] -> CompState -> IO ()
 compileLineLabels lbls cs = do
   offset <- curChunkCount cs
   curLblMap <- getLabelOffsetMap cs
@@ -78,7 +77,6 @@ compileLineLabels lbls cs = do
       curLblMap
       lbls
   setLabelOffsetMap newLblMap cs
-  return cs
 
 compileStmts :: [Statement] -> CompState -> IO CompState
 compileStmts (st : stmts) cs = compileStmt st cs >>= compileStmts stmts
