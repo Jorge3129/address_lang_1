@@ -199,12 +199,12 @@ data BinOp
 
 data Expr
   = Lit Value
+  | Nil
   | Var String
   | BinOpApp BinOp Expr Expr
   | Negate Expr
   | Deref Expr
   | MulDeref Expr Expr
-  | Nil
   | BuiltinFn String [Expr]
   deriving (Eq, Show)
 

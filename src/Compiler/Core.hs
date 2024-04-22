@@ -4,7 +4,7 @@ module Compiler.Core where
 
 import ByteCode.Core
 import Compiler.LoopUtils
-import Compiler.ProgTreeUtils (replaceOpStmt)
+import Compiler.ProgTreeUtils (replaceExprStmt, replaceOpStmt, replaceStmtStmt)
 import Compiler.State
 import Compiler.Vars
 import Control.Arrow ((>>>))
@@ -173,23 +173,23 @@ compileStmt (SubprogramCall name args _) cs = do
 --
 compileStmt (Replace repls start end) cs = do
   repLines <- findReplaceRange start end cs
-  let newRLines =
-        map
-          ( \rLine ->
-              rLine
-                { stmts =
-                    map
-                      (\rSt -> replaceOpStmt rSt (head repls))
-                      (stmts rLine)
-                }
-          )
-          repLines
-  print newRLines
+  let newRLines = map (`lineReplacements` repls) repLines
   compileLines newRLines cs
 --
 compileStmt Ret cs = return $ emitOpCode OP_RETURN cs
 --
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
+
+lineReplacements :: ProgLine -> [Replacement] -> ProgLine
+lineReplacements = foldl' lineReplacement
+
+lineReplacement :: ProgLine -> Replacement -> ProgLine
+lineReplacement rLine r = rLine {stmts = map (`stmtReplacement` r) (stmts rLine)}
+
+stmtReplacement :: Statement -> Replacement -> Statement
+stmtReplacement st r@(StmtReplace {}) = replaceStmtStmt st r
+stmtReplacement st r@(ExprReplace {}) = replaceExprStmt st r
+stmtReplacement st r@(BinOpReplace {}) = replaceOpStmt st r
 
 findReplaceRange :: String -> String -> CompState -> IO [ProgLine]
 findReplaceRange start end cs = do

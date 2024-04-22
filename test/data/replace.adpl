@@ -1,7 +1,16 @@
-R { + -> - } a, b
-R { + -> * } a, b
-R { + -> / } a, b
+R { c + d -> 100 } a, b
+R { x => y -> Pg double { x, y } } a1, b1
 !
 @a...
-    print 10 + 5
+    print c +  d + (c + d + (c + d))
 @b...
+@a1...
+    x = 1000 
+    x => y
+    print 'y
+@b1...
+
+@double ... Nil => val, Nil => res_addr
+    ('val) * 2 => 'res_addr
+    Ret 
+

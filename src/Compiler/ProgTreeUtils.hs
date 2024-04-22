@@ -28,6 +28,7 @@ exprVars (Deref a) = exprVars a
 exprVars (MulDeref a b) = exprVars a ++ exprVars b
 exprVars _ = []
 
+-- BinOpReplace
 replaceOpStmt :: Statement -> Replacement -> Statement
 replaceOpStmt (Assignment a b) r = Assignment (replaceOpExpr a r) (replaceOpExpr b r)
 replaceOpStmt (Send a b) r = Send (replaceOpExpr a r) (replaceOpExpr b r)
@@ -47,7 +48,6 @@ replaceOpStmt (LoopCommon initSt stepSt endExpr cntExpr a b) r =
     (replaceOpExpr cntExpr r)
     a
     b
--- stmtExprs initSt ++ stmtExprs stepSt ++ [endExpr] ++ [cntExpr]
 replaceOpStmt (BuiltinProc nm args) r = BuiltinProc nm (map (`replaceOpExpr` r) args)
 replaceOpStmt (SubprogramCall nm args e) r = SubprogramCall nm (map (`replaceOpExpr` r) args) e
 replaceOpStmt (CompJump ex) r = CompJump (ex `replaceOpExpr` r)
@@ -63,3 +63,64 @@ replaceOpExpr (MulDeref a b) r = MulDeref (replaceOpExpr a r) (replaceOpExpr b r
 replaceOpExpr (Negate a) r = Negate $ replaceOpExpr a r
 replaceOpExpr (BuiltinFn nm args) r = BuiltinFn nm (map (`replaceOpExpr` r) args)
 replaceOpExpr ex _ = ex
+
+-- ExprReplace
+replaceExprStmt :: Statement -> Replacement -> Statement
+replaceExprStmt (Assignment a b) r = Assignment (replaceExprExpr a r) (replaceExprExpr b r)
+replaceExprStmt (Send a b) r = Send (replaceExprExpr a r) (replaceExprExpr b r)
+replaceExprStmt (Exchange a b) r = Exchange (replaceExprExpr a r) (replaceExprExpr b r)
+replaceExprStmt (Predicate cond thenSts elseSts) r =
+  Predicate
+    (replaceExprExpr cond r)
+    (map (`replaceExprStmt` r) thenSts)
+    (map (`replaceExprStmt` r) elseSts)
+replaceExprStmt st@(LoopSimple {}) r = replaceExprStmt (desugarStmt st) r
+replaceExprStmt st@(LoopComplex {}) r = replaceExprStmt (desugarStmt st) r
+replaceExprStmt (LoopCommon initSt stepSt endExpr cntExpr a b) r =
+  LoopCommon
+    (replaceExprStmt initSt r)
+    (replaceExprStmt stepSt r)
+    (replaceExprExpr endExpr r)
+    (replaceExprExpr cntExpr r)
+    a
+    b
+replaceExprStmt (BuiltinProc nm args) r = BuiltinProc nm (map (`replaceExprExpr` r) args)
+replaceExprStmt (SubprogramCall nm args e) r = SubprogramCall nm (map (`replaceExprExpr` r) args) e
+replaceExprStmt (CompJump ex) r = CompJump (ex `replaceExprExpr` r)
+replaceExprStmt (ExpSt ex) r = ExpSt (ex `replaceExprExpr` r)
+replaceExprStmt st _ = st
+
+replaceExprExpr :: Expr -> Replacement -> Expr
+replaceExprExpr ex r@(ExprReplace exSrc exDst)
+  | ex == exSrc = exDst
+  | otherwise = case ex of
+      BinOpApp op a b -> BinOpApp op (replaceExprExpr a r) (replaceExprExpr b r)
+      Deref a -> Deref $ replaceExprExpr a r
+      MulDeref a b -> MulDeref (replaceExprExpr a r) (replaceExprExpr b r)
+      Negate a -> Negate $ replaceExprExpr a r
+      BuiltinFn nm args -> BuiltinFn nm (map (`replaceExprExpr` r) args)
+      _ -> ex
+replaceExprExpr ex _ = ex
+
+-- StmtReplace
+replaceStmtStmt :: Statement -> Replacement -> Statement
+replaceStmtStmt st r@(StmtReplace stSrc stDst)
+  | st == stSrc = stDst
+  | otherwise = case st of
+      Predicate cond thenSts elseSts ->
+        Predicate
+          cond
+          (map (`replaceStmtStmt` r) thenSts)
+          (map (`replaceStmtStmt` r) elseSts)
+      st1@(LoopSimple {}) -> replaceStmtStmt (desugarStmt st1) r
+      st1@(LoopComplex {}) -> replaceStmtStmt (desugarStmt st1) r
+      LoopCommon initSt stepSt endExpr cntExpr a b ->
+        LoopCommon
+          (replaceStmtStmt initSt r)
+          (replaceStmtStmt stepSt r)
+          endExpr
+          cntExpr
+          a
+          b
+      st1 -> st1
+replaceStmtStmt st _ = st
