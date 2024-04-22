@@ -49,7 +49,8 @@ compileLine (ProgLine lbls@(fnName : _) args@(Send Nil (Var _) : _) lineNum) cs 
 compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
   setCurLine lineNum cs
   cs1 <- compileLineLabels labels cs
-  cs2 <- patchLoops (loopPatches cs1) pl cs1
+  lps <- getLoopPatches cs1
+  cs2 <- patchLoops lps pl cs1
   compileStmts stmts cs2
 
 patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO CompState
@@ -59,7 +60,8 @@ patchLoops (lp : lps) pl cs = do
   let shouldPatch = scLbl `elem` lnScLbls
   if shouldPatch
     then do
-      cs1 <- patchLoop lp (cs {loopPatches = lps})
+      setLoopPatches lps cs
+      cs1 <- patchLoop lp cs
       patchLoops lps pl cs1
     else return cs
 patchLoops [] _ cs = return cs
@@ -152,11 +154,12 @@ compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   cs4 <- compileStmts thenStmts cs2
   (cs5, toEndJump) <- emitJump OP_JUMP cs4
   -- else clause
-  cs6 <- patchJump toElseJump cs5
-  emitOpCode OP_POP cs6
-  cs8 <- compileStmts elseStmts cs6
+  patchJump toElseJump cs5
+  emitOpCode OP_POP cs5
+  cs8 <- compileStmts elseStmts cs5
   -- end
   patchJump toEndJump cs8
+  return cs8
 --
 compileStmt st@(LoopSimple {}) cs = compileStmt (desugarStmt st) cs
 --
@@ -172,19 +175,19 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
   stepStart <- curChunkCount cs5
   cs6 <- compileStmt stepStmt cs5
   cs7 <- emitLoop loopStart cs6
-  cs8 <- patchJump bodyJump cs7
-  curLn <- getCurLine cs8
-  return $
-    addLoopPatch
-      ( LoopPatch
-          { scopeLabel = scope,
-            nextLabel = next,
-            stepStart = stepStart,
-            exitJump = exitJump,
-            loopLine = curLn
-          }
-      )
-      cs8
+  patchJump bodyJump cs7
+  curLn <- getCurLine cs7
+  addLoopPatch
+    ( LoopPatch
+        { scopeLabel = scope,
+          nextLabel = next,
+          stepStart = stepStart,
+          exitJump = exitJump,
+          loopLine = curLn
+        }
+    )
+    cs7
+  return cs7
 --
 compileStmt (Assignment (Var name) lhs) cs = do
   csEx <- compileExpr lhs cs
@@ -317,22 +320,18 @@ emitLoop jumpToInstr cs = do
   emitByte jumpOffset cs
   return cs
 
-patchJump :: Int -> CompState -> IO CompState
+patchJump :: Int -> CompState -> IO ()
 patchJump offset cs = do
   chCnt <- curChunkCount cs
   let jump = chCnt - offset - 1
   updateChunk (\ch -> ch {code = replace offset jump (code ch)}) cs
-  return cs
 
 patchLoop :: LoopPatch -> CompState -> IO CompState
 patchLoop (LoopPatch {stepStart, exitJump}) cs = do
   cs1 <- emitLoop stepStart cs
-  cs2 <- patchJump exitJump cs1
-  emitOpCode OP_POP cs2
-  return cs2
-
-addLoopPatch :: LoopPatch -> CompState -> CompState
-addLoopPatch p cs = cs {loopPatches = p : loopPatches cs}
+  patchJump exitJump cs1
+  emitOpCode OP_POP cs1
+  return cs1
 
 addLabelPatch :: Int -> String -> CompState -> CompState
 addLabelPatch curOffset lbl cs@(CompState {labelJumpsToPatch}) =
