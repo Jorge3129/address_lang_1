@@ -148,15 +148,15 @@ compileStmt (Jump lbl) cs = do
 compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   -- condition
   cs1 <- compileExpr ifExp cs
-  (cs2, toElseJump) <- emitJump OP_JUMP_IF_FALSE cs1
+  toElseJump <- emitJump OP_JUMP_IF_FALSE cs1
   -- then clause
-  emitOpCode OP_POP cs2
-  cs4 <- compileStmts thenStmts cs2
-  (cs5, toEndJump) <- emitJump OP_JUMP cs4
+  emitOpCode OP_POP cs1
+  cs4 <- compileStmts thenStmts cs1
+  toEndJump <- emitJump OP_JUMP cs4
   -- else clause
-  patchJump toElseJump cs5
-  emitOpCode OP_POP cs5
-  cs8 <- compileStmts elseStmts cs5
+  patchJump toElseJump cs4
+  emitOpCode OP_POP cs4
+  cs8 <- compileStmts elseStmts cs4
   -- end
   patchJump toEndJump cs8
   return cs8
@@ -169,11 +169,11 @@ compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
   cs1 <- compileStmt initStmt cs
   loopStart <- curChunkCount cs1
   cs2 <- compileExpr endCondition cs1
-  (cs3, exitJump) <- emitJump OP_JUMP_IF_FALSE cs2
-  emitOpCode OP_POP cs3
-  (cs5, bodyJump) <- emitJump OP_JUMP cs3
-  stepStart <- curChunkCount cs5
-  cs6 <- compileStmt stepStmt cs5
+  exitJump <- emitJump OP_JUMP_IF_FALSE cs2
+  emitOpCode OP_POP cs2
+  bodyJump <- emitJump OP_JUMP cs2
+  stepStart <- curChunkCount cs2
+  cs6 <- compileStmt stepStmt cs2
   emitLoop loopStart cs6
   patchJump bodyJump cs6
   curLn <- getCurLine cs6
@@ -305,12 +305,12 @@ compileExpr (BuiltinFn "ptr" [ex]) cs = do
 --
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
-emitJump :: OpCode -> CompState -> IO (CompState, Int)
+emitJump :: OpCode -> CompState -> IO Int
 emitJump op cs = do
   emitOpCode op cs
   emitByte 0 cs
   chCnt <- curChunkCount cs
-  return (cs, chCnt - 1)
+  return $ chCnt - 1
 
 emitLoop :: Int -> CompState -> IO ()
 emitLoop jumpToInstr cs = do

@@ -1,9 +1,7 @@
-{-# LANGUAGE NamedFieldPuns #-}
-
 module Compiler.State where
 
 import ByteCode.Core
-import Control.Monad (foldM, foldM_)
+import Control.Monad (foldM_)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
 import Grammar (Program)
@@ -38,17 +36,17 @@ data CompState = CompState
 
 initCs :: Program -> IO CompState
 initCs prog = do
-  curLine <- newIORef 0
-  curChunk <- newIORef initChunk
-  loopPatches <- newIORef []
-  labelJumpsToPatch <- newIORef []
+  initCurLine <- newIORef 0
+  initCurChunk <- newIORef initChunk
+  initLoopPatches <- newIORef []
+  initLabelJumpsToPatch <- newIORef []
   return $
     CompState
-      { curChunk = curChunk,
-        curLine = curLine,
+      { curChunk = initCurChunk,
+        curLine = initCurLine,
         labelOffsetMap = Map.empty,
-        labelJumpsToPatch = labelJumpsToPatch,
-        loopPatches = loopPatches,
+        labelJumpsToPatch = initLabelJumpsToPatch,
+        loopPatches = initLoopPatches,
         csFnVars = Map.empty,
         csFnMap = Map.empty,
         csProg = prog,
