@@ -26,7 +26,8 @@ compileProg pg1 = do
   cs1 <- compileLines pLines csv
   patchLabelJumps cs1
   ch <- getCurChunk cs1
-  let ch1 = ch {chLabelMap = labelOffsetMap cs1}
+  curLblMap <- getLabelOffsetMap cs1
+  let ch1 = ch {chLabelMap = curLblMap}
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
 
 numerateLines :: Program -> Program
@@ -66,7 +67,7 @@ patchLoops [] _ _ = return ()
 compileLineLabels :: [String] -> CompState -> IO CompState
 compileLineLabels lbls cs = do
   offset <- curChunkCount cs
-  let curLblMap = labelOffsetMap cs
+  curLblMap <- getLabelOffsetMap cs
   newLblMap <-
     foldM
       ( \lblMap lbl ->
@@ -76,7 +77,8 @@ compileLineLabels lbls cs = do
       )
       curLblMap
       lbls
-  return $ cs {labelOffsetMap = newLblMap}
+  setLabelOffsetMap newLblMap cs
+  return cs
 
 compileStmts :: [Statement] -> CompState -> IO CompState
 compileStmts (st : stmts) cs = compileStmt st cs >>= compileStmts stmts
@@ -331,7 +333,7 @@ patchLoop (LoopPatch {stepStart, exitJump}) cs = do
 
 patchLabelJumps :: CompState -> IO ()
 patchLabelJumps cs = do
-  let curLblMap = labelOffsetMap cs
+  curLblMap <- getLabelOffsetMap cs
   jumps <- getJumpPatches cs
   forM_ jumps $ \(curOffset, lbl) -> do
     let jumpToInstr = curLblMap Map.! lbl

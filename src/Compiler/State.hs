@@ -1,7 +1,7 @@
 module Compiler.State where
 
 import ByteCode.Core
-import Control.Monad (foldM_, forM_)
+import Control.Monad (forM_)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
 import Grammar (Program)
@@ -24,9 +24,9 @@ data LoopPatch = LoopPatch
   deriving (Eq, Show)
 
 data CompState = CompState
-  { curChunk :: IORef Chunk,
-    curLine :: IORef Int,
-    labelOffsetMap :: LabelOffsetMap,
+  { curLine :: IORef Int,
+    curChunk :: IORef Chunk,
+    labelOffsetMap :: IORef LabelOffsetMap,
     jumpPatches :: IORef [(Int, String)],
     loopPatches :: IORef [LoopPatch],
     csFnVars :: FnVarMap,
@@ -41,11 +41,12 @@ initCs prog = do
   initCurChunk <- newIORef initChunk
   initLoopPatches <- newIORef []
   initJumpPatches <- newIORef []
+  initLabelOffsetMap <- newIORef Map.empty
   return $
     CompState
       { curChunk = initCurChunk,
         curLine = initCurLine,
-        labelOffsetMap = Map.empty,
+        labelOffsetMap = initLabelOffsetMap,
         jumpPatches = initJumpPatches,
         loopPatches = initLoopPatches,
         csFnVars = Map.empty,
@@ -68,6 +69,12 @@ updateChunk f cs = modifyIORef (curChunk cs) f
 
 patchChunkCode :: Int -> Int -> CompState -> IO ()
 patchChunkCode offset value = updateChunk (\ch -> ch {code = replace offset value (code ch)})
+
+getLabelOffsetMap :: CompState -> IO LabelOffsetMap
+getLabelOffsetMap cs = readIORef (labelOffsetMap cs)
+
+setLabelOffsetMap :: LabelOffsetMap -> CompState -> IO ()
+setLabelOffsetMap v cs = writeIORef (labelOffsetMap cs) v
 
 getLoopPatches :: CompState -> IO [LoopPatch]
 getLoopPatches cs = readIORef (loopPatches cs)
