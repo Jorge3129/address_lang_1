@@ -29,7 +29,6 @@ library
   exposed-modules:
       ByteCode.Core
       Compiler.Core
-      Compiler.LoopUtils
       Compiler.ProgTreeUtils
       Compiler.State
       Compiler.Vars

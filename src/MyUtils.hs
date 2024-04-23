@@ -12,3 +12,6 @@ lpad :: a -> Int -> [a] -> [a]
 lpad pad m xs = replicate (m - length ys) pad ++ ys
   where
     ys = take m xs
+
+slice :: Int -> Int -> [a] -> [a]
+slice start end xs = take (end - start) (drop start xs)

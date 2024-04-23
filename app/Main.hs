@@ -4,5 +4,5 @@ import Lib (execFile)
 
 main :: IO ()
 main = do
-  execFile "hof"
+  execFile "bin_tree"
   return ()

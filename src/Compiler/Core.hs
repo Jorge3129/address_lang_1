@@ -3,8 +3,7 @@
 module Compiler.Core where
 
 import ByteCode.Core
-import Compiler.LoopUtils
-import Compiler.ProgTreeUtils (replaceExprStmt, replaceOpStmt, replaceStmtStmt)
+import Compiler.ProgTreeUtils (desugarStmt, replaceExprStmt, replaceOpStmt, replaceStmtStmt)
 import Compiler.State
 import Compiler.Vars
 import Control.Monad (foldM, forM_, when)
@@ -12,6 +11,7 @@ import Data.List (find, foldl')
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Grammar
+import MyUtils (slice)
 import Value.Core
 
 compileProg :: Program -> IO Chunk
@@ -194,11 +194,11 @@ compileStmt (SubprogramCall name args _) cs = do
   emitByte constant cs
 --
 compileStmt (Replace repls start end) cs = do
-  repLines <- findReplaceRange start end cs
-  let newRLines = map (`lineReplacements` repls) repLines
+  srcLines <- findReplaceRange start end cs
+  let newLines = map (`lineReplacements` repls) srcLines
   curLn <- getCurLine cs
   pushReplacement curLn cs
-  compileLines newRLines cs
+  compileLines newLines cs
   popReplacement cs
 --
 compileStmt Ret cs = do
@@ -226,9 +226,6 @@ findReplaceRange start end cs = do
         (Just s, Just e) -> (lineNum s, lineNum e)
         (_, _) -> error $ "Invalid replacement range: " ++ start ++ ", " ++ end
   return $ slice startLn endLn progLines
-
-slice :: Int -> Int -> [a] -> [a]
-slice start end xs = take (end - start) (drop start xs)
 
 compileExprs :: [Expr] -> CompState -> IO ()
 compileExprs (ex : exs) cs = compileExpr ex cs >> compileExprs exs cs
