@@ -1,6 +1,7 @@
 a = 1000000
 b = 0
 L { 1(1)a => i } b
-    b = b+1
+    P { b % 10000 == 0 } print b |
+    b = b + 1
 @b ...
 print b
