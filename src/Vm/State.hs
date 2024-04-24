@@ -6,13 +6,14 @@ import ByteCode.Core
 import qualified Data.Array.IO as IA
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
+import qualified Utils.Stack as Stack
 import Value.Core
 
 type VmMemory = IA.IOArray Int Value
 
 type VmIp = IORef Int
 
-type VmStack = IORef [Value]
+type VmStack = Stack.Stack Value
 
 type VmVarsMap = IORef (Map.Map String Int)
 
@@ -30,6 +31,9 @@ data VM = VM
 memMax :: Int
 memMax = 5000
 
+stackMax :: Int
+stackMax = 256
+
 newMemory :: Int -> IO VmMemory
 newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
 
@@ -37,7 +41,7 @@ initVM :: Chunk -> IO VM
 initVM ch = do
   mem <- newMemory memMax
   ip <- newIORef 0
-  stack <- newIORef []
+  stack <- Stack.newStack stackMax
   varsMap <- newIORef Map.empty
   vmCalls <- newIORef []
   return
@@ -52,14 +56,10 @@ initVM ch = do
 
 -- TODO change arg order
 push :: VM -> Value -> IO ()
-push vm val = modifyIORef (stack vm) (val :)
+push vm val = Stack.push val (stack vm)
 
 pop :: VM -> IO Value
-pop vm = do
-  curStack <- readIORef (stack vm)
-  let topVal = popStack curStack
-  writeIORef (stack vm) (tail curStack)
-  return topVal
+pop vm = Stack.pop (stack vm)
 
 popStack :: [Value] -> Value
 popStack [] = error "operand stack is empty"
@@ -73,9 +73,7 @@ popN n vm = do
   return $ val : restValues
 
 peek :: Int -> VM -> IO Value
-peek offset vm = do
-  curStack <- readIORef (stack vm)
-  return $ curStack !! offset
+peek offset vm = Stack.peek' offset (stack vm)
 
 addIp :: Int -> VM -> IO ()
 addIp ipOffset vm = do

@@ -32,15 +32,29 @@ isEmpty :: Stack a -> IO Bool
 isEmpty (Stack _ topRef _) = (== -1) <$> readIORef topRef
 
 pop :: Stack a -> IO a
-pop (Stack _ topRef arr) = do
-  empty <- isEmpty (Stack 0 topRef arr)
+pop s = do
+  empty <- isEmpty s
   if empty
     then error "Stack underflow"
     else do
-      top <- readIORef topRef
-      val <- IA.readArray arr top
-      modifyIORef' topRef (\x -> x - 1)
+      top <- readIORef (topIndex s)
+      val <- IA.readArray (stackArray s) top
+      modifyIORef' (topIndex s) (\x -> x - 1)
       return val
+
+peek :: Int -> Stack a -> IO (Maybe a)
+peek offset (Stack _ topRef arr) = do
+  top <- readIORef topRef
+  if offset <= top && offset >= 0
+    then Just <$> IA.readArray arr (top - offset)
+    else return Nothing
+
+peek' :: Int -> Stack a -> IO a
+peek' offset s = do
+  res <- peek offset s
+  return $ case res of
+    Just v -> v
+    Nothing -> error "Negative peek index"
 
 example :: IO ()
 example = do
