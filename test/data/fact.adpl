@@ -1,4 +1,4 @@
-L { 0 (1) 100 => i } l1
+L { 0 (1) 20 => i } l1
     Pg fact { 'i, res }
     print 'res
 @l1 ...

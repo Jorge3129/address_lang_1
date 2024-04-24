@@ -1,0 +1,8 @@
+Pg foo { 1000 }
+
+!
+@foo ... Nil => n
+    P { 'n <= 1 } Ret |
+    P { 'n % 100 == 0 } print 'n |
+    Pg foo { 'n - 1 }
+    Ret
