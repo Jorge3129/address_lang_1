@@ -19,8 +19,15 @@ type VmVarsMap = IORef (Map.Map String Int)
 
 type VmCalls = IORef [(String, Int)]
 
+data VmChunk = VmChunk
+  { vmcCode :: IA.IOArray Int Int,
+    vmcCodeLines :: IA.IOArray Int Int,
+    vmcConstants :: IA.IOArray Int Value,
+    vmcLabelMap :: Map.Map String Int
+  }
+
 data VM = VM
-  { chunk :: !Chunk,
+  { chunk :: !VmChunk,
     ip :: !VmIp,
     stack :: !VmStack,
     memory :: !VmMemory,
@@ -44,9 +51,10 @@ initVM ch = do
   stack <- Stack.newStack stackMax
   varsMap <- newIORef Map.empty
   vmCalls <- newIORef []
+  chunk <- newChunk ch
   return
     VM
-      { chunk = ch,
+      { chunk = chunk,
         ip = ip,
         stack = stack,
         memory = mem,
@@ -95,17 +103,39 @@ pushCall call vm = modifyIORef (vmCalls vm) (call :)
 popCall :: VM -> IO ()
 popCall vm = modifyIORef (vmCalls vm) tail
 
+newChunk :: Chunk -> IO VmChunk
+newChunk ch = do
+  chCode <- IA.newListArray (0, length (code ch) - 1) (code ch)
+  chCodeLines <- IA.newListArray (0, length (codeLines ch) - 1) (codeLines ch)
+  chConstants <- IA.newListArray (0, length (constants ch) - 1) (constants ch)
+  return $
+    VmChunk
+      { vmcCode = chCode,
+        vmcCodeLines = chCodeLines,
+        vmcConstants = chConstants,
+        vmcLabelMap = chLabelMap ch
+      }
+
+readChunk :: VmChunk -> Int -> IO Int
+readChunk ch = IA.readArray (vmcCode ch)
+
+readChunkConst :: VmChunk -> Int -> IO Value
+readChunkConst ch = IA.readArray (vmcConstants ch)
+
+getFnOffset :: VmChunk -> String -> IO Int
+getFnOffset ch fnName = return $ vmcLabelMap ch Map.! fnName
+
 readByte :: VM -> IO Int
 readByte vm = do
   curIp <- readIORef (ip vm)
-  let instruction = code (chunk vm) !! curIp
+  instruction <- readChunk (chunk vm) curIp
   addIp 1 vm
   return instruction
 
 readConst :: VM -> IO Value
 readConst vm@(VM {chunk}) = do
   constPos <- readByte vm
-  return $ constants chunk !! constPos
+  readChunkConst chunk constPos
 
 readStr :: VM -> IO String
 readStr vm = asStr <$> readConst vm

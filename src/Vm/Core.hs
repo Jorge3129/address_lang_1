@@ -23,12 +23,12 @@ run vm = do
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) = do
   -- _ <- disassembleInstruction (chunk vm) (ip vm)
-  curIp <- readIp vm
-  let lineNum = getLineByOffset curIp (chunk vm) + 1
+  -- curIp <- readIp vm
+  -- let lineNum = getLineByOffset curIp (chunk vm) + 1
   -- print $ getLineByOffset (ip vm) (chunk vm) + 1
   instruction <- readByte vm
   -- print $ (toEnum instruction :: OpCode)
-  (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) vm) (handler lineNum)
+  (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) vm) (handler 0)
   -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
   -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
   -- print $ map (second (memory resVM !!)) (Map.toList (varsMap resVM))
@@ -215,7 +215,7 @@ execInstruction OP_ALLOC_N vm = do
 --
 execInstruction OP_CALL vm = do
   fnName <- readStr vm
-  let jumpTo = chLabelMap (chunk vm) Map.! fnName
+  jumpTo <- getFnOffset (chunk vm) fnName
   curIp <- readIp vm
   pushCall (fnName, curIp) vm
   setIp jumpTo vm
