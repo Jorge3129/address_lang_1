@@ -5,7 +5,7 @@ import Control.Monad (forM_)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
 import Grammar (Program)
-import MyUtils (replace)
+import Utils.Core (replace)
 import Value.Core
 
 type LabelOffsetMap = Map.Map String Int

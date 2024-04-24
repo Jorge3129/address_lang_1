@@ -4,7 +4,7 @@ import Control.Monad (forM, forM_)
 import qualified Data.Array.IO as IA
 import Data.IORef (modifyIORef, readIORef)
 import qualified Data.Map as Map
-import MyUtils (lpad)
+import Utils.Core (lpad)
 import Value.Core
 import Vm.State
 

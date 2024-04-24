@@ -8,7 +8,7 @@ import Data.List (foldl')
 import qualified Data.Map as Map
 import Data.Maybe (isJust)
 import Debug
-import MyUtils
+import Utils.Core
 import Value.Core
 import Vm.MemUtils
 import Vm.State

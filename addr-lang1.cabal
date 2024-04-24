@@ -35,8 +35,9 @@ library
       Debug
       Grammar
       Lib
-      MyUtils
       Tokens
+      Utils.Core
+      Utils.Stack
       Value.Core
       Vm.Core
       Vm.MemUtils

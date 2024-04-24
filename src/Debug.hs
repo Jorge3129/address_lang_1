@@ -3,7 +3,7 @@
 module Debug where
 
 import ByteCode.Core
-import MyUtils (lpad)
+import Utils.Core (lpad)
 
 disassembleChunk :: Chunk -> String -> IO ()
 disassembleChunk chunk name = do

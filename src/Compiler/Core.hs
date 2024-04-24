@@ -11,7 +11,7 @@ import Data.List (find, foldl')
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Grammar
-import MyUtils (slice)
+import Utils.Core (slice)
 import Value.Core
 
 compileProg :: Program -> IO Chunk

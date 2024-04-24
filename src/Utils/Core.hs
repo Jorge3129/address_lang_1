@@ -1,4 +1,4 @@
-module MyUtils where
+module Utils.Core where
 
 untilM :: (Monad m) => (a -> Bool) -> (a -> m a) -> a -> m a
 untilM p f x
