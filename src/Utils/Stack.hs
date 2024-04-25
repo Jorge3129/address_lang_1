@@ -1,52 +1,54 @@
 module Utils.Stack where
 
 import Control.Exception as Exc
-import qualified Data.Array.IO as IA
-import Data.IORef
+import Control.Monad.ST (RealWorld, ST, stToIO)
+import qualified Data.Array.ST as IS
+import Data.STRef
 
 data Stack a = Stack
   { capacity :: Int,
-    topIndex :: IORef Int,
-    stackArray :: IA.IOArray Int a
+    topIndex :: STRef RealWorld Int,
+    stackArray :: IS.STArray RealWorld Int a
   }
 
 newStack :: Int -> IO (Stack a)
-newStack cap = Stack cap <$> newIORef (-1) <*> IA.newArray_ (0, cap - 1)
+newStack cap = stToIO $ do
+  Stack cap <$> newSTRef (-1 :: Int) <*> IS.newArray_ (0, cap - 1)
 
-isFull :: Stack a -> IO Bool
+isFull :: Stack a -> ST RealWorld Bool
 isFull (Stack cap topRef _) = do
-  top <- readIORef topRef
+  top <- readSTRef topRef
   return (top == cap - 1)
 
 push :: a -> Stack a -> IO ()
-push x st@(Stack _ topRef arr) = do
+push x st@(Stack _ topRef arr) = stToIO $ do
   full <- isFull st
   if full
     then error "Stack overflow"
     else do
-      top <- readIORef topRef
-      IA.writeArray arr (top + 1) x
-      modifyIORef' topRef (+ 1)
+      top <- readSTRef topRef
+      IS.writeArray arr (top + 1) x
+      modifySTRef' topRef (+ 1)
 
-isEmpty :: Stack a -> IO Bool
-isEmpty (Stack _ topRef _) = (== -1) <$> readIORef topRef
+isEmpty :: Stack a -> ST RealWorld Bool
+isEmpty (Stack _ topRef _) = (== -1) <$> readSTRef topRef
 
 pop :: Stack a -> IO a
-pop s = do
+pop s = stToIO $ do
   empty <- isEmpty s
   if empty
     then error "Stack underflow"
     else do
-      top <- readIORef (topIndex s)
-      val <- IA.readArray (stackArray s) top
-      modifyIORef' (topIndex s) (\x -> x - 1)
+      top <- readSTRef (topIndex s)
+      val <- IS.readArray (stackArray s) top
+      modifySTRef' (topIndex s) (\x -> x - 1)
       return val
 
 peek :: Int -> Stack a -> IO (Maybe a)
-peek offset (Stack _ topRef arr) = do
-  top <- readIORef topRef
+peek offset (Stack _ topRef arr) = stToIO $ do
+  top <- readSTRef topRef
   if offset <= top && offset >= 0
-    then Just <$> IA.readArray arr (top - offset)
+    then Just <$> IS.readArray arr (top - offset)
     else return Nothing
 
 peek' :: Int -> Stack a -> IO a
