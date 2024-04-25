@@ -3,15 +3,18 @@
 module Vm.State where
 
 import ByteCode.Core
+import Control.Monad.ST (RealWorld, stToIO)
+import qualified Data.Array as A
 import qualified Data.Array.IO as IA
-import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
+import Data.IORef (IORef, modifyIORef, newIORef, readIORef)
 import qualified Data.Map as Map
+import Data.STRef
 import qualified Utils.Stack as Stack
 import Value.Core
 
 type VmMemory = IA.IOArray Int Value
 
-type VmIp = IORef Int
+type VmIp = STRef RealWorld Int
 
 type VmStack = Stack.Stack Value
 
@@ -20,9 +23,9 @@ type VmVarsMap = IORef (Map.Map String Int)
 type VmCalls = IORef [(String, Int)]
 
 data VmChunk = VmChunk
-  { vmcCode :: IA.IOArray Int Int,
-    vmcCodeLines :: IA.IOArray Int Int,
-    vmcConstants :: IA.IOArray Int Value,
+  { vmcCode :: A.Array Int Int,
+    vmcCodeLines :: A.Array Int Int,
+    vmcConstants :: A.Array Int Value,
     vmcLabelMap :: Map.Map String Int
   }
 
@@ -47,7 +50,7 @@ newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
 initVM :: Chunk -> IO VM
 initVM ch = do
   mem <- newMemory memMax
-  ip <- newIORef 0
+  ip <- stToIO $ newSTRef 0
   stack <- Stack.newStack stackMax
   varsMap <- newIORef Map.empty
   vmCalls <- newIORef []
@@ -84,15 +87,13 @@ peek :: Int -> VM -> IO Value
 peek offset vm = Stack.peek' offset (stack vm)
 
 addIp :: Int -> VM -> IO ()
-addIp ipOffset vm = do
-  modifyIORef (ip vm) (+ ipOffset)
+addIp ipOffset vm = stToIO $ modifySTRef (ip vm) (+ ipOffset)
 
 setIp :: Int -> VM -> IO ()
-setIp val vm = do
-  writeIORef (ip vm) val
+setIp val vm = stToIO $ writeSTRef (ip vm) val
 
 readIp :: VM -> IO Int
-readIp vm = readIORef (ip vm)
+readIp vm = stToIO $ readSTRef (ip vm)
 
 readCalls :: VM -> IO [(String, Int)]
 readCalls vm = readIORef (vmCalls vm)
@@ -105,9 +106,9 @@ popCall vm = modifyIORef (vmCalls vm) tail
 
 newChunk :: Chunk -> IO VmChunk
 newChunk ch = do
-  chCode <- IA.newListArray (0, length (code ch) - 1) (code ch)
-  chCodeLines <- IA.newListArray (0, length (codeLines ch) - 1) (codeLines ch)
-  chConstants <- IA.newListArray (0, length (constants ch) - 1) (constants ch)
+  let chCode = A.listArray (0, length (code ch) - 1) (code ch)
+  let chCodeLines = A.listArray (0, length (codeLines ch) - 1) (codeLines ch)
+  let chConstants = A.listArray (0, length (constants ch) - 1) (constants ch)
   return $
     VmChunk
       { vmcCode = chCode,
@@ -117,17 +118,17 @@ newChunk ch = do
       }
 
 readChunk :: VmChunk -> Int -> IO Int
-readChunk ch = IA.readArray (vmcCode ch)
+readChunk ch i = return $ vmcCode ch A.! i
 
 readChunkConst :: VmChunk -> Int -> IO Value
-readChunkConst ch = IA.readArray (vmcConstants ch)
+readChunkConst ch i = return $ vmcConstants ch A.! i
 
 getFnOffset :: VmChunk -> String -> IO Int
 getFnOffset ch fnName = return $ vmcLabelMap ch Map.! fnName
 
 readByte :: VM -> IO Int
 readByte vm = do
-  curIp <- readIORef (ip vm)
+  curIp <- readIp vm
   instruction <- readChunk (chunk vm) curIp
   addIp 1 vm
   return instruction
