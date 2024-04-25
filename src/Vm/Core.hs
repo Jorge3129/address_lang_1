@@ -4,11 +4,7 @@ import ByteCode.Core
 import Control.Exception as Exc
 import qualified Control.Monad as CM
 import Control.Monad.ST (RealWorld, ST, stToIO)
-import Data.Bifunctor
-import Data.List (foldl')
-import qualified Data.Map as Map
 import Data.Maybe (isJust)
-import Debug
 import Utils.Core
 import Value.Core
 import Vm.MemUtils
@@ -24,17 +20,11 @@ run vm = do
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) = do
   -- _ <- disassembleInstruction (chunk vm) (ip vm)
-  -- curIp <- readIp vm
+  -- curIp <- stToIO $ readIp vm
   -- let lineNum = getLineByOffset curIp (chunk vm) + 1
   -- print $ getLineByOffset (ip vm) (chunk vm) + 1
   instruction <- stToIO $ readByte vm
-  -- print $ (toEnum instruction :: OpCode)
   (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) vm) (handler 0)
-  -- print $ map (lpad '0' 2 . show) [0 :: Int .. 30]
-  -- print $ map (lpad '0' 2 . show) (take 31 (memory resVM))
-  -- print $ map (second (memory resVM !!)) (Map.toList (varsMap resVM))
-  -- print $ vmCalls resVM
-  -- print $ stack resVM
   return (resVM, intRes)
   where
     handler :: Int -> ErrorCall -> IO (VM, Maybe InterpretResult)

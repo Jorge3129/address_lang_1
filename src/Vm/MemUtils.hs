@@ -1,9 +1,8 @@
 module Vm.MemUtils where
 
 import Control.Monad (forM, forM_)
-import Control.Monad.ST (RealWorld, ST, stToIO)
+import Control.Monad.ST (RealWorld, ST)
 import qualified Data.Array.ST as SA
-import Data.IORef (modifyIORef, readIORef)
 import qualified Data.Map as Map
 import Data.STRef (modifySTRef, readSTRef)
 import Utils.Core (lpad)
