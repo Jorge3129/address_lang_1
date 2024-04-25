@@ -1,7 +1,8 @@
 module Vm.MemUtils where
 
 import Control.Monad (forM, forM_)
-import qualified Data.Array.IO as IA
+import Control.Monad.ST (RealWorld, ST, stToIO)
+import qualified Data.Array.ST as SA
 import Data.IORef (modifyIORef, readIORef)
 import qualified Data.Map as Map
 import Utils.Core (lpad)
@@ -9,16 +10,16 @@ import Value.Core
 import Vm.State
 
 allocN :: Int -> VmMemory -> IO Int
-allocN n vmMemory = do
-  (low, high) <- IA.getBounds vmMemory
+allocN n vmMemory = stToIO $ do
+  (low, high) <- SA.getBounds vmMemory
   allocHelper 0 (low + 1) high
   where
-    allocHelper :: Int -> Int -> Int -> IO Int
+    allocHelper :: Int -> Int -> Int -> ST RealWorld Int
     allocHelper count currentIndex endIndex
       | currentIndex > endIndex = error $ "Cound not allocate " ++ show n ++ " cells of memory"
       | count >= n = return $ currentIndex - count
       | otherwise = do
-          curVal <- IA.readArray vmMemory currentIndex
+          curVal <- SA.readArray vmMemory currentIndex
           if curVal == NilVal
             then allocHelper (count + 1) (currentIndex + 1) endIndex
             else allocHelper 0 (currentIndex + 1) endIndex
@@ -81,13 +82,13 @@ freeVars vm = do
   locals <- getLocalVars vm
   forM_ locals $ \(nm, addr) -> do
     modifyIORef (varsMap vm) (Map.delete nm)
-    IA.writeArray (memory vm) addr NilVal
+    stToIO $ SA.writeArray (memory vm) addr NilVal
 
 getRefsToAddr :: Int -> VM -> IO [Int]
-getRefsToAddr addr vm = do
-  (low, high) <- IA.getBounds (memory vm)
+getRefsToAddr addr vm = stToIO $ do
+  (low, high) <- SA.getBounds (memory vm)
   indexes <- forM [low + 1 .. high] $ \i -> do
-    val <- IA.readArray (memory vm) i
+    val <- SA.readArray (memory vm) i
     if isPointer val && asInt val == addr
       then return i
       else return (-1)
@@ -95,7 +96,7 @@ getRefsToAddr addr vm = do
 
 deref :: Int -> VM -> IO Value
 deref addr vm
-  | addr > 0 = IA.readArray (memory vm) addr
+  | addr > 0 = stToIO $ SA.readArray (memory vm) addr
   | otherwise = error $ "Cannot dereference memory at " ++ show addr
 
 mulDeref :: Int -> Value -> VM -> IO Value
@@ -118,7 +119,7 @@ castAsType oldVal val
 
 memSet :: Int -> Value -> VM -> IO ()
 memSet addr val vm
-  | addr >= 0 = IA.writeArray (memory vm) addr val
+  | addr >= 0 = stToIO $ SA.writeArray (memory vm) addr val
   | otherwise = error $ "Cannot set memory at address " ++ show addr
 
 scopedVar :: Int -> String -> String

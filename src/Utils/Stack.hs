@@ -2,18 +2,18 @@ module Utils.Stack where
 
 import Control.Exception as Exc
 import Control.Monad.ST (RealWorld, ST, stToIO)
-import qualified Data.Array.ST as IS
+import qualified Data.Array.ST as SA
 import Data.STRef
 
 data Stack a = Stack
   { capacity :: Int,
     topIndex :: STRef RealWorld Int,
-    stackArray :: IS.STArray RealWorld Int a
+    stackArray :: SA.STArray RealWorld Int a
   }
 
 newStack :: Int -> IO (Stack a)
 newStack cap = stToIO $ do
-  Stack cap <$> newSTRef (-1 :: Int) <*> IS.newArray_ (0, cap - 1)
+  Stack cap <$> newSTRef (-1 :: Int) <*> SA.newArray_ (0, cap - 1)
 
 isFull :: Stack a -> ST RealWorld Bool
 isFull (Stack cap topRef _) = do
@@ -27,7 +27,7 @@ push x st@(Stack _ topRef arr) = stToIO $ do
     then error "Stack overflow"
     else do
       top <- readSTRef topRef
-      IS.writeArray arr (top + 1) x
+      SA.writeArray arr (top + 1) x
       modifySTRef' topRef (+ 1)
 
 isEmpty :: Stack a -> ST RealWorld Bool
@@ -40,7 +40,7 @@ pop s = stToIO $ do
     then error "Stack underflow"
     else do
       top <- readSTRef (topIndex s)
-      val <- IS.readArray (stackArray s) top
+      val <- SA.readArray (stackArray s) top
       modifySTRef' (topIndex s) (\x -> x - 1)
       return val
 
@@ -48,7 +48,7 @@ peek :: Int -> Stack a -> IO (Maybe a)
 peek offset (Stack _ topRef arr) = stToIO $ do
   top <- readSTRef topRef
   if offset <= top && offset >= 0
-    then Just <$> IS.readArray arr (top - offset)
+    then Just <$> SA.readArray arr (top - offset)
     else return Nothing
 
 peek' :: Int -> Stack a -> IO a

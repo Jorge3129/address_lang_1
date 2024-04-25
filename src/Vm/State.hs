@@ -5,14 +5,14 @@ module Vm.State where
 import ByteCode.Core
 import Control.Monad.ST (RealWorld, stToIO)
 import qualified Data.Array as A
-import qualified Data.Array.IO as IA
+import qualified Data.Array.ST as SA
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef)
 import qualified Data.Map as Map
 import Data.STRef
 import qualified Utils.Stack as Stack
 import Value.Core
 
-type VmMemory = IA.IOArray Int Value
+type VmMemory = SA.STArray RealWorld Int Value
 
 type VmIp = STRef RealWorld Int
 
@@ -45,7 +45,7 @@ stackMax :: Int
 stackMax = 256
 
 newMemory :: Int -> IO VmMemory
-newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
+newMemory size = stToIO $ SA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
 
 initVM :: Chunk -> IO VM
 initVM ch = do
