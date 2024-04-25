@@ -102,13 +102,13 @@ compileStmt (ExpSt ex) cs = do
   compileExpr ex cs
   emitOpCode OP_POP cs
 --
-compileStmt (Send valEx (Var name)) cs = do
-  compileExpr valEx cs
-  compileExpr (Var name) cs
-  emitOpCode OP_SEND cs
-  arg <- addConstantToCs (StringVal name) cs
-  emitOpCode OP_MAKE_VAR_POINTER cs
-  emitByte arg cs
+-- compileStmt (Send valEx (Var name)) cs = do
+--   compileExpr valEx cs
+--   compileExpr (Var name) cs
+--   emitOpCode OP_SEND cs
+--   arg <- addConstantToCs (StringVal name) cs
+--   emitOpCode OP_MAKE_VAR_POINTER cs
+--   emitByte arg cs
 --
 -- compileStmt (Send valEx (Deref innerExpr)) cs = do
 --   compileExpr valEx cs

@@ -1,4 +1,5 @@
 import Compiler.Core
+import Control.Monad.ST
 import Debug
 import Grammar
 import System.Directory (getCurrentDirectory)
@@ -17,7 +18,7 @@ main = do
   -- print progAst
   ch <- compileProg progAst
   -- disassembleChunk ch "test chunk"
-  vm <- initVM ch
+  vm <- stToIO $ initVM ch
   res <- run vm
   -- print res
   return ()

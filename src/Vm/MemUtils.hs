@@ -5,12 +5,13 @@ import Control.Monad.ST (RealWorld, ST, stToIO)
 import qualified Data.Array.ST as SA
 import Data.IORef (modifyIORef, readIORef)
 import qualified Data.Map as Map
+import Data.STRef (modifySTRef, readSTRef)
 import Utils.Core (lpad)
 import Value.Core
 import Vm.State
 
-allocN :: Int -> VmMemory -> IO Int
-allocN n vmMemory = stToIO $ do
+allocN :: Int -> VmMemory -> ST RealWorld Int
+allocN n vmMemory = do
   (low, high) <- SA.getBounds vmMemory
   allocHelper 0 (low + 1) high
   where
@@ -24,35 +25,35 @@ allocN n vmMemory = stToIO $ do
             then allocHelper (count + 1) (currentIndex + 1) endIndex
             else allocHelper 0 (currentIndex + 1) endIndex
 
-allocNInit :: Int -> VM -> IO Int
+allocNInit :: Int -> VM -> ST RealWorld Int
 allocNInit n vm = do
   freeAddr <- allocN n (memory vm)
   forM_ [0 .. (n - 1)] $ \offset ->
     memSet (freeAddr + offset) 0 vm
   return freeAddr
 
-parseList :: Value -> VM -> IO [Value]
+parseList :: Value -> VM -> ST RealWorld [Value]
 parseList val vm = do
   firstAddr <- asInt <$> deref (asInt val) vm
   if firstAddr == 0
     then return []
     else parseList' firstAddr [] vm
   where
-    parseList' :: Int -> [Value] -> VM -> IO [Value]
+    parseList' :: Int -> [Value] -> VM -> ST RealWorld [Value]
     parseList' 0 acc _ = return acc
     parseList' curAddr acc vm_ = do
       nextAddr <- deref curAddr vm_
       curVal <- deref (curAddr + 1) vm_
       parseList' (asInt nextAddr) (acc ++ [curVal]) vm_
 
-constructList :: [Value] -> VM -> IO Value
+constructList :: [Value] -> VM -> ST RealWorld Value
 constructList [] vm = PointerVal <$> allocNInit 1 vm
 constructList vals vm = do
   freeAddr <- allocNInit 1 vm
   consList' freeAddr vals vm
   return $ PointerVal freeAddr
   where
-    consList' :: Int -> [Value] -> VM -> IO ()
+    consList' :: Int -> [Value] -> VM -> ST RealWorld ()
     consList' prevAddr (x : xs) vm_ = do
       newAddr <- allocN 2 (memory vm_)
       memSet prevAddr (PointerVal newAddr) vm_
@@ -61,31 +62,31 @@ constructList vals vm = do
       consList' newAddr xs vm_
     consList' _ [] _ = return ()
 
-defineVar :: String -> Int -> VM -> IO ()
+defineVar :: String -> Int -> VM -> ST RealWorld ()
 defineVar nm addr vm = do
   curScope <- length <$> readCalls vm
-  modifyIORef (varsMap vm) (Map.insert (scopedVar curScope nm) addr)
+  modifySTRef (varsMap vm) (Map.insert (scopedVar curScope nm) addr)
 
-getVarAddr :: String -> VM -> IO Int
+getVarAddr :: String -> VM -> ST RealWorld Int
 getVarAddr name vm = do
   curScope <- length <$> readCalls vm
-  (Map.! scopedVar curScope name) <$> readIORef (varsMap vm)
+  (Map.! scopedVar curScope name) <$> readSTRef (varsMap vm)
 
-getLocalVars :: VM -> IO [(String, Int)]
+getLocalVars :: VM -> ST RealWorld [(String, Int)]
 getLocalVars vm = do
   curScope <- length <$> readCalls vm
-  allVars <- Map.toList <$> readIORef (varsMap vm)
+  allVars <- Map.toList <$> readSTRef (varsMap vm)
   return $ [(nm, add) | (nm, add) <- allVars, getVarScope nm == curScope]
 
-freeVars :: VM -> IO ()
+freeVars :: VM -> ST RealWorld ()
 freeVars vm = do
   locals <- getLocalVars vm
   forM_ locals $ \(nm, addr) -> do
-    modifyIORef (varsMap vm) (Map.delete nm)
-    stToIO $ SA.writeArray (memory vm) addr NilVal
+    modifySTRef (varsMap vm) (Map.delete nm)
+    SA.writeArray (memory vm) addr NilVal
 
-getRefsToAddr :: Int -> VM -> IO [Int]
-getRefsToAddr addr vm = stToIO $ do
+getRefsToAddr :: Int -> VM -> ST RealWorld [Int]
+getRefsToAddr addr vm = do
   (low, high) <- SA.getBounds (memory vm)
   indexes <- forM [low + 1 .. high] $ \i -> do
     val <- SA.readArray (memory vm) i
@@ -94,12 +95,12 @@ getRefsToAddr addr vm = stToIO $ do
       else return (-1)
   return $ filter (/= -1) indexes
 
-deref :: Int -> VM -> IO Value
+deref :: Int -> VM -> ST RealWorld Value
 deref addr vm
-  | addr > 0 = stToIO $ SA.readArray (memory vm) addr
+  | addr > 0 = SA.readArray (memory vm) addr
   | otherwise = error $ "Cannot dereference memory at " ++ show addr
 
-mulDeref :: Int -> Value -> VM -> IO Value
+mulDeref :: Int -> Value -> VM -> ST RealWorld Value
 mulDeref count addrVal vm
   | count < 0 = error $ "Cannot execute multi-stroke operation for a negative number " ++ show count
   | count == 0 = return addrVal
@@ -117,9 +118,9 @@ castAsType oldVal val
   | isPointer oldVal = asPointer val
   | otherwise = val
 
-memSet :: Int -> Value -> VM -> IO ()
+memSet :: Int -> Value -> VM -> ST RealWorld ()
 memSet addr val vm
-  | addr >= 0 = stToIO $ SA.writeArray (memory vm) addr val
+  | addr >= 0 = SA.writeArray (memory vm) addr val
   | otherwise = error $ "Cannot set memory at address " ++ show addr
 
 scopedVar :: Int -> String -> String
