@@ -172,7 +172,7 @@ execInstruction OP_ALLOC vm = stToIO $ do
 execInstruction OP_ALLOC_N vm = stToIO $ do
   n <- asInt <$> pop vm
   freeAddr <- allocNInit n vm
-  push vm $ PointerVal freeAddr
+  push vm $ newPtrWithSize freeAddr n
   return' vm
 --
 execInstruction OP_CALL vm = stToIO $ do

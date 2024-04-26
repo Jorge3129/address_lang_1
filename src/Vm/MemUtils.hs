@@ -46,20 +46,21 @@ parseList val vm = do
       parseList' (asInt nextAddr) (acc ++ [curVal]) vm_
 
 constructList :: [Value] -> VM -> ST RealWorld Value
-constructList [] vm = PointerVal <$> allocNInit 1 vm
+constructList [] vm = newPtr <$> allocNInit 1 vm
 constructList vals vm = do
   freeAddr <- allocNInit 1 vm
-  consList' freeAddr vals vm
-  return $ PointerVal freeAddr
+  consList' freeAddr vals
+  return $ newPtr freeAddr
   where
-    consList' :: Int -> [Value] -> VM -> ST RealWorld ()
-    consList' prevAddr (x : xs) vm_ = do
-      newAddr <- allocN 2 (memory vm_)
-      memSet prevAddr (PointerVal newAddr) vm_
-      memSet newAddr (PointerVal 0) vm_
-      memSet (newAddr + 1) x vm_
-      consList' newAddr xs vm_
-    consList' _ [] _ = return ()
+    consList' :: Int -> [Value] -> ST RealWorld ()
+    consList' prevAddr (x : xs) = do
+      let sz = 2 :: Int
+      newAddr <- allocN sz (memory vm)
+      memSet prevAddr (newPtrWithSize newAddr sz) vm
+      memSet newAddr (newPtr 0) vm
+      memSet (newAddr + 1) x vm
+      consList' newAddr xs
+    consList' _ [] = return ()
 
 defineVar :: String -> Int -> VM -> ST RealWorld ()
 defineVar nm addr vm = do
