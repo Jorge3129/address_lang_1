@@ -37,4 +37,6 @@ execBuiltinFn "ptr" _ vm = stToIO $ do
   push vm $ asPointer oldVal
   return' vm
 --
+execBuiltinFn "id" _ vm = returnIO' vm
+--
 execBuiltinFn _ _ _ = undefined

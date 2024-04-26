@@ -1,18 +1,21 @@
 list1 = [1,2,3,4,5]
 printList list1
-R { h -> list1; v => nv -> Pg double { v, nv }; r -> list1_1 } map, map_end
+R { h -> list1; id(v) => nv -> Pg double { v, nv }; r -> list1_1 } map, map_end
 printList list1_1
 
-R { h -> list1_1; v => nv -> v > 5 and v < 9 => nv; r -> list1_2 } filter, filter_end
+R { h -> list1; id(v) -> v * 2; r -> list1_1 } map, map_end
+printList list1_1
+
+R { h -> list1_1; id(v) -> v > 5 and v < 9; r -> list1_2 } filter, filter_end
 printList list1_2
 
-R { h -> list1; v => nv -> v % 2 /= 0 => nv; r -> list1_3 } filter, filter_end
+R { h -> list1; id(v) -> v % 2 /= 0; r -> list1_3 } filter, filter_end
 printList list1_3
 
-R { h -> list1_1; v => acc -> 'acc + v => acc; init_val -> 0 } fold, fold_end
+R { h -> list1_1; id(v) -> 'acc + v; init_val -> 0 } fold, fold_end
 print 'acc
 
-R { h -> list1_1; v => acc -> 'acc * v => acc; init_val -> 1 } fold, fold_end
+R { h -> list1_1; id(v) -> 'acc * v; init_val -> 1 } fold, fold_end
 print 'acc
 
 list2 = []
@@ -28,7 +31,7 @@ printList list2_1
 
     L { 'h, 'Nil, P { 'i /= 0 } => i } b
         v = '('i + 1)
-        v => nv
+        id(v) => nv
         Pg list_add { 'nv, r }
     @b ...
 
@@ -42,7 +45,7 @@ printList list2_1
 
     L { 'h, 'Nil, P { 'i /= 0 } => i } b1
         v = '('i + 1)
-        v => nv
+        id(v) => nv
         P { 'nv } | continue
         Pg list_add { v, r }
         
@@ -59,7 +62,7 @@ printList list2_1
 
     L { 'h, 'Nil, P { 'i /= 0 } => i } b
         v = '('i + 1)
-        v => acc
+        id(v) => acc
     @b ...
 
     @fold_end_1 ...
