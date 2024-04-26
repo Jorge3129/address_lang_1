@@ -53,16 +53,11 @@ disassembleInstruction chunk offset = do
     OP_OR -> simpleInstruction "OP_OR" offset
     OP_NEGATE -> simpleInstruction "OP_NEGATE" offset
     --
-    OP_PRINT -> simpleInstruction "OP_PRINT" offset
-    OP_PRINT_REFS -> simpleInstruction "OP_PRINT_REFS" offset
-    OP_PRINT_LIST -> simpleInstruction "OP_PRINT_LIST" offset
-    OP_CONSTR_LIST -> simpleInstruction "OP_CONSTR_LIST" offset
     OP_POP -> simpleInstruction "OP_POP" offset
     OP_SEND -> simpleInstruction "OP_SEND" offset
     OP_DEREF -> simpleInstruction "OP_DEREF" offset
     OP_MUL_DEREF -> simpleInstruction "OP_MUL_DEREF" offset
     OP_MAKE_POINTER -> simpleInstruction "OP_MAKE_POINTER" offset
-    OP_CAST_AS_PTR -> simpleInstruction "OP_CAST_AS_PTR" offset
     OP_EXCHANGE -> simpleInstruction "OP_EXCHANGE" offset
     OP_GET_REFS -> simpleInstruction "OP_GET_REFS" offset
     --
@@ -78,6 +73,8 @@ disassembleInstruction chunk offset = do
     OP_SET_VAR -> constantInstruction "OP_SET_VAR" chunk offset
     OP_MAKE_VAR_POINTER -> constantInstruction "OP_MAKE_VAR_POINTER" chunk offset
     OP_CALL -> constantInstruction "OP_CALL" chunk offset
+    OP_CALL_PROC -> constantInstruction "OP_CALL_PROC" chunk offset
+    OP_CALL_FN -> constantInstruction "OP_CALL_FN" chunk offset
 
 -- _ -> do
 --   putStrLn $ "Unknown opcode " ++ show instruction

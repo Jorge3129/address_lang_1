@@ -86,17 +86,12 @@ compileStmt :: Statement -> CompState -> IO ()
 compileStmt Stop cs = do
   emitOpCode OP_RETURN cs
 --
-compileStmt (BuiltinProc "print" [ex]) cs = do
-  compileExpr ex cs
-  emitOpCode OP_PRINT cs
 --
-compileStmt (BuiltinProc "printList" [ex]) cs = do
-  compileExpr ex cs
-  emitOpCode OP_PRINT_LIST cs
---
-compileStmt (BuiltinProc "printRefs" [ex]) cs = do
-  compileExpr ex cs
-  emitOpCode OP_PRINT_REFS cs
+compileStmt (BuiltinProc name args) cs = do
+  compileExprs args cs
+  constant <- addConstantToCs (StringVal name) cs
+  emitOpCode OP_CALL_PROC cs
+  emitByte constant cs
 --
 compileStmt (ExpSt ex) cs = do
   compileExpr ex cs
@@ -270,14 +265,12 @@ compileExpr (BuiltinFn "getRefs" [ex]) cs = do
   compileExpr ex cs
   emitOpCode OP_GET_REFS cs
 --
-compileExpr (BuiltinFn "constrList" args) cs = do
+compileExpr (BuiltinFn name args) cs = do
   compileExprs args cs
   compileExpr (Lit (IntVal (length args))) cs
-  emitOpCode OP_CONSTR_LIST cs
---
-compileExpr (BuiltinFn "ptr" [ex]) cs = do
-  compileExpr ex cs
-  emitOpCode OP_CAST_AS_PTR cs
+  constant <- addConstantToCs (StringVal name) cs
+  emitOpCode OP_CALL_FN cs
+  emitByte constant cs
 --
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 

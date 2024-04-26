@@ -39,9 +39,11 @@ library
       Utils.Core
       Utils.Stack
       Value.Core
+      Vm.BuiltinProcs
       Vm.Core
       Vm.MemUtils
       Vm.State
+      Vm.VmUtils
   other-modules:
       Paths_addr_lang1
   autogen-modules:

@@ -3,14 +3,14 @@ module Vm.Core where
 import ByteCode.Core
 import Control.Exception as Exc
 import qualified Control.Monad as CM
-import Control.Monad.ST (RealWorld, ST, stToIO)
+import Control.Monad.ST (stToIO)
 import Data.Maybe (isJust)
 import Utils.Core
 import Value.Core
+import Vm.BuiltinProcs (execBuiltinFn, execBuiltinProc)
 import Vm.MemUtils
 import Vm.State
-
-data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)
+import Vm.VmUtils
 
 run :: VM -> IO InterpretResult
 run vm = do
@@ -64,34 +64,10 @@ execInstruction OP_EQUAL vm = compInstr (==) vm
 execInstruction OP_AND vm = logInstr (&&) vm
 execInstruction OP_OR vm = logInstr (||) vm
 --
-execInstruction OP_PRINT vm = do
-  val <- stToIO $ pop vm
-  print val
-  returnIO' vm
---
-execInstruction OP_PRINT_LIST vm = do
-  val <- stToIO $ pop vm
-  list <- stToIO $ parseList val vm
-  print list
-  returnIO' vm
---
-execInstruction OP_PRINT_REFS vm = do
-  addr <- stToIO $ asInt <$> pop vm
-  refs <- stToIO $ getRefsToAddr addr vm
-  putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
-  returnIO' vm
---
 execInstruction OP_GET_REFS vm = stToIO $ do
   addr <- asInt <$> pop vm
   refs <- getRefsToAddr addr vm
   listHead <- constructList (map IntVal refs) vm
-  push vm listHead
-  return' vm
---
-execInstruction OP_CONSTR_LIST vm = stToIO $ do
-  len <- asInt <$> pop vm
-  elems <- popN len vm
-  listHead <- constructList (reverse elems) vm
   push vm listHead
   return' vm
 --
@@ -188,11 +164,6 @@ execInstruction OP_MAKE_POINTER vm = stToIO $ do
   memSet addr (asPointer oldVal) vm
   return' vm
 --
-execInstruction OP_CAST_AS_PTR vm = stToIO $ do
-  oldVal <- pop vm
-  push vm $ asPointer oldVal
-  return' vm
---
 execInstruction OP_ALLOC vm = stToIO $ do
   freeAddr <- allocNInit 1 vm
   push vm $ IntVal freeAddr
@@ -211,6 +182,15 @@ execInstruction OP_CALL vm = stToIO $ do
   pushCall (fnName, curIp) vm
   setIp jumpTo vm
   return' vm
+--
+execInstruction OP_CALL_FN vm = do
+  fnName <- stToIO $ readStr vm
+  len <- stToIO $ asInt <$> pop vm
+  execBuiltinFn fnName len vm
+--
+execInstruction OP_CALL_PROC vm = do
+  fnName <- stToIO $ readStr vm
+  execBuiltinProc fnName vm
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 
@@ -237,16 +217,3 @@ logInstr op vm = stToIO $ do
   let res = if op (isTruthy a) (isTruthy b) then 1 else 0
   res `seq` push vm res
   return' vm
-
-returnIO' :: VM -> IO (VM, Maybe InterpretResult)
-returnIO' vm = do
-  res <- evaluate vm
-  return (res, Nothing)
-
-return' :: VM -> ST RealWorld (VM, Maybe InterpretResult)
-return' vm = do
-  return (vm, Nothing)
-
-returnOk :: VM -> IO (VM, Maybe InterpretResult)
-returnOk vm = do
-  return (vm, Just OK)

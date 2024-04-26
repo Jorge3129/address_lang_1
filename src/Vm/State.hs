@@ -37,6 +37,8 @@ data VM = VM
     vmCalls :: !VmCalls
   }
 
+data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)
+
 memMax :: Int
 memMax = 5000
 

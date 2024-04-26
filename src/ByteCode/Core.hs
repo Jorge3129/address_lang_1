@@ -20,10 +20,6 @@ data OpCode
   | OP_EQUAL
   | OP_GREATER
   | OP_LESS
-  | OP_PRINT
-  | OP_PRINT_LIST
-  | OP_PRINT_REFS
-  | OP_CONSTR_LIST
   | OP_POP
   | OP_JUMP
   | OP_JUMP_IF_FALSE
@@ -38,8 +34,9 @@ data OpCode
   | OP_GET_REFS
   | OP_MAKE_VAR_POINTER
   | OP_MAKE_POINTER
-  | OP_CAST_AS_PTR
   | OP_CALL
+  | OP_CALL_PROC
+  | OP_CALL_FN
   | OP_EXCHANGE
   deriving (Eq, Show, Enum)
 
