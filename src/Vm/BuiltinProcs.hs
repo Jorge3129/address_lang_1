@@ -23,7 +23,7 @@ execBuiltinProc "printRefs" vm = do
   refs <- stToIO $ getRefsToAddr addr vm
   putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
   returnIO' vm
-execBuiltinProc _ _ = undefined
+execBuiltinProc name _ = error $ "procedure " ++ name ++ " is not defined"
 
 execBuiltinFn :: String -> Int -> VM -> IO (VM, Maybe InterpretResult)
 execBuiltinFn "constrList" len vm = stToIO $ do
@@ -52,4 +52,4 @@ execBuiltinFn "mulalloc" _ vm = stToIO $ do
   push vm $ PointerVal freeAddr size count
   return' vm
 --
-execBuiltinFn _ _ _ = undefined
+execBuiltinFn name _ _ = error $ "function " ++ name ++ " is not defined"

@@ -22,7 +22,8 @@ compileProg pg1 = do
   let cs = inCs {csFnVars = fnVars, csFnMap = fnMap}
   compileVars (fnVars Map.! "") cs
   compileLines pLines cs
-  patchLabelJumps cs
+  patchJumps cs
+  patchLabelRefs cs
   ch <- getCurChunk cs
   curLblMap <- getLabelOffsetMap cs
   let ch1 = ch {chLabelMap = curLblMap}
@@ -246,6 +247,14 @@ compileExpr (BuiltinFn name args) cs = do
   emitOpCode OP_CALL_FN cs
   emitByte constant cs
 --
+compileExpr (LabelRef lblName) cs = do
+  scopedLabel <- toScopedLabel lblName cs
+  constant <- addConstantToCs (IntVal 0) cs
+  emitOpCode OP_CONSTANT cs
+  chunkCount <- curChunkCount cs
+  addLabelRefPatch chunkCount scopedLabel cs
+  emitByte constant cs
+--
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
 emitJump :: OpCode -> CompState -> IO Int
@@ -274,14 +283,22 @@ patchLoop (LoopPatch {stepStart, exitJump}) cs = do
   patchJump exitJump cs
   emitOpCode OP_POP cs
 
-patchLabelJumps :: CompState -> IO ()
-patchLabelJumps cs = do
+patchJumps :: CompState -> IO ()
+patchJumps cs = do
   curLblMap <- getLabelOffsetMap cs
   jumps <- getJumpPatches cs
   forM_ jumps $ \(curOffset, lbl) -> do
     let jumpToInstr = curLblMap Map.! lbl
         jumpOffset = jumpToInstr - curOffset - 2
     patchChunkCode (curOffset + 1) jumpOffset cs
+
+patchLabelRefs :: CompState -> IO ()
+patchLabelRefs cs = do
+  curLblMap <- getLabelOffsetMap cs
+  labelRefs <- getLabelRefPatches cs
+  forM_ labelRefs $ \(curOffset, lbl) -> do
+    let labelOffset = curLblMap Map.! lbl
+    patchChunkConstant curOffset (IntVal labelOffset) cs
 
 binOpToOpCode :: BinOp -> [OpCode]
 binOpToOpCode Add = [OP_ADD]

@@ -23,6 +23,7 @@ tokens :-
   "//".*        ;
   @eol_pattern      { \_ -> TokenNewLine }
   "@"       { \_ -> TokenAt }
+  "&"       { \_ -> TokenAnd }
   "|"       { \_ -> TokenVerticalBar }
   ";"       { \_ -> TokenSemi }
   ","       { \_ -> TokenComma }
@@ -66,6 +67,7 @@ tokens :-
 data Token = 
     TokenNewLine
   | TokenAt
+  | TokenAnd
   | TokenVerticalBar
   | TokenSemi
   | TokenComma

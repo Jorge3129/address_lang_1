@@ -29,6 +29,7 @@ data CompState = CompState
     labelOffsetMap :: IORef LabelOffsetMap,
     jumpPatches :: IORef [(Int, String)],
     loopPatches :: IORef [LoopPatch],
+    labelRefPatches :: IORef [(Int, String)],
     csFnVars :: FnVarMap,
     csFnMap :: LineFnMap,
     csProg :: Program,
@@ -41,6 +42,7 @@ initCs prog = do
   initCurChunk <- newIORef initChunk
   initLoopPatches <- newIORef []
   initJumpPatches <- newIORef []
+  initLabelPatches <- newIORef []
   initLabelOffsetMap <- newIORef Map.empty
   initRepls <- newIORef []
   return $
@@ -50,6 +52,7 @@ initCs prog = do
         labelOffsetMap = initLabelOffsetMap,
         jumpPatches = initJumpPatches,
         loopPatches = initLoopPatches,
+        labelRefPatches = initLabelPatches,
         csFnVars = Map.empty,
         csFnMap = Map.empty,
         csProg = prog,
@@ -70,6 +73,14 @@ updateChunk f cs = modifyIORef (curChunk cs) f
 
 patchChunkCode :: Int -> Int -> CompState -> IO ()
 patchChunkCode offset value = updateChunk (\ch -> ch {code = replace offset value (code ch)})
+
+patchChunkConstant :: Int -> Value -> CompState -> IO ()
+patchChunkConstant offset value =
+  updateChunk
+    ( \ch ->
+        let constIndex = code ch !! offset
+         in ch {constants = replace constIndex value (constants ch)}
+    )
 
 getLabelOffsetMap :: CompState -> IO LabelOffsetMap
 getLabelOffsetMap cs = readIORef (labelOffsetMap cs)
@@ -92,6 +103,13 @@ getJumpPatches cs = readIORef (jumpPatches cs)
 addJumpPatch :: Int -> String -> CompState -> IO ()
 addJumpPatch curOffset lbl cs = do
   modifyIORef (jumpPatches cs) (++ [(curOffset, lbl)])
+
+getLabelRefPatches :: CompState -> IO [(Int, String)]
+getLabelRefPatches cs = readIORef (labelRefPatches cs)
+
+addLabelRefPatch :: Int -> String -> CompState -> IO ()
+addLabelRefPatch curOffset lbl cs = do
+  modifyIORef (labelRefPatches cs) (++ [(curOffset, lbl)])
 
 getReplacements :: CompState -> IO [Int]
 getReplacements cs = readIORef (csRepls cs)

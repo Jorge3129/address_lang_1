@@ -26,6 +26,7 @@ import Value.Core
     builtinFn     { TokenBuiltinFn $$ }
     lab           { TokenLabel $$ }
     '@'           { TokenAt }
+    '&'           { TokenAnd }
     '|'           { TokenVerticalBar }
     ';'           { TokenSemi }
     ','           { TokenComma }
@@ -182,6 +183,7 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | "'" Exp %prec DEREF                       { Deref $2 }
     | "`" Exp "`" Exp %prec DEREF               { MulDeref $2 $4 }
     | "m`" Exp "`" Exp %prec DEREF              { BuiltinFn "getRefs" [$4] }
+    | '&' var                                   { LabelRef $2 }
     | constInt                                  { Lit (IntVal $1) }
     | constFloat                                { Lit (DoubleVal $1) }
     | var                                       { Var $1 }
@@ -220,6 +222,7 @@ data Expr
   | Deref Expr
   | MulDeref Expr Expr
   | BuiltinFn String [Expr]
+  | LabelRef String
   deriving (Eq, Show)
 
 data LoopEnd = LoopEndValue Expr | LoopEndCondition Expr deriving (Eq, Show)
