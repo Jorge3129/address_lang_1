@@ -72,7 +72,7 @@ disassembleInstruction chunk offset = do
     OP_GET_VAR -> constantInstruction "OP_GET_VAR" chunk offset
     OP_SET_VAR -> constantInstruction "OP_SET_VAR" chunk offset
     OP_MAKE_VAR_POINTER -> constantInstruction "OP_MAKE_VAR_POINTER" chunk offset
-    OP_CALL -> constantInstruction "OP_CALL" chunk offset
+    OP_CALL -> jumpInstruction "OP_CALL" chunk offset
     OP_CALL_PROC -> constantInstruction "OP_CALL_PROC" chunk offset
     OP_CALL_FN -> constantInstruction "OP_CALL_FN" chunk offset
 

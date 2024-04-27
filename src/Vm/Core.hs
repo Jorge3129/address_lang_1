@@ -172,11 +172,11 @@ execInstruction OP_ALLOC vm = stToIO $ do
   return' vm
 --
 execInstruction OP_CALL vm = stToIO $ do
-  fnName <- readStr vm
-  jumpTo <- getFnOffset (chunk vm) fnName
+  argCount <- readByte vm
+  fnOffset <- asInt <$> peek argCount vm
   curIp <- readIp vm
-  pushCall (fnName, curIp) vm
-  setIp jumpTo vm
+  pushCall ("", curIp) vm -- TODO fix fnName here
+  setIp fnOffset vm
   return' vm
 --
 execInstruction OP_CALL_FN vm = do

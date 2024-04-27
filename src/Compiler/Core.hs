@@ -44,6 +44,7 @@ compileLine (ProgLine lbls@(fnName : _) args@(Send Nil (Var _) : _) lineNum) cs 
   compileLineLabels lbls cs
   compileVars (csFnVars cs Map.! fnName) cs
   compileStmts (reverse args) cs
+  emitOpCode OP_POP cs
 --
 compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
   setCurLine lineNum cs
@@ -85,13 +86,6 @@ compileStmts [] _ = return ()
 compileStmt :: Statement -> CompState -> IO ()
 compileStmt Stop cs = do
   emitOpCode OP_RETURN cs
---
---
-compileStmt (BuiltinProc name args) cs = do
-  compileExprs args cs
-  constant <- addConstantToCs (StringVal name) cs
-  emitOpCode OP_CALL_PROC cs
-  emitByte constant cs
 --
 compileStmt (ExpSt ex) cs = do
   compileExpr ex cs
@@ -183,9 +177,16 @@ compileStmt (Assignment (Var name) lhs) cs = do
   emitByte arg cs
 --
 compileStmt (SubprogramCall name args _) cs = do
+  let argCount = length args
+  compileExpr (LabelRef name False) cs
+  compileExprs args cs
+  emitOpCode OP_CALL cs
+  emitByte argCount cs
+--
+compileStmt (BuiltinProc name args) cs = do
   compileExprs args cs
   constant <- addConstantToCs (StringVal name) cs
-  emitOpCode OP_CALL cs
+  emitOpCode OP_CALL_PROC cs
   emitByte constant cs
 --
 compileStmt (Replace repls start end) cs = do
@@ -247,8 +248,8 @@ compileExpr (BuiltinFn name args) cs = do
   emitOpCode OP_CALL_FN cs
   emitByte constant cs
 --
-compileExpr (LabelRef lblName) cs = do
-  scopedLabel <- toScopedLabel lblName cs
+compileExpr (LabelRef lblName scoped) cs = do
+  scopedLabel <- if scoped then toScopedLabel lblName cs else return lblName
   constant <- addConstantToCs (IntVal 0) cs
   emitOpCode OP_CONSTANT cs
   chunkCount <- curChunkCount cs
