@@ -53,7 +53,6 @@ compileVars vars cs = do
 
 compileVar :: String -> CompState -> IO ()
 compileVar name cs = do
-  emitOpCode OP_ALLOC cs
   constant <- addConstantToCs (StringVal name) cs
   emitOpCode OP_DEFINE_VAR cs
   emitByte constant cs

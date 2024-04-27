@@ -130,7 +130,7 @@ execInstruction OP_JUMP_IF_FALSE vm = stToIO $ do
 --
 execInstruction OP_DEFINE_VAR vm = stToIO $ do
   name <- readStr vm
-  addr <- asInt <$> pop vm
+  addr <- allocNInit 1 vm
   defineVar name addr vm
   return' vm
 --
