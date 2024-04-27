@@ -4,5 +4,5 @@ import Lib (execFile)
 
 main :: IO ()
 main = do
-  execFile "label_ref"
+  execFile "bin_tree"
   return ()

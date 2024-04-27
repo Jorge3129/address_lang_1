@@ -176,9 +176,9 @@ compileStmt (Assignment (Var name) lhs) cs = do
   emitOpCode OP_SET_VAR cs
   emitByte arg cs
 --
-compileStmt (SubprogramCall name args _) cs = do
+compileStmt (SubprogramCall callValue args _) cs = do
   let argCount = length args
-  compileExpr (LabelRef name False) cs
+  compileExpr callValue cs
   compileExprs args cs
   emitOpCode OP_CALL cs
   emitByte argCount cs

@@ -1,6 +1,7 @@
-Pg foo { 1, 2 }
+Pg [&foo] { 1, 2 }
 
 !
 @foo ... Nil => a, Nil => b
     print 'a
+    print 'b
     Ret

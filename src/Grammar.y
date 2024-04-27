@@ -147,9 +147,12 @@ assignSt : assignLhs '=' Exp                    { Assignment $1 $3 }
 
 sendSt : Exp "=>" Exp                           { Send $1 $3 }
 
-subprogCallSt : Pg var '{' exprs '}' subProgNextLabel { SubprogramCall $2 $4 $6 }
+subprogCallSt : Pg callValue '{' exprs '}' callNextLabel { SubprogramCall $2 $4 $6 }
 
-subProgNextLabel : var                          { Just $1 }
+callValue : '[' Exp ']'                         { $2 }
+      | var                                     { LabelRef $1 False }
+
+callNextLabel : var                             { Just $1 }
       | {- empty -}                             { Nothing }
 
 exprs : exprs ',' Exp                           { $1 ++ [$3] }
@@ -243,7 +246,7 @@ data Statement
   | LoopComplex Expr Expr LoopEnd Expr (Maybe String) (Maybe String)
   | LoopCommon Statement Statement Expr Expr (Maybe String) (Maybe String)
   | Replace [Replacement] String String
-  | SubprogramCall String [Expr] (Maybe String)
+  | SubprogramCall Expr [Expr] (Maybe String)
   | BuiltinProc String [Expr]
   | Jump String
   | CompJump Expr
