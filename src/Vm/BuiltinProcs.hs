@@ -39,4 +39,17 @@ execBuiltinFn "ptr" _ vm = stToIO $ do
 --
 execBuiltinFn "id" _ vm = returnIO' vm
 --
+execBuiltinFn "alloc" _ vm = stToIO $ do
+  n <- asInt <$> pop vm
+  freeAddr <- allocNInit n vm
+  push vm $ newPtrWithSize freeAddr n
+  return' vm
+--
+execBuiltinFn "mulalloc" _ vm = stToIO $ do
+  count <- asInt <$> pop vm
+  size <- asInt <$> pop vm
+  freeAddr <- allocNInit (size * count) vm
+  push vm $ PointerVal freeAddr size count
+  return' vm
+--
 execBuiltinFn _ _ _ = undefined

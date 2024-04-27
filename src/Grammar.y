@@ -30,6 +30,7 @@ import Value.Core
     ';'           { TokenSemi }
     ','           { TokenComma }
     '+'           { TokenPlus }
+    '<+>'         { TokenLessPlusGreater }
     '-'           { TokenMinus }
     '*'           { TokenStar }
     '/'           { TokenSlash }
@@ -59,7 +60,7 @@ import Value.Core
 %left "and"
 %nonassoc "==" "/="
 %nonassoc '>' '<' "<=" ">="
-%left '+' '-'
+%left '+' '-' '<+>'
 %left '*' '/' '%'
 %left NEG
 %left DEREF
@@ -118,6 +119,7 @@ binOp : '+'                                     { Add }
     | '*'                                       { Mul }
     | '/'                                       { Div }
     | '%'                                       { Mod }
+    | '<+>'                                     { PtrAdd }
 
 exchangeSt : Exp "<=>" Exp                      { Exchange $1 $3 }
 
@@ -153,7 +155,13 @@ exprs : exprs ',' Exp                           { $1 ++ [$3] }
       | Exp			                        { [$1] }
       | {- empty -}	                        { [] }
 
+spaceExprs : spaceExprs Exp                     { $1 ++ [$2] }
+      | Exp			                        { [$1] }
+      | {- empty -}	                        { [] }
+
 listExp : '[' exprs ']'                         { BuiltinFn "constrList" $2 }
+
+builtinFnExp : builtinFn spaceExprs             { BuiltinFn $1 $2 }
 
 Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | Exp "and" Exp                             { BinOpApp And $1 $3 }
@@ -168,6 +176,7 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | Exp '*' Exp                               { BinOpApp Mul $1 $3 }
     | Exp '/' Exp                               { BinOpApp Div $1 $3 }
     | Exp '%' Exp                               { BinOpApp Mod $1 $3 }
+    | Exp '<+>' Exp                             { BinOpApp PtrAdd $1 $3 }
     | '(' Exp ')'                               { $2 }
     | '-' Exp %prec NEG                         { Negate $2 }
     | "'" Exp %prec DEREF                       { Deref $2 }
@@ -177,7 +186,7 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | constFloat                                { Lit (DoubleVal $1) }
     | var                                       { Var $1 }
     | Nil                                       { Nil }
-    | builtinFn Exp                             { BuiltinFn $1 [$2] }
+    | builtinFnExp                              { $1 }
     | listExp                                   { $1 }
 
 {
@@ -191,6 +200,7 @@ data BinOp
   | Mul
   | Div
   | Mod
+  | PtrAdd
   | Greater
   | Less
   | Equal

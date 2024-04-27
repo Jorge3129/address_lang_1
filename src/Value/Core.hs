@@ -19,6 +19,10 @@ mapPtr :: (Int -> Int) -> Value -> Value
 mapPtr f (PointerVal v s c) = PointerVal (f v) s c
 mapPtr _ v = v
 
+ptrAdd :: Value -> Value -> Value
+ptrAdd (PointerVal v s c) b = PointerVal (v + s * asInt b) s (c - asInt b)
+ptrAdd a b = error $ "cannot apply pointer addition to " ++ show a ++ " and " ++ show b
+
 instance Show Value where
   show (IntVal v) = show v
   show (PointerVal v 1 1) = "(Ptr " ++ show v ++ ")"

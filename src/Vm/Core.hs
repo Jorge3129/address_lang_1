@@ -64,6 +64,8 @@ execInstruction OP_EQUAL vm = compInstr (==) vm
 execInstruction OP_AND vm = logInstr (&&) vm
 execInstruction OP_OR vm = logInstr (||) vm
 --
+execInstruction OP_PTR_ADD vm = binaryInstr ptrAdd vm
+--
 execInstruction OP_GET_REFS vm = stToIO $ do
   addr <- asInt <$> pop vm
   refs <- getRefsToAddr addr vm
@@ -167,12 +169,6 @@ execInstruction OP_MAKE_POINTER vm = stToIO $ do
 execInstruction OP_ALLOC vm = stToIO $ do
   freeAddr <- allocNInit 1 vm
   push vm $ IntVal freeAddr
-  return' vm
---
-execInstruction OP_ALLOC_N vm = stToIO $ do
-  n <- asInt <$> pop vm
-  freeAddr <- allocNInit n vm
-  push vm $ newPtrWithSize freeAddr n
   return' vm
 --
 execInstruction OP_CALL vm = stToIO $ do

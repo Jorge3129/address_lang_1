@@ -1,0 +1,15 @@
+x = mulalloc 3 10
+
+L { 0(1)9 => i }  l1
+    cell = x <+> 'i
+    n = 'i + 1
+    n * 100 => cell
+    n * 10 => cell + 1
+    n => cell + 2
+@l1 ...
+
+L { 0(1)9 => i } l2
+    cell = x <+> 'i
+    print cell
+    print 'cell + '(cell + 1) + '(cell + 2)
+@l2 ...

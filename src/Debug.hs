@@ -39,6 +39,7 @@ disassembleInstruction chunk offset = do
     OP_RETURN -> simpleInstruction "OP_RETURN" offset
     --
     OP_ADD -> simpleInstruction "OP_ADD" offset
+    OP_PTR_ADD -> simpleInstruction "OP_PTR_ADD" offset
     OP_SUB -> simpleInstruction "OP_SUB" offset
     OP_MUL -> simpleInstruction "OP_MUL" offset
     OP_DIV -> simpleInstruction "OP_DIV" offset
@@ -62,7 +63,6 @@ disassembleInstruction chunk offset = do
     OP_GET_REFS -> simpleInstruction "OP_GET_REFS" offset
     --
     OP_ALLOC -> simpleInstruction "OP_ALLOC" offset
-    OP_ALLOC_N -> simpleInstruction "OP_ALLOC_N" offset
     --
     OP_JUMP -> jumpInstruction "OP_JUMP" chunk offset
     OP_JUMP_IF_FALSE -> jumpInstruction "OP_JUMP_IF_FALSE" chunk offset

@@ -13,6 +13,7 @@ data OpCode
   | OP_OR
   | OP_NEGATE
   | OP_ADD
+  | OP_PTR_ADD
   | OP_SUB
   | OP_MUL
   | OP_DIV
@@ -30,7 +31,6 @@ data OpCode
   | OP_SET_VAR
   | OP_GET_VAR
   | OP_ALLOC
-  | OP_ALLOC_N
   | OP_GET_REFS
   | OP_MAKE_VAR_POINTER
   | OP_MAKE_POINTER

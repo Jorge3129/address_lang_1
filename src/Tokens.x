@@ -16,7 +16,7 @@ $cr = \r
 @decimal = $digit+
 @kw = (P|L|R|Pg|Nil|Ret|Cj|not|and|or)
 @builtinProc = (print|printList|printRefs)
-@builtinFn = (getRefs|alloc|ptr|id)
+@builtinFn = (getRefs|alloc|ptr|id|mulalloc)
 
 tokens :-
   $white_no_nl+ ;
@@ -27,6 +27,7 @@ tokens :-
   ";"       { \_ -> TokenSemi }
   ","       { \_ -> TokenComma }
   "+"       { \_ -> TokenPlus }
+  "<+>"     { \_ -> TokenLessPlusGreater }
   "-"       { \_ -> TokenMinus }
   "*"       { \_ -> TokenStar }
   "/"       { \_ -> TokenSlash }
@@ -69,6 +70,7 @@ data Token =
   | TokenSemi
   | TokenComma
   | TokenPlus
+  | TokenLessPlusGreater
   | TokenMinus
   | TokenStar
   | TokenSlash

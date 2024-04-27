@@ -257,10 +257,6 @@ compileExpr (Var name) cs = do
 --
 compileExpr Nil _ = return ()
 --
-compileExpr (BuiltinFn "alloc" [ex]) cs = do
-  compileExpr ex cs
-  emitOpCode OP_ALLOC_N cs
---
 compileExpr (BuiltinFn "getRefs" [ex]) cs = do
   compileExpr ex cs
   emitOpCode OP_GET_REFS cs
@@ -323,4 +319,5 @@ binOpToOpCode GreaterEqual = [OP_LESS, OP_NOT]
 binOpToOpCode LessEqual = [OP_GREATER, OP_NOT]
 binOpToOpCode And = [OP_AND]
 binOpToOpCode Or = [OP_OR]
-binOpToOpCode _ = undefined
+binOpToOpCode PtrAdd = [OP_PTR_ADD]
+binOpToOpCode _ = error "binary operation not implemented"
