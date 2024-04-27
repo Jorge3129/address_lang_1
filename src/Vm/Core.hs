@@ -19,12 +19,9 @@ run vm = do
 
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) = do
-  -- _ <- disassembleInstruction (chunk vm) (ip vm)
-  -- curIp <- stToIO $ readIp vm
-  -- let lineNum = getLineByOffset curIp (chunk vm) + 1
-  -- print $ getLineByOffset (ip vm) (chunk vm) + 1
+  lineNum <- getCurrentLine vm
   instruction <- stToIO $ readByte vm
-  (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) vm) (handler 0)
+  (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) vm) (handler lineNum)
   return (resVM, intRes)
   where
     handler :: Int -> ErrorCall -> IO (VM, Maybe InterpretResult)
