@@ -3,15 +3,14 @@
 module Compiler.Core where
 
 import ByteCode.Core
-import Compiler.ProgTreeUtils (desugarStmt, replaceExprStmt, replaceOpStmt, replaceStmtStmt)
+import Compiler.ProgTreeUtils (desugarStmt)
+import Compiler.Replace
 import Compiler.State
 import Compiler.Vars
 import Control.Monad (foldM, forM_, when)
-import Data.List (find, foldl')
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Grammar
-import Utils.Core (slice)
 import Value.Core
 
 compileProg :: Program -> IO Chunk
@@ -200,27 +199,6 @@ compileStmt Ret cs = do
   emitOpCode OP_RETURN cs
 --
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
-
-lineReplacements :: ProgLine -> [Replacement] -> ProgLine
-lineReplacements = foldl' lineReplacement
-
-lineReplacement :: ProgLine -> Replacement -> ProgLine
-lineReplacement rLine r = rLine {stmts = map (`stmtReplacement` r) (stmts rLine)}
-
-stmtReplacement :: Statement -> Replacement -> Statement
-stmtReplacement st r@(StmtReplace {}) = replaceStmtStmt st r
-stmtReplacement st r@(ExprReplace {}) = replaceExprStmt st r
-stmtReplacement st r@(BinOpReplace {}) = replaceOpStmt st r
-
-findReplaceRange :: String -> String -> CompState -> IO [ProgLine]
-findReplaceRange start end cs = do
-  let progLines = pLines (csProg cs)
-  let startLine = find (\ln -> start `elem` labels ln) progLines
-  let endLine = find (\ln -> end `elem` labels ln) progLines
-  let (startLn, endLn) = case (startLine, endLine) of
-        (Just s, Just e) -> (lineNum s, lineNum e)
-        (_, _) -> error $ "Invalid replacement range: " ++ start ++ ", " ++ end
-  return $ slice startLn endLn progLines
 
 compileExprs :: [Expr] -> CompState -> IO ()
 compileExprs (ex : exs) cs = compileExpr ex cs >> compileExprs exs cs

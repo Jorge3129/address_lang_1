@@ -30,6 +30,7 @@ library
       ByteCode.Core
       Compiler.Core
       Compiler.ProgTreeUtils
+      Compiler.Replace
       Compiler.State
       Compiler.Vars
       Debug

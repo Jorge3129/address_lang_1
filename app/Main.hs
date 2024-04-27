@@ -4,5 +4,5 @@ import Lib (execFile)
 
 main :: IO ()
 main = do
-  execFile "mulalloc"
+  execFile "bin_tree"
   return ()
