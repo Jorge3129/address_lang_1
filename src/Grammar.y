@@ -185,7 +185,7 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | '-' Exp %prec NEG                         { Negate $2 }
     | "'" Exp %prec DEREF                       { Deref $2 }
     | "`" Exp "`" Exp %prec DEREF               { MulDeref $2 $4 }
-    | "m`" Exp "`" Exp %prec DEREF              { BuiltinFn "getRefs" [$4] }
+    | "m`" Exp "`" Exp %prec DEREF              { MinDeref $2 $4 }
     | '&' var                                   { LabelRef $2 True }
     | constInt                                  { Lit (IntVal $1) }
     | constFloat                                { Lit (DoubleVal $1) }
@@ -224,6 +224,7 @@ data Expr
   | Negate Expr
   | Deref Expr
   | MulDeref Expr Expr
+  | MinDeref Expr Expr
   | BuiltinFn String [Expr]
   | LabelRef String Bool
   deriving (Eq, Show)

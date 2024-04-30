@@ -58,9 +58,9 @@ disassembleInstruction chunk offset = do
     OP_SEND -> simpleInstruction "OP_SEND" offset
     OP_DEREF -> simpleInstruction "OP_DEREF" offset
     OP_MUL_DEREF -> simpleInstruction "OP_MUL_DEREF" offset
+    OP_MIN_DEREF -> simpleInstruction "OP_MIN_DEREF" offset
     OP_MAKE_POINTER -> simpleInstruction "OP_MAKE_POINTER" offset
     OP_EXCHANGE -> simpleInstruction "OP_EXCHANGE" offset
-    OP_GET_REFS -> simpleInstruction "OP_GET_REFS" offset
     --
     OP_ALLOC -> simpleInstruction "OP_ALLOC" offset
     --

@@ -230,16 +230,17 @@ compileExpr (MulDeref countEx innerEx) cs = do
   compileExpr innerEx cs
   emitOpCode OP_MUL_DEREF cs
 --
+compileExpr (MinDeref countEx innerEx) cs = do
+  compileExpr countEx cs
+  compileExpr innerEx cs
+  emitOpCode OP_MIN_DEREF cs
+--
 compileExpr (Var name) cs = do
   constant <- addConstantToCs (StringVal name) cs
   emitOpCode OP_GET_VAR cs
   emitByte constant cs
 --
 compileExpr Nil _ = return ()
---
-compileExpr (BuiltinFn "getRefs" [ex]) cs = do
-  compileExpr ex cs
-  emitOpCode OP_GET_REFS cs
 --
 compileExpr (BuiltinFn name args) cs = do
   compileExprs args cs

@@ -16,7 +16,7 @@ $cr = \r
 @decimal = $digit+
 @kw = (P|L|R|Pg|Nil|Ret|Cj|not|and|or)
 @builtinProc = (print|printList|printRefs)
-@builtinFn = (getRefs|alloc|ptr|id|mulalloc)
+@builtinFn = (alloc|ptr|id|mulalloc)
 
 tokens :-
   $white_no_nl+ ;

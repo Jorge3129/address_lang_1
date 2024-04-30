@@ -63,13 +63,6 @@ execInstruction OP_OR vm = logInstr (||) vm
 --
 execInstruction OP_PTR_ADD vm = binaryInstr ptrAdd vm
 --
-execInstruction OP_GET_REFS vm = stToIO $ do
-  addr <- asInt <$> pop vm
-  refs <- getRefsToAddr addr vm
-  listHead <- constructList (map IntVal refs) vm
-  push vm listHead
-  return' vm
---
 execInstruction OP_SEND vm = stToIO $ do
   addr <- asInt <$> pop vm
   val <- pop vm
@@ -90,6 +83,13 @@ execInstruction OP_MUL_DEREF vm = stToIO $ do
   count <- asInt <$> pop vm
   val <- mulDeref count addrVal vm
   push vm val
+  return' vm
+--
+execInstruction OP_MIN_DEREF vm = stToIO $ do
+  addr <- asInt <$> pop vm
+  refs <- getRefsToAddr addr vm
+  listHead <- constructList (map IntVal refs) vm
+  push vm listHead
   return' vm
 --
 execInstruction OP_EXCHANGE vm = stToIO $ do
