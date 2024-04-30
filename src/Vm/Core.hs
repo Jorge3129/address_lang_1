@@ -87,6 +87,7 @@ execInstruction OP_MUL_DEREF vm = stToIO $ do
 --
 execInstruction OP_MIN_DEREF vm = stToIO $ do
   addr <- asInt <$> pop vm
+  _ <- asInt <$> pop vm -- TODO read count
   refs <- getRefsToAddr addr vm
   listHead <- constructList (map IntVal refs) vm
   push vm listHead
