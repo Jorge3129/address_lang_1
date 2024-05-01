@@ -22,8 +22,12 @@ tokens :-
   $white_no_nl+ ;
   "//".*        ;
   @eol_pattern      { \_ -> TokenNewLine }
-  "@"       { \_ -> TokenAt }
-  "&"       { \_ -> TokenAnd }
+  "("       { \_ -> TokenLeftParen }
+  ")"       { \_ -> TokenRightParen }
+  "{"       { \_ -> TokenLeftCurly }
+  "}"       { \_ -> TokenRightCurly }
+  "["       { \_ -> TokenLeftBracket }
+  "]"       { \_ -> TokenRightBracket }
   "|"       { \_ -> TokenVerticalBar }
   ";"       { \_ -> TokenSemi }
   ","       { \_ -> TokenComma }
@@ -33,14 +37,6 @@ tokens :-
   "*"       { \_ -> TokenStar }
   "/"       { \_ -> TokenSlash }
   "%"       { \_ -> TokenPercent }
-  "("       { \_ -> TokenLeftParen }
-  ")"       { \_ -> TokenRightParen }
-  "{"       { \_ -> TokenLeftCurly }
-  "}"       { \_ -> TokenRightCurly }
-  "["       { \_ -> TokenLeftBracket }
-  "]"       { \_ -> TokenRightBracket }
-  "!"       { \_ -> TokenBang }
-  "="       { \_ -> TokenEqual }
   "=="      { \_ -> TokenEqualEqual }
   "/="      { \_ -> TokenSlashEqual }
   ">"       { \_ -> TokenGreater }
@@ -50,9 +46,12 @@ tokens :-
   "'"       { \_ -> TokenSingleQuote }
   "`"       { \_ -> TokenBackTick }
   "m`"      { \_ -> TokenMBackTick }
+  "&"       { \_ -> TokenAnd }
   "->"      { \_ -> TokenMinusGreater }
   "=>"      { \_ -> TokenEqualGreater }
   "<=>"     { \_ -> TokenLessEqualGreater }
+  "!"       { \_ -> TokenBang }
+  "="       { \_ -> TokenEqual }
   "@" @id $white_no_nl* "..." { \s -> TokenLabel (takeWhile (\c -> isAlphaNum c || c `elem` "_") (tail s)) }
   @kw                   { \s -> TokenKeyword s}
   @builtinProc          { \s -> TokenBuiltinProc s}
@@ -66,7 +65,6 @@ tokens :-
 
 data Token = 
     TokenNewLine
-  | TokenAt
   | TokenAnd
   | TokenVerticalBar
   | TokenSemi

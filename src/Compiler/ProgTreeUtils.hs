@@ -49,7 +49,6 @@ stmtExprs (LoopCommon initSt stepSt endExpr cntExpr _ _) =
 stmtExprs (BuiltinProc _ exs) = exs
 stmtExprs (SubprogramCall _ exs _) = exs
 stmtExprs (CompJump ex) = [ex]
-stmtExprs (ExpSt ex) = [ex]
 stmtExprs _ = []
 
 exprVars :: Expr -> [String]
@@ -82,7 +81,6 @@ replaceOpStmt (LoopCommon initSt stepSt endExpr cntExpr a b) r =
 replaceOpStmt (BuiltinProc nm args) r = BuiltinProc nm (map (`replaceOpExpr` r) args)
 replaceOpStmt (SubprogramCall nm args e) r = SubprogramCall nm (map (`replaceOpExpr` r) args) e
 replaceOpStmt (CompJump ex) r = CompJump (ex `replaceOpExpr` r)
-replaceOpStmt (ExpSt ex) r = ExpSt (ex `replaceOpExpr` r)
 replaceOpStmt st _ = st
 
 replaceOpExpr :: Expr -> Replacement -> Expr
@@ -118,7 +116,6 @@ replaceExprStmt (LoopCommon initSt stepSt endExpr cntExpr a b) r =
 replaceExprStmt (BuiltinProc nm args) r = BuiltinProc nm (map (`replaceExprExpr` r) args)
 replaceExprStmt (SubprogramCall nm args e) r = SubprogramCall nm (map (`replaceExprExpr` r) args) e
 replaceExprStmt (CompJump ex) r = CompJump (ex `replaceExprExpr` r)
-replaceExprStmt (ExpSt ex) r = ExpSt (ex `replaceExprExpr` r)
 replaceExprStmt st _ = st
 
 replaceExprExpr :: Expr -> Replacement -> Expr

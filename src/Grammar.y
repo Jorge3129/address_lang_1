@@ -25,7 +25,6 @@ import Value.Core
     builtinProc   { TokenBuiltinProc $$ }
     builtinFn     { TokenBuiltinFn $$ }
     lab           { TokenLabel $$ }
-    '@'           { TokenAt }
     '&'           { TokenAnd }
     '|'           { TokenVerticalBar }
     ';'           { TokenSemi }
@@ -103,7 +102,6 @@ stmt : '!'                                      { Stop }
     | Ret                                       { Ret }
     | var                                       { Jump $1 }
     | replaceSt                                 { $1 }
---     | Exp { ExpSt $1 }
 
 replaceSt : R '{' replacements '}' var ',' var  { Replace $3 $5 $7 }
 
@@ -253,7 +251,6 @@ data Statement
   | CompJump Expr
   | Ret
   | Stop
-  | ExpSt Expr
   deriving (Eq, Show)
 
 data ProgLine = ProgLine {

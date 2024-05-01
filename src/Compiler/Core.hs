@@ -87,10 +87,6 @@ compileStmt :: Statement -> CompState -> IO ()
 compileStmt Stop cs = do
   emitOpCode OP_RETURN cs
 --
-compileStmt (ExpSt ex) cs = do
-  compileExpr ex cs
-  emitOpCode OP_POP cs
---
 -- compileStmt (Send valEx (Var name)) cs = do
 --   compileExpr valEx cs
 --   compileExpr (Var name) cs
