@@ -1,6 +1,7 @@
 module Vm.MemUtils where
 
 import Control.Monad (forM, forM_)
+import Control.Monad.Loops (concatM)
 import Control.Monad.ST (RealWorld, ST)
 import qualified Data.Array.ST as SA
 import qualified Data.Map as Map
@@ -102,11 +103,25 @@ deref addr vm
 
 mulDeref :: Int -> Value -> VM -> ST RealWorld Value
 mulDeref count addrVal vm
-  | count < 0 = error $ "Cannot execute multi-stroke operation for a negative number " ++ show count
+  | count < 0 = error $ "Cannot execute multiple dereference operation for a negative number " ++ show count
   | count == 0 = return addrVal
   | otherwise = do
       addr <- deref (asInt addrVal) vm
       mulDeref (count - 1) addr vm
+
+minDeref :: Int -> Value -> VM -> ST RealWorld Value
+minDeref count startAddrVal vm
+  | count <= 0 = error $ "Cannot execute minus dereference operation for a non-positive number " ++ show count
+  | otherwise = do
+      refs <- minDeref' count [asInt startAddrVal] vm
+      constructList (map IntVal refs) vm
+
+minDeref' :: Int -> [Int] -> VM -> ST RealWorld [Int]
+minDeref' count addrs vm
+  | count <= 0 = return addrs
+  | otherwise = do
+      refs <- concat <$> mapM (`getRefsToAddr` vm) addrs
+      minDeref' (count - 1) refs vm
 
 checkAddrForSend :: Int -> Int
 checkAddrForSend addr

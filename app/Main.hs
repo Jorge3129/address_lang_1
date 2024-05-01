@@ -4,5 +4,5 @@ import Lib (execFile)
 
 main :: IO ()
 main = do
-  execFile "bin_tree"
+  execFile "min_deref"
   return ()

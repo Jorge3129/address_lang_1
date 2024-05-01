@@ -1,0 +1,13 @@
+h = [1,2,3,4,5]
+last_node = `5`h + 0
+last_val = '(last_node + 1)
+print last_node
+print 'last_node
+print last_val
+
+L { 1(1)4 => pi } l1
+    refs = m`('pi)`last_node
+    prev_addr = '(`1`refs + 1)
+    prev_val = '(prev_addr + 1)
+    print prev_val
+@l1 ...
