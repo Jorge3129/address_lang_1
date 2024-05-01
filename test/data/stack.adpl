@@ -1,0 +1,60 @@
+Pg stack_new { s }
+printList s
+Pg stack_push { 1, s }
+printList s
+Pg stack_push { 2, s }
+printList s
+Pg stack_push { 3, s }
+Pg stack_push { 4, s }
+Pg stack_push { 5, s }
+printList s
+
+Pg stack_new { s1 }
+Pg stack_is_empty { s1, s1_em }
+print 's1_em
+Pg stack_push { 1, s1 }
+Pg stack_is_empty { s1, s1_em }
+print 's1_em
+
+Pg stack_is_empty { s, s_em }
+L { 0(1) P { 's_em /= 1 } => pi } l1
+     Pg stack_pop { s, top_val }
+     print 'top_val
+     printList s
+     Pg stack_is_empty { s, s_em }
+@l1 ...
+
+!
+
+@stack_new ... Nil => res_addr
+    0 => 'res_addr
+    Ret
+
+@stack_push ... Nil => val, Nil => stack_addr
+    head = 'stack_addr
+    old_addr = 'head
+
+    new_addr = alloc 2
+
+    new_addr => head
+    old_addr => new_addr
+    'val => new_addr + 1
+    Ret
+
+@stack_pop ... Nil => stack_addr, Nil => res_addr
+    head = 'stack_addr
+    old_addr = 'head
+    P { old_addr == 0 } Ret |
+
+    old_val = '(old_addr + 1)
+    old_val => 'res_addr
+
+    next_addr = 'old_addr
+    next_addr => head
+    0 => old_addr
+    Ret
+
+@stack_is_empty ... Nil => stack_addr, Nil => res_addr
+    head = 'stack_addr
+    'head == 0 => 'res_addr
+    Ret

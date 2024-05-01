@@ -153,18 +153,6 @@ callValue : '[' Exp ']'                         { $2 }
 callNextLabel : var                             { Just $1 }
       | {- empty -}                             { Nothing }
 
-exprs : exprs ',' Exp                           { $1 ++ [$3] }
-      | Exp			                        { [$1] }
-      | {- empty -}	                        { [] }
-
-spaceExprs : spaceExprs Exp                     { $1 ++ [$2] }
-      | Exp			                        { [$1] }
-      | {- empty -}	                        { [] }
-
-listExp : '[' exprs ']'                         { BuiltinFn "constrList" $2 }
-
-builtinFnExp : builtinFn spaceExprs             { BuiltinFn $1 $2 }
-
 Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | Exp "and" Exp                             { BinOpApp And $1 $3 }
     | Exp "==" Exp                              { BinOpApp Equal $1 $3 }
@@ -179,7 +167,6 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | Exp '/' Exp                               { BinOpApp Div $1 $3 }
     | Exp '%' Exp                               { BinOpApp Mod $1 $3 }
     | Exp '<+>' Exp                             { BinOpApp PtrAdd $1 $3 }
-    | '(' Exp ')'                               { $2 }
     | '-' Exp %prec NEG                         { Negate $2 }
     | "'" Exp %prec DEREF                       { Deref $2 }
     | "`" Exp "`" Exp %prec DEREF               { MulDeref $2 $4 }
@@ -191,6 +178,20 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | Nil                                       { Nil }
     | builtinFnExp                              { $1 }
     | listExp                                   { $1 }
+    | '(' Exp ')'                               { $2 }
+
+
+exprs : exprs ',' Exp                           { $1 ++ [$3] }
+      | Exp			                        { [$1] }
+      | {- empty -}	                        { [] }
+
+spaceExprs : spaceExprs Exp                     { $1 ++ [$2] }
+      | Exp			                        { [$1] }
+      | {- empty -}	                        { [] }
+
+listExp : '[' exprs ']'                         { BuiltinFn "constrList" $2 }
+
+builtinFnExp : builtinFn spaceExprs             { BuiltinFn $1 $2 }
 
 {
 
