@@ -1,10 +1,3 @@
-list1 = [1,2,3,4,5]
-printList list1
-
-Pg map { &double, list1, res1 }
-
-printList res1
-
 list2 = []
 
 list2_len = 5
@@ -25,39 +18,25 @@ Pg fmap { list2, res2 }
 
 printList res2
 
-
 !
 @double ... Nil => val, Nil => res_addr
-    ('val) * 2 => 'res_addr
+    'val * 2 => 'res_addr
     Ret
 
 @triple ... Nil => val, Nil => res_addr
-    ('val) * 3 => 'res_addr
+    'val * 3 => 'res_addr
     Ret
 
-@map ... Nil => F, Nil => List_, Nil => r
-    List = 'List_
+@fmap ... Nil => list_addr, Nil => r
+    head = 'list_addr
     Pg list_empty { 'r }
 
-    P { 'List == 0 } Ret |
+    P { 'head == 0 } Ret |
 
-    L { 'List, 'Nil, P { 'pi /= 0 } => pi } l1
+    L { 'head, 'Nil, P { 'pi /= 0 } => pi } l1
         val = '('pi + 1)
-        Pg ['F] { val, new_val }
-        Pg list_add { 'new_val, 'r }
-    @l1 ...
-    Ret
-
-@fmap ... Nil => List_, Nil => r
-    List = 'List_
-    Pg list_empty { 'r }
-
-    P { 'List == 0 } Ret |
-
-    L { 'List, 'Nil, P { 'pi /= 0 } => pi } l1
-        val = '('pi + 1)
-        F = '('pi + 2)
-        Pg [F] { val, new_val }
+        f = '('pi + 2)
+        Pg [f] { val, new_val }
         Pg list_add { 'new_val, 'r }
     @l1 ...
     Ret

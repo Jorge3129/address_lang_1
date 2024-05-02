@@ -4,5 +4,5 @@ import Lib (execFile)
 
 main :: IO ()
 main = do
-  execFile "stack"
+  execFile "list_map"
   return ()
