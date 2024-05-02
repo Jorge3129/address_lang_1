@@ -1,28 +1,18 @@
 Pg stack_new { s }
 printList s
-Pg stack_push { 1, s }
-printList s
-Pg stack_push { 2, s }
-printList s
-Pg stack_push { 3, s }
-Pg stack_push { 4, s }
-Pg stack_push { 5, s }
-printList s
 
-Pg stack_new { s1 }
-Pg stack_is_empty { s1, s1_em }
-print 's1_em
-Pg stack_push { 1, s1 }
-Pg stack_is_empty { s1, s1_em }
-print 's1_em
+L { 1(1)5 => i } l1
+    Pg stack_push { 'i, s }
+@l1 ...
+printList s
 
 Pg stack_is_empty { s, s_em }
-L { 0(1) P { 's_em /= 1 } => pi } l1
+L { 0(1) P { 's_em /= 1 } => pi } l2
      Pg stack_pop { s, top_val }
      print 'top_val
      printList s
      Pg stack_is_empty { s, s_em }
-@l1 ...
+@l2 ...
 
 !
 
