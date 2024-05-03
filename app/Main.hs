@@ -4,5 +4,5 @@ import Lib (execFile)
 
 main :: IO ()
 main = do
-  execFile "list_map"
+  execFile "hof"
   return ()

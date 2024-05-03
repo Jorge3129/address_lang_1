@@ -25,4 +25,6 @@ findReplaceRange start end cs = do
   let (startLn, endLn) = case (startLine, endLine) of
         (Just s, Just e) -> (lineNum s, lineNum e)
         (_, _) -> error $ "Invalid replacement range: " ++ start ++ ", " ++ end
-  return $ slice startLn endLn progLines
+  let replaceLines = slice startLn endLn progLines
+  let finalLine = ProgLine {lineNum = endLn, labels = [end], stmts = []}
+  return $ replaceLines ++ [finalLine]
