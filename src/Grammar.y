@@ -5,56 +5,56 @@ import Value.Core
 }
 
 %name parseProg
-%tokentype { Token }
+%tokentype { TokenInfo }
 %error { parseError }
 
 %token
-    constInt      { TokenInt $$ }
-    constFloat    { TokenFloat $$ }
-    var           { TokenIdentifier $$ }
-    eol           { TokenNewLine }
-    Ret           { TokenKeyword "Ret"}
-    P             { TokenKeyword "P"}
-    L             { TokenKeyword "L"}
-    R             { TokenKeyword "R"}
-    Pg            { TokenKeyword "Pg"}
-    "not"         { TokenKeyword "not"}
-    "and"         { TokenKeyword "and"}
-    "or"          { TokenKeyword "or"}
-    Nil           { TokenKeyword "Nil" }
-    builtinProc   { TokenBuiltinProc $$ }
-    builtinFn     { TokenBuiltinFn $$ }
-    lab           { TokenLabel $$ }
-    '&'           { TokenAnd }
-    '|'           { TokenVerticalBar }
-    ';'           { TokenSemi }
-    ','           { TokenComma }
-    '+'           { TokenPlus }
-    '<+>'         { TokenLessPlusGreater }
-    '-'           { TokenMinus }
-    '*'           { TokenStar }
-    '/'           { TokenSlash }
-    '%'           { TokenPercent }
-    '('           { TokenLeftParen }
-    ')'           { TokenRightParen }
-    '{'           { TokenLeftCurly }
-    '}'           { TokenRightCurly }
-    '['           { TokenLeftBracket }
-    ']'           { TokenRightBracket }
-    '!'           { TokenBang }
-    '='           { TokenEqual }
-    "=="          { TokenEqualEqual }
-    "/="          { TokenSlashEqual }
-    '>'           { TokenGreater }
-    ">="          { TokenGreaterEqual }
-    '<'           { TokenLess }
-    "<="          { TokenLessEqual }
-    "'"           { TokenSingleQuote }
-    "`"           { TokenBackTick }
-    "m`"          { TokenMBackTick }
-    "->"          { TokenMinusGreater }
-    "=>"          { TokenEqualGreater }
-    "<=>"         { TokenLessEqualGreater }
+    constInt      { TokenInfo _ _ (TokenInt $$) }
+    constFloat    { TokenInfo _ _ (TokenFloat $$) }
+    var           { TokenInfo _ _ (TokenIdentifier $$) }
+    eol           { TokenInfo _ _ TokenNewLine }
+    Ret           { TokenInfo _ _ (TokenKeyword "Ret") }
+    P             { TokenInfo _ _ (TokenKeyword "P") }
+    L             { TokenInfo _ _ (TokenKeyword "L") }
+    R             { TokenInfo _ _ (TokenKeyword "R") }
+    Pg            { TokenInfo _ _ (TokenKeyword "Pg") }
+    "not"         { TokenInfo _ _ (TokenKeyword "not") }
+    "and"         { TokenInfo _ _ (TokenKeyword "and") }
+    "or"          { TokenInfo _ _ (TokenKeyword "or") }
+    Nil           { TokenInfo _ _ (TokenKeyword "Nil") }
+    builtinProc   { TokenInfo _ _ (TokenBuiltinProc $$) }
+    builtinFn     { TokenInfo _ _ (TokenBuiltinFn $$) }
+    lab           { TokenInfo _ _ (TokenLabel $$) }
+    '&'           { TokenInfo _ _ TokenAnd }
+    '|'           { TokenInfo _ _ TokenVerticalBar }
+    ';'           { TokenInfo _ _ TokenSemi }
+    ','           { TokenInfo _ _ TokenComma }
+    '+'           { TokenInfo _ _ TokenPlus }
+    '<+>'         { TokenInfo _ _ TokenLessPlusGreater }
+    '-'           { TokenInfo _ _ TokenMinus }
+    '*'           { TokenInfo _ _ TokenStar }
+    '/'           { TokenInfo _ _ TokenSlash }
+    '%'           { TokenInfo _ _ TokenPercent }
+    '('           { TokenInfo _ _ TokenLeftParen }
+    ')'           { TokenInfo _ _ TokenRightParen }
+    '{'           { TokenInfo _ _ TokenLeftCurly }
+    '}'           { TokenInfo _ _ TokenRightCurly }
+    '['           { TokenInfo _ _ TokenLeftBracket }
+    ']'           { TokenInfo _ _ TokenRightBracket }
+    '!'           { TokenInfo _ _ TokenBang }
+    '='           { TokenInfo _ _ TokenEqual }
+    "=="          { TokenInfo _ _ TokenEqualEqual }
+    "/="          { TokenInfo _ _ TokenSlashEqual }
+    '>'           { TokenInfo _ _ TokenGreater }
+    ">="          { TokenInfo _ _ TokenGreaterEqual }
+    '<'           { TokenInfo _ _ TokenLess }
+    "<="          { TokenInfo _ _ TokenLessEqual }
+    "'"           { TokenInfo _ _ TokenSingleQuote }
+    "`"           { TokenInfo _ _ TokenBackTick }
+    "m`"          { TokenInfo _ _ TokenMBackTick }
+    "->"          { TokenInfo _ _ TokenMinusGreater }
+    "=>"          { TokenInfo _ _ TokenEqualGreater }
+    "<=>"         { TokenInfo _ _ TokenLessEqualGreater }
 
 %left "or"
 %left "and"
@@ -195,8 +195,10 @@ builtinFnExp : builtinFn spaceExprs             { BuiltinFn $1 $2 }
 
 {
 
-parseError :: [Token] -> a
-parseError x = error (show x)
+parseError :: [TokenInfo] -> a
+parseError ((TokenInfo (AlexPn _ ln col) str _):xs) = 
+      error $ "Parse error: unexpected token " ++ show str ++ " at line " ++ show ln ++ ", column " ++ show col
+parseError [] = error $ "parse error at the end of file"
 
 data BinOp
   = Add

@@ -1,7 +1,6 @@
 module Utils.Stack where
 
-import Control.Exception as Exc
-import Control.Monad.ST (RealWorld, ST, stToIO)
+import Control.Monad.ST (RealWorld, ST)
 import qualified Data.Array.ST as SA
 import Data.STRef
 

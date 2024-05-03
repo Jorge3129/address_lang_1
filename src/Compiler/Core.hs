@@ -7,11 +7,22 @@ import Compiler.ProgTreeUtils (desugarStmt)
 import Compiler.Replace
 import Compiler.State
 import Compiler.Vars
+import qualified Control.Exception as Exc
 import Control.Monad (foldM, forM_, when)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
 import Grammar
+import Tokens (scanTokens)
 import Value.Core
+
+compileSrc :: String -> IO (Either String Chunk)
+compileSrc src = Exc.catch
+  ( do
+      let tokens = scanTokens src
+      let progAst = parseProg tokens
+      Right <$> compileProg progAst
+  )
+  $ \(Exc.ErrorCallWithLocation msg _) -> return $ Left msg
 
 compileProg :: Program -> IO Chunk
 compileProg pg1 = do

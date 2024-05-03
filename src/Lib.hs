@@ -1,11 +1,10 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Lib (execFile) where
 
 import Compiler.Core
 import Control.Monad.ST (stToIO)
-import Debug (disassembleChunk)
-import Grammar
 import System.Directory
-import Tokens
 import Vm.Core
 import Vm.State
 
@@ -13,11 +12,10 @@ execFile :: String -> IO ()
 execFile fileName = do
   rootDir <- getCurrentDirectory
   let basePath = rootDir ++ "/test/data"
-  tokens <- scanTokens <$> readFile (basePath ++ "/" ++ fileName ++ ".adpl")
-  let progAst = parseProg tokens
-  ch <- compileProg progAst
-  -- disassembleChunk ch "test"
-  vm <- stToIO $ initVM ch
-  res <- run vm
-  print res
-  return ()
+  src <- readFile (basePath ++ "/" ++ fileName ++ ".adpl")
+  compileSrc src >>= \case
+    (Left err) -> putStrLn err
+    (Right ch) -> do
+      vm <- stToIO $ initVM ch
+      _handleCallback <- run vm
+      return ()
