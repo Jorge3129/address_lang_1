@@ -9,7 +9,7 @@ import Control.Arrow ((>>>))
 import Control.Monad (forM_)
 import Data.List (intercalate, nub)
 import qualified Data.Map as Map
-import Grammar
+import Parser.AST
 import Value.Core
 
 collectProgVars :: Program -> FnVarMap

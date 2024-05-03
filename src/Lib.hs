@@ -17,5 +17,5 @@ execFile fileName = do
     (Left err) -> putStrLn err
     (Right ch) -> do
       vm <- stToIO $ initVM ch
-      _handleCallback <- run vm
+      _ <- run vm
       return ()

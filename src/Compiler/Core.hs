@@ -11,8 +11,9 @@ import qualified Control.Exception as Exc
 import Control.Monad (foldM, forM_, when)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
-import Grammar
-import Tokens (scanTokens)
+import Lexer.Rules (scanTokens)
+import Parser.AST
+import Parser.Rules
 import Value.Core
 
 compileSrc :: String -> IO (Either String Chunk)

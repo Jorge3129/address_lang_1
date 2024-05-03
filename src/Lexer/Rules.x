@@ -1,5 +1,5 @@
 {
-module Tokens where
+module Lexer.Rules where
 
 import Data.Char (isAlphaNum)
 }

@@ -3,7 +3,7 @@ module Compiler.Replace where
 import Compiler.ProgTreeUtils
 import Compiler.State
 import Data.List (find, foldl')
-import Grammar
+import Parser.AST
 import Utils.Core (slice)
 
 lineReplacements :: ProgLine -> [Replacement] -> ProgLine

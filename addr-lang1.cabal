@@ -18,8 +18,8 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
-    src/Tokens.x
-    src/Grammar.y
+    src/Lexer/Rules.x
+    src/Parser/Rules.y
 
 source-repository head
   type: git
@@ -34,9 +34,10 @@ library
       Compiler.State
       Compiler.Vars
       Debug
-      Grammar
+      Lexer.Rules
       Lib
-      Tokens
+      Parser.AST
+      Parser.Rules
       Utils.Core
       Utils.Stack
       Value.Core

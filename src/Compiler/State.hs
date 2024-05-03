@@ -4,7 +4,7 @@ import ByteCode.Core
 import Control.Monad (forM_)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import qualified Data.Map as Map
-import Grammar (Program)
+import Parser.AST (Program)
 import Utils.Core (replace)
 import Value.Core
 
