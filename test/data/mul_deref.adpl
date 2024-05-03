@@ -19,19 +19,17 @@ L { 1(1)5 => i} b
     0 => 'targetAddr
     Ret
 
-@list_add ... Nil => val, Nil => listAddr
-    h = 'listAddr
-    P { 'h == 0 } then | else
-    @then ...
-        curAddr = h;
-        end
-    @else ...
-        L { 'h, 'Nil, P { ''j /= 0 } => j } l1
+@list_add ... Nil => val, Nil => list_addr
+    h = 'list_addr
+    last_node = h
+
+    P { 'h /= 0 } | go
+        L { 'h, 'Nil, P { ''i /= 0 } => i } l1
         @l1 ...
-        curAddr = 'j;
-        end
-    @end ...
-        nextNode = alloc 2;
-        nextNode => curAddr
-        'val => nextNode + 1
+        last_node = 'i;
+    @go ...
+        new_node = alloc 2;
+        new_node => last_node
+        ptr(0) => new_node
+        'val => new_node + 1
     Ret

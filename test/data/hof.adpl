@@ -27,73 +27,60 @@ printList list2_1
 @map ...
     Pg list_empty { r }
 
-    P { 'h == 0 } map_end_1 |
+    P { 'h == 0 } map_end |
 
-    L { 'h, 'Nil, P { 'i /= 0 } => i } b
+    L { 'h, 'Nil, P { 'i /= 0 } => i } l1
         v = '('i + 1)
         id(v) => nv
         Pg list_add { 'nv, r }
-    @b ...
-
-    @map_end_1 ...
+    @l1 ...
 @map_end ...
 
 @filter ...
     Pg list_empty { r }
 
-    P { 'h == 0 } filter_end_1 |
+    P { 'h == 0 } filter_end |
 
-    L { 'h, 'Nil, P { 'i /= 0 } => i } b1
+    L { 'h, 'Nil, P { 'i /= 0 } => i } l1
         v = '('i + 1)
         id(v) => nv
         P { 'nv } | continue
         Pg list_add { v, r }
         
         @continue ...
-    @b1 ...
-
-    @filter_end_1 ...
+    @l1 ...
 @filter_end ...
 
 @fold ...
     init_val => acc
 
-    P { 'h == 0 } fold_end_1 |
+    P { 'h == 0 } fold_end |
 
-    L { 'h, 'Nil, P { 'i /= 0 } => i } b
+    L { 'h, 'Nil, P { 'i /= 0 } => i } l1
         v = '('i + 1)
         id(v) => acc
-    @b ...
-
-    @fold_end_1 ...
+    @l1 ...
 @fold_end ...
 
-!
 @double ... Nil => val, Nil => res_addr
-    ('val) * 2 => 'res_addr
-    Ret
-
-@is_gt_3 ... Nil => val, Nil => res_addr
-    ('val) > 3 => 'res_addr
+    'val * 2 => 'res_addr
     Ret
 
 @list_empty ... Nil => targetAddr
     0 => 'targetAddr
     Ret
 
-@list_add ... Nil => val, Nil => listAddr
-    h = 'listAddr
-    P { 'h == 0 } then | else
-    @then ...
-        curAddr = h;
-        end
-    @else ...
-        L { 'h, 'Nil, P { ''j /= 0 } => j } l1
+@list_add ... Nil => val, Nil => list_addr
+    h = 'list_addr
+    last_node = h
+
+    P { 'h /= 0 } | go
+        L { 'h, 'Nil, P { ''i /= 0 } => i } l1
         @l1 ...
-        curAddr = 'j;
-        end
-    @end ...
-        nextNode = alloc 2;
-        nextNode => curAddr
-        'val => nextNode + 1
+        last_node = 'i;
+    @go ...
+        new_node = alloc 2;
+        new_node => last_node
+        ptr(0) => new_node
+        'val => new_node + 1
     Ret
