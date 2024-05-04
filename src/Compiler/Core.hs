@@ -37,9 +37,7 @@ compileProg pg1 = do
   patchJumps cs
   patchLabelRefs cs
   ch <- getCurChunk cs
-  curLblMap <- getLabelOffsetMap cs
-  let ch1 = ch {chLabelMap = curLblMap}
-  return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch1
+  return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch
 
 numerateLines :: Program -> Program
 numerateLines pg@(Program {pLines}) =

@@ -44,8 +44,7 @@ data OpCode
 data Chunk = Chunk
   { code :: [Int],
     codeLines :: [Int],
-    constants :: [Value],
-    chLabelMap :: Map String Int
+    constants :: [Value]
   }
   deriving (Eq, Show)
 
@@ -54,8 +53,7 @@ initChunk =
   Chunk
     { code = [],
       codeLines = [],
-      constants = [],
-      chLabelMap = Map.empty
+      constants = []
     }
 
 writeChunk :: Int -> Int -> Chunk -> Chunk

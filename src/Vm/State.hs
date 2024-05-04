@@ -24,8 +24,7 @@ type VmCalls = IORef [(String, Int)]
 data VmChunk = VmChunk
   { vmcCode :: A.Array Int Int,
     vmcCodeLines :: A.Array Int Int,
-    vmcConstants :: A.Array Int Value,
-    vmcLabelMap :: Map String Int
+    vmcConstants :: A.Array Int Value
   }
 
 data VM = VM
@@ -113,8 +112,7 @@ newChunk ch =
    in VmChunk
         { vmcCode = chCode,
           vmcCodeLines = chCodeLines,
-          vmcConstants = chConstants,
-          vmcLabelMap = chLabelMap ch
+          vmcConstants = chConstants
         }
 
 readChunk :: VmChunk -> Int -> IO Int
@@ -122,9 +120,6 @@ readChunk ch i = return $ vmcCode ch A.! i
 
 readChunkConst :: VmChunk -> Int -> IO Value
 readChunkConst ch i = return $ vmcConstants ch A.! i
-
-getFnOffset :: VmChunk -> String -> IO Int
-getFnOffset ch fnName = return $ vmcLabelMap ch Map.! fnName
 
 readByte :: VM -> IO Int
 readByte vm = do
