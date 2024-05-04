@@ -3,7 +3,6 @@ module Vm.Core where
 import ByteCode.Core
 import Control.Exception as Exc
 import qualified Control.Monad as CM
-import Control.Monad.ST (stToIO)
 import Data.Maybe (isJust)
 import Utils.Core
 import Value.Core
@@ -20,7 +19,7 @@ run vm = do
 runStep :: (VM, Maybe InterpretResult) -> IO (VM, Maybe InterpretResult)
 runStep (vm, _) = do
   lineNum <- getCurrentLine vm
-  instruction <- stToIO $ readByte vm
+  instruction <- readByte vm
   (resVM, intRes) <- Exc.catch (execInstruction (toEnum instruction) vm) (handler lineNum)
   return (resVM, intRes)
   where
@@ -32,7 +31,7 @@ runStep (vm, _) = do
 
 execReturn :: [(String, Int)] -> VM -> IO (VM, Maybe InterpretResult)
 execReturn [] vm = returnOk vm
-execReturn ((_, ret) : _) vm = stToIO $ do
+execReturn ((_, ret) : _) vm = do
   freeVars vm
   popCall vm
   setIp ret vm
@@ -40,10 +39,10 @@ execReturn ((_, ret) : _) vm = stToIO $ do
 
 execInstruction :: OpCode -> VM -> IO (VM, Maybe InterpretResult)
 execInstruction OP_RETURN vm = do
-  curVmCalls <- stToIO $ readCalls vm
+  curVmCalls <- readCalls vm
   execReturn curVmCalls vm
 --
-execInstruction OP_CONSTANT vm = stToIO $ do
+execInstruction OP_CONSTANT vm = do
   val <- readConst vm
   val `seq` push vm val
   return' vm
@@ -63,7 +62,7 @@ execInstruction OP_OR vm = logInstr (||) vm
 --
 execInstruction OP_PTR_ADD vm = binaryInstr ptrAdd vm
 --
-execInstruction OP_SEND vm = stToIO $ do
+execInstruction OP_SEND vm = do
   addr <- asInt <$> pop vm
   val <- pop vm
   let destAddr = checkAddrForSend addr
@@ -72,27 +71,27 @@ execInstruction OP_SEND vm = stToIO $ do
   castVal `seq` memSet destAddr castVal vm
   return' vm
 --
-execInstruction OP_DEREF vm = stToIO $ do
+execInstruction OP_DEREF vm = do
   addr <- asInt <$> pop vm
   val <- deref addr vm
   push vm val
   return' vm
 --
-execInstruction OP_MUL_DEREF vm = stToIO $ do
+execInstruction OP_MUL_DEREF vm = do
   addrVal <- pop vm
   count <- asInt <$> pop vm
   val <- mulDeref count addrVal vm
   push vm val
   return' vm
 --
-execInstruction OP_MIN_DEREF vm = stToIO $ do
+execInstruction OP_MIN_DEREF vm = do
   addrVal <- pop vm
   count <- asInt <$> pop vm
   listHead <- minDeref count addrVal vm
   push vm listHead
   return' vm
 --
-execInstruction OP_EXCHANGE vm = stToIO $ do
+execInstruction OP_EXCHANGE vm = do
   addrB <- asInt <$> pop vm
   addrA <- asInt <$> pop vm
   valA <- deref addrA vm
@@ -101,47 +100,47 @@ execInstruction OP_EXCHANGE vm = stToIO $ do
   memSet addrB valA vm
   return' vm
 --
-execInstruction OP_NOT vm = stToIO $ do
+execInstruction OP_NOT vm = do
   val <- pop vm
   let newVal = IntVal $ if isFalsy val then 1 else 0
   newVal `seq` push vm newVal
   return' vm
 --
-execInstruction OP_NEGATE vm = stToIO $ do
+execInstruction OP_NEGATE vm = do
   val <- pop vm
   let newVal = negate val
   newVal `seq` push vm newVal
   return' vm
 --
-execInstruction OP_POP vm = stToIO $ do
+execInstruction OP_POP vm = do
   _ <- pop vm
   return' vm
 --
-execInstruction OP_JUMP vm = stToIO $ do
+execInstruction OP_JUMP vm = do
   jumpOffset <- readByte vm
   addIp jumpOffset vm
   return' vm
 --
-execInstruction OP_JUMP_IF_FALSE vm = stToIO $ do
+execInstruction OP_JUMP_IF_FALSE vm = do
   jumpOffset <- readByte vm
   topVal <- peek 0 vm
   CM.when (isFalsy topVal) $ addIp jumpOffset vm
   return' vm
 --
-execInstruction OP_DEFINE_VAR vm = stToIO $ do
+execInstruction OP_DEFINE_VAR vm = do
   name <- readStr vm
   addr <- allocNInit 1 vm
   defineVar name addr vm
   return' vm
 --
-execInstruction OP_GET_VAR vm = stToIO $ do
+execInstruction OP_GET_VAR vm = do
   name <- readStr vm
   addr <- getVarAddr name vm
   val <- deref addr vm
   push vm val
   return' vm
 --
-execInstruction OP_SET_VAR vm = stToIO $ do
+execInstruction OP_SET_VAR vm = do
   name <- readStr vm
   addr <- getVarAddr name vm
   oldVal <- deref addr vm
@@ -150,25 +149,25 @@ execInstruction OP_SET_VAR vm = stToIO $ do
   memSet addr castVal vm
   return' vm
 --
-execInstruction OP_MAKE_VAR_POINTER vm = stToIO $ do
+execInstruction OP_MAKE_VAR_POINTER vm = do
   name <- readStr vm
   addr <- getVarAddr name vm
   oldVal <- deref addr vm
   memSet addr (asPointer oldVal) vm
   return' vm
 --
-execInstruction OP_MAKE_POINTER vm = stToIO $ do
+execInstruction OP_MAKE_POINTER vm = do
   addr <- asInt <$> peek 0 vm
   oldVal <- deref addr vm
   memSet addr (asPointer oldVal) vm
   return' vm
 --
-execInstruction OP_ALLOC vm = stToIO $ do
+execInstruction OP_ALLOC vm = do
   freeAddr <- allocNInit 1 vm
   push vm $ IntVal freeAddr
   return' vm
 --
-execInstruction OP_CALL vm = stToIO $ do
+execInstruction OP_CALL vm = do
   argCount <- readByte vm
   fnOffset <- asInt <$> peek argCount vm
   curIp <- readIp vm
@@ -177,18 +176,18 @@ execInstruction OP_CALL vm = stToIO $ do
   return' vm
 --
 execInstruction OP_CALL_FN vm = do
-  fnName <- stToIO $ readStr vm
-  len <- stToIO $ asInt <$> pop vm
+  fnName <- readStr vm
+  len <- asInt <$> pop vm
   execBuiltinFn fnName len vm
 --
 execInstruction OP_CALL_PROC vm = do
-  fnName <- stToIO $ readStr vm
+  fnName <- readStr vm
   execBuiltinProc fnName vm
 --
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 
 binaryInstr :: (Value -> Value -> Value) -> VM -> IO (VM, Maybe InterpretResult)
-binaryInstr op vm = stToIO $ do
+binaryInstr op vm = do
   b <- pop vm
   a <- pop vm
   let res = op a b
@@ -196,7 +195,7 @@ binaryInstr op vm = stToIO $ do
   return' vm
 
 compInstr :: (Value -> Value -> Bool) -> VM -> IO (VM, Maybe InterpretResult)
-compInstr op vm = stToIO $ do
+compInstr op vm = do
   b <- pop vm
   a <- pop vm
   let res = if op a b then 1 else 0
@@ -204,7 +203,7 @@ compInstr op vm = stToIO $ do
   return' vm
 
 logInstr :: (Bool -> Bool -> Bool) -> VM -> IO (VM, Maybe InterpretResult)
-logInstr op vm = stToIO $ do
+logInstr op vm = do
   b <- pop vm
   a <- pop vm
   let res = if op (isTruthy a) (isTruthy b) then 1 else 0

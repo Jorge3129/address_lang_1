@@ -3,7 +3,6 @@
 module Lib (execFile) where
 
 import Compiler.Core
-import Control.Monad.ST (stToIO)
 import System.Directory
 import Vm.Core
 import Vm.State
@@ -16,6 +15,6 @@ execFile fileName = do
   compileSrc src >>= \case
     (Left err) -> putStrLn err
     (Right ch) -> do
-      vm <- stToIO $ initVM ch
+      vm <- initVM ch
       _ <- run vm
       return ()

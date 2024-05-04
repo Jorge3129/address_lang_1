@@ -1,56 +1,56 @@
 module Utils.Stack where
 
-import Control.Monad.ST (RealWorld, ST)
-import qualified Data.Array.ST as SA
-import Data.STRef
+import Data.Array.IO (IOArray)
+import qualified Data.Array.IO as IA
+import Data.IORef
 
 data Stack a = Stack
   { capacity :: Int,
-    topIndex :: STRef RealWorld Int,
-    stackArray :: SA.STArray RealWorld Int a
+    topIndex :: IORef Int,
+    stackArray :: IOArray Int a
   }
 
-newStack :: Int -> ST RealWorld (Stack a)
+newStack :: Int -> IO (Stack a)
 newStack cap = do
-  Stack cap <$> newSTRef (-1 :: Int) <*> SA.newArray_ (0, cap - 1)
+  Stack cap <$> newIORef (-1 :: Int) <*> IA.newArray_ (0, cap - 1)
 
-isFull :: Stack a -> ST RealWorld Bool
+isFull :: Stack a -> IO Bool
 isFull (Stack cap topRef _) = do
-  top <- readSTRef topRef
+  top <- readIORef topRef
   return (top == cap - 1)
 
-push :: a -> Stack a -> ST RealWorld ()
+push :: a -> Stack a -> IO ()
 push x st@(Stack _ topRef arr) = do
   full <- isFull st
   if full
     then error "Stack overflow"
     else do
-      top <- readSTRef topRef
-      SA.writeArray arr (top + 1) x
-      modifySTRef' topRef (+ 1)
+      top <- readIORef topRef
+      IA.writeArray arr (top + 1) x
+      modifyIORef' topRef (+ 1)
 
-isEmpty :: Stack a -> ST RealWorld Bool
-isEmpty (Stack _ topRef _) = (== -1) <$> readSTRef topRef
+isEmpty :: Stack a -> IO Bool
+isEmpty (Stack _ topRef _) = (== -1) <$> readIORef topRef
 
-pop :: Stack a -> ST RealWorld a
+pop :: Stack a -> IO a
 pop s = do
   empty <- isEmpty s
   if empty
     then error "Stack underflow"
     else do
-      top <- readSTRef (topIndex s)
-      val <- SA.readArray (stackArray s) top
-      modifySTRef' (topIndex s) (\x -> x - 1)
+      top <- readIORef (topIndex s)
+      val <- IA.readArray (stackArray s) top
+      modifyIORef' (topIndex s) (\x -> x - 1)
       return val
 
-peek :: Int -> Stack a -> ST RealWorld (Maybe a)
+peek :: Int -> Stack a -> IO (Maybe a)
 peek offset (Stack _ topRef arr) = do
-  top <- readSTRef topRef
+  top <- readIORef topRef
   if offset <= top && offset >= 0
-    then Just <$> SA.readArray arr (top - offset)
+    then Just <$> IA.readArray arr (top - offset)
     else return Nothing
 
-peek' :: Int -> Stack a -> ST RealWorld a
+peek' :: Int -> Stack a -> IO a
 peek' offset s = do
   res <- peek offset s
   return $ case res of

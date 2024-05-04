@@ -3,23 +3,22 @@
 module Vm.State where
 
 import ByteCode.Core
-import Control.Monad.ST (RealWorld, ST)
 import qualified Data.Array as A
-import qualified Data.Array.ST as SA
+import qualified Data.Array.IO as IA
+import Data.IORef
 import qualified Data.Map as Map
-import Data.STRef
 import qualified Utils.Stack as Stack
 import Value.Core
 
-type VmMemory = SA.STArray RealWorld Int Value
+type VmMemory = IA.IOArray Int Value
 
-type VmIp = STRef RealWorld Int
+type VmIp = IORef Int
 
 type VmStack = Stack.Stack Value
 
-type VmVarsMap = STRef RealWorld (Map.Map String Int)
+type VmVarsMap = IORef (Map.Map String Int)
 
-type VmCalls = STRef RealWorld [(String, Int)]
+type VmCalls = IORef [(String, Int)]
 
 data VmChunk = VmChunk
   { vmcCode :: A.Array Int Int,
@@ -45,16 +44,16 @@ memMax = 5000
 stackMax :: Int
 stackMax = 256
 
-newMemory :: Int -> ST RealWorld VmMemory
-newMemory size = SA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
+newMemory :: Int -> IO VmMemory
+newMemory size = IA.newListArray (0, size - 1) (0 : replicate (size - 1) NilVal)
 
-initVM :: Chunk -> ST RealWorld VM
+initVM :: Chunk -> IO VM
 initVM ch = do
   mem <- newMemory memMax
-  ip <- newSTRef 0
+  ip <- newIORef 0
   stack <- Stack.newStack stackMax
-  varsMap <- newSTRef Map.empty
-  vmCalls <- newSTRef []
+  varsMap <- newIORef Map.empty
+  vmCalls <- newIORef []
   let chunk = newChunk ch
   return
     VM
@@ -67,43 +66,43 @@ initVM ch = do
       }
 
 -- TODO change arg order
-push :: VM -> Value -> ST RealWorld ()
+push :: VM -> Value -> IO ()
 push vm val = Stack.push val (stack vm)
 
-pop :: VM -> ST RealWorld Value
+pop :: VM -> IO Value
 pop vm = Stack.pop (stack vm)
 
 popStack :: [Value] -> Value
 popStack [] = error "operand stack is empty"
 popStack (x : _) = x
 
-popN :: Int -> VM -> ST RealWorld [Value]
+popN :: Int -> VM -> IO [Value]
 popN 0 _ = return []
 popN n vm = do
   val <- pop vm
   restValues <- popN (n - 1) vm
   return $ val : restValues
 
-peek :: Int -> VM -> ST RealWorld Value
+peek :: Int -> VM -> IO Value
 peek offset vm = Stack.peek' offset (stack vm)
 
-addIp :: Int -> VM -> ST RealWorld ()
-addIp ipOffset vm = modifySTRef (ip vm) (+ ipOffset)
+addIp :: Int -> VM -> IO ()
+addIp ipOffset vm = modifyIORef (ip vm) (+ ipOffset)
 
-setIp :: Int -> VM -> ST RealWorld ()
-setIp val vm = writeSTRef (ip vm) val
+setIp :: Int -> VM -> IO ()
+setIp val vm = writeIORef (ip vm) val
 
-readIp :: VM -> ST RealWorld Int
-readIp vm = readSTRef (ip vm)
+readIp :: VM -> IO Int
+readIp vm = readIORef (ip vm)
 
-readCalls :: VM -> ST RealWorld [(String, Int)]
-readCalls vm = readSTRef (vmCalls vm)
+readCalls :: VM -> IO [(String, Int)]
+readCalls vm = readIORef (vmCalls vm)
 
-pushCall :: (String, Int) -> VM -> ST RealWorld ()
-pushCall call vm = modifySTRef (vmCalls vm) (call :)
+pushCall :: (String, Int) -> VM -> IO ()
+pushCall call vm = modifyIORef (vmCalls vm) (call :)
 
-popCall :: VM -> ST RealWorld ()
-popCall vm = modifySTRef (vmCalls vm) tail
+popCall :: VM -> IO ()
+popCall vm = modifyIORef (vmCalls vm) tail
 
 newChunk :: Chunk -> VmChunk
 newChunk ch =
@@ -117,26 +116,26 @@ newChunk ch =
           vmcLabelMap = chLabelMap ch
         }
 
-readChunk :: VmChunk -> Int -> ST RealWorld Int
+readChunk :: VmChunk -> Int -> IO Int
 readChunk ch i = return $ vmcCode ch A.! i
 
-readChunkConst :: VmChunk -> Int -> ST RealWorld Value
+readChunkConst :: VmChunk -> Int -> IO Value
 readChunkConst ch i = return $ vmcConstants ch A.! i
 
-getFnOffset :: VmChunk -> String -> ST RealWorld Int
+getFnOffset :: VmChunk -> String -> IO Int
 getFnOffset ch fnName = return $ vmcLabelMap ch Map.! fnName
 
-readByte :: VM -> ST RealWorld Int
+readByte :: VM -> IO Int
 readByte vm = do
   curIp <- readIp vm
   instruction <- readChunk (chunk vm) curIp
   addIp 1 vm
   return instruction
 
-readConst :: VM -> ST RealWorld Value
+readConst :: VM -> IO Value
 readConst vm@(VM {chunk}) = do
   constPos <- readByte vm
   readChunkConst chunk constPos
 
-readStr :: VM -> ST RealWorld String
+readStr :: VM -> IO String
 readStr vm = asStr <$> readConst vm
