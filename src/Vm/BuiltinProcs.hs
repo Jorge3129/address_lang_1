@@ -5,50 +5,50 @@ import Vm.MemUtils
 import Vm.State
 import Vm.VmUtils
 
-execBuiltinProc :: String -> VM -> IO (VM, Maybe InterpretResult)
+execBuiltinProc :: String -> VM -> IO (Maybe InterpretResult)
 execBuiltinProc "print" vm = do
   val <- pop vm
   print val
-  returnIO' vm
+  return'
 --
 execBuiltinProc "printList" vm = do
   val <- pop vm
   list <- parseList val vm
   print list
-  returnIO' vm
+  return'
 --
 execBuiltinProc "printRefs" vm = do
   addr <- asInt <$> pop vm
   refs <- getRefsToAddr addr vm
   putStrLn $ "Refs to " ++ show addr ++ ": " ++ show refs
-  returnIO' vm
+  return'
 execBuiltinProc name _ = error $ "procedure " ++ name ++ " is not defined"
 
-execBuiltinFn :: String -> Int -> VM -> IO (VM, Maybe InterpretResult)
+execBuiltinFn :: String -> Int -> VM -> IO (Maybe InterpretResult)
 execBuiltinFn "constrList" len vm = do
   elems <- popN len vm
   listHead <- constructList (reverse elems) vm
   push vm listHead
-  return' vm
+  return'
 --
 execBuiltinFn "ptr" _ vm = do
   oldVal <- pop vm
   push vm $ asPointer oldVal
-  return' vm
+  return'
 --
-execBuiltinFn "id" _ vm = returnIO' vm
+execBuiltinFn "id" _ vm = return'
 --
 execBuiltinFn "alloc" _ vm = do
   n <- asInt <$> pop vm
   freeAddr <- allocNInit n vm
   push vm $ newPtrWithSize freeAddr n
-  return' vm
+  return'
 --
 execBuiltinFn "mulalloc" _ vm = do
   count <- asInt <$> pop vm
   size <- asInt <$> pop vm
   freeAddr <- allocNInit (size * count) vm
   push vm $ PointerVal freeAddr size count
-  return' vm
+  return'
 --
 execBuiltinFn name _ _ = error $ "function " ++ name ++ " is not defined"
