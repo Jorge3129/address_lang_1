@@ -2,6 +2,7 @@
 
 module ByteCode.Core where
 
+import Data.Map (Map)
 import qualified Data.Map as Map
 import Value.Core
 
@@ -44,7 +45,7 @@ data Chunk = Chunk
   { code :: [Int],
     codeLines :: [Int],
     constants :: [Value],
-    chLabelMap :: Map.Map String Int
+    chLabelMap :: Map String Int
   }
   deriving (Eq, Show)
 

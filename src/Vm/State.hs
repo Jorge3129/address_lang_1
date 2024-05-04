@@ -6,6 +6,7 @@ import ByteCode.Core
 import qualified Data.Array as A
 import qualified Data.Array.IO as IA
 import Data.IORef
+import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Utils.Stack as Stack
 import Value.Core
@@ -16,7 +17,7 @@ type VmIp = IORef Int
 
 type VmStack = Stack.Stack Value
 
-type VmVarsMap = IORef (Map.Map String Int)
+type VmVarsMap = IORef (Map String Int)
 
 type VmCalls = IORef [(String, Int)]
 
@@ -24,7 +25,7 @@ data VmChunk = VmChunk
   { vmcCode :: A.Array Int Int,
     vmcCodeLines :: A.Array Int Int,
     vmcConstants :: A.Array Int Value,
-    vmcLabelMap :: Map.Map String Int
+    vmcLabelMap :: Map String Int
   }
 
 data VM = VM

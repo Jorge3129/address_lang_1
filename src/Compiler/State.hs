@@ -3,16 +3,17 @@ module Compiler.State where
 import ByteCode.Core
 import Control.Monad (forM_)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
+import Data.Map (Map)
 import qualified Data.Map as Map
 import Parser.AST (Program)
 import Utils.Core (replace)
 import Value.Core
 
-type LabelOffsetMap = Map.Map String Int
+type LabelOffsetMap = Map String Int
 
-type FnVarMap = Map.Map String [String]
+type FnVarMap = Map String [String]
 
-type LineFnMap = Map.Map Int String
+type LineFnMap = Map Int String
 
 data LoopPatch = LoopPatch
   { endLabel :: Maybe String,
