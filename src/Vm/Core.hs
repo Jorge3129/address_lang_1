@@ -66,14 +66,14 @@ execInstruction OP_SEND vm = do
   addr <- asInt <$> pop vm
   val <- pop vm
   let destAddr = checkAddrForSend addr
-  oldVal <- deref addr vm
+  oldVal <- memRead addr vm
   let castVal = castAsType oldVal val
-  castVal `seq` memSet destAddr castVal vm
+  castVal `seq` memWrite destAddr castVal vm
   return' vm
 --
 execInstruction OP_DEREF vm = do
   addr <- asInt <$> pop vm
-  val <- deref addr vm
+  val <- memRead addr vm
   push vm val
   return' vm
 --
@@ -94,10 +94,10 @@ execInstruction OP_MIN_DEREF vm = do
 execInstruction OP_EXCHANGE vm = do
   addrB <- asInt <$> pop vm
   addrA <- asInt <$> pop vm
-  valA <- deref addrA vm
-  valB <- deref addrB vm
-  memSet addrA valB vm
-  memSet addrB valA vm
+  valA <- memRead addrA vm
+  valB <- memRead addrB vm
+  memWrite addrA valB vm
+  memWrite addrB valA vm
   return' vm
 --
 execInstruction OP_NOT vm = do
@@ -135,31 +135,30 @@ execInstruction OP_DEFINE_VAR vm = do
 --
 execInstruction OP_GET_VAR vm = do
   name <- readStr vm
-  addr <- getVarAddr name vm
-  val <- deref addr vm
+  val <- readVar name vm
   push vm val
   return' vm
 --
 execInstruction OP_SET_VAR vm = do
   name <- readStr vm
   addr <- getVarAddr name vm
-  oldVal <- deref addr vm
+  oldVal <- memRead addr vm
   val <- pop vm
   let castVal = castAsType oldVal val
-  memSet addr castVal vm
+  memWrite addr castVal vm
   return' vm
 --
 execInstruction OP_MAKE_VAR_POINTER vm = do
   name <- readStr vm
   addr <- getVarAddr name vm
-  oldVal <- deref addr vm
-  memSet addr (asPointer oldVal) vm
+  oldVal <- memRead addr vm
+  memWrite addr (asPointer oldVal) vm
   return' vm
 --
 execInstruction OP_MAKE_POINTER vm = do
   addr <- asInt <$> peek 0 vm
-  oldVal <- deref addr vm
-  memSet addr (asPointer oldVal) vm
+  oldVal <- memRead addr vm
+  memWrite addr (asPointer oldVal) vm
   return' vm
 --
 execInstruction OP_ALLOC vm = do

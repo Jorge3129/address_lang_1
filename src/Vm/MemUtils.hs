@@ -27,12 +27,12 @@ allocNInit :: Int -> VM -> IO Int
 allocNInit n vm = do
   freeAddr <- allocN n (memory vm)
   forM_ [0 .. (n - 1)] $ \offset ->
-    memSet (freeAddr + offset) 0 vm
+    memWrite (freeAddr + offset) 0 vm
   return freeAddr
 
 parseList :: Value -> VM -> IO [Value]
 parseList val vm = do
-  firstAddr <- asInt <$> deref (asInt val) vm
+  firstAddr <- asInt <$> memRead (asInt val) vm
   if firstAddr == 0
     then return []
     else parseList' firstAddr [] vm
@@ -40,8 +40,8 @@ parseList val vm = do
     parseList' :: Int -> [Value] -> VM -> IO [Value]
     parseList' 0 acc _ = return acc
     parseList' curAddr acc vm_ = do
-      nextAddr <- deref curAddr vm_
-      curVal <- deref (curAddr + 1) vm_
+      nextAddr <- memRead curAddr vm_
+      curVal <- memRead (curAddr + 1) vm_
       parseList' (asInt nextAddr) (acc ++ [curVal]) vm_
 
 constructList :: [Value] -> VM -> IO Value
@@ -55,9 +55,9 @@ constructList vals vm = do
     consList' prevAddr (x : xs) = do
       let sz = 2 :: Int
       newAddr <- allocN sz (memory vm)
-      memSet prevAddr (newPtrWithSize newAddr sz) vm
-      memSet newAddr (newPtr 0) vm
-      memSet (newAddr + 1) x vm
+      memWrite prevAddr (newPtrWithSize newAddr sz) vm
+      memWrite newAddr (newPtr 0) vm
+      memWrite (newAddr + 1) x vm
       consList' newAddr xs
     consList' _ [] = return ()
 
@@ -94,17 +94,22 @@ getRefsToAddr addr vm = do
       else return (-1)
   return $ filter (/= -1) indexes
 
-deref :: Int -> VM -> IO Value
-deref addr vm
+memRead :: Int -> VM -> IO Value
+memRead addr vm
   | addr > 0 = IA.readArray (memory vm) addr
-  | otherwise = error $ "Cannot dereference memory at " ++ show addr
+  | otherwise = error $ "Cannot access memory at " ++ show addr
+
+readVar :: String -> VM -> IO Value
+readVar name vm = do
+  addr <- getVarAddr name vm
+  memRead addr vm
 
 mulDeref :: Int -> Value -> VM -> IO Value
 mulDeref count addrVal vm
   | count < 0 = error $ "Cannot execute multiple dereference operation for a negative number " ++ show count
   | count == 0 = return addrVal
   | otherwise = do
-      addr <- deref (asInt addrVal) vm
+      addr <- memRead (asInt addrVal) vm
       mulDeref (count - 1) addr vm
 
 minDeref :: Int -> Value -> VM -> IO Value
@@ -131,8 +136,8 @@ castAsType oldVal val
   | isPointer oldVal = asPointer val
   | otherwise = val
 
-memSet :: Int -> Value -> VM -> IO ()
-memSet addr val vm
+memWrite :: Int -> Value -> VM -> IO ()
+memWrite addr val vm
   | addr >= 0 = IA.writeArray (memory vm) addr val
   | otherwise = error $ "Cannot set memory at address " ++ show addr
 
