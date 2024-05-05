@@ -36,7 +36,7 @@ data VM = VM
     vmCalls :: !VmCalls
   }
 
-data InterpretResult = OK | COMPILE_ERR | RUNTIME_ERR deriving (Eq, Show)
+data InterpretResult = OK | RUNTIME_ERR deriving (Eq, Show)
 
 memMax :: Int
 memMax = 5000
@@ -71,10 +71,6 @@ push vm val = Stack.push val (stack vm)
 
 pop :: VM -> IO Value
 pop vm = Stack.pop (stack vm)
-
-popStack :: [Value] -> Value
-popStack [] = error "operand stack is empty"
-popStack (x : _) = x
 
 popN :: Int -> VM -> IO [Value]
 popN 0 _ = return []

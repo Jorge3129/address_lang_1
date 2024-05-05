@@ -58,32 +58,31 @@ print 'sm
     Pg bst_find_children { node_addr, left, right }
 
     @case_left ...
-    P { 'val < node_val } | case_right
+        P { 'val < node_val } | case_right
         Pg bst_delete { 'val, 'left }
         end
     @case_right ...
-    P { 'val > node_val } | case_cur
+        P { 'val > node_val } | case_cur
         Pg bst_delete { 'val, 'right }
         end
     @case_cur ...
         parent_addr = 'node_addr
         @case_leaf ...
-        P { 'left == 0 and 'right == 0 } | case_no_left
+            P { 'left == 0 and 'right == 0 } | case_no_left
             0 => node_addr
             end
         @case_no_left ...
-        P { 'left == 0 } | case_no_right
+            P { 'left == 0 } | case_no_right
             Pg bst_shift_child { node_addr, 'right }
             end
         @case_no_right ...
-        P { 'right == 0 } | case_both
+            P { 'right == 0 } | case_both
             Pg bst_shift_child { node_addr, 'left }
             end
         @case_both ...
-
-        Pg bst_min_value { 'right, min_val }
-        Pg bst_set_value { node_addr, 'min_val }
-        Pg bst_delete { 'min_val, 'right }
+            Pg bst_min_value { 'right, min_val }
+            Pg bst_set_value { node_addr, 'min_val }
+            Pg bst_delete { 'min_val, 'right }
     @end ...
     Ret
 
@@ -94,7 +93,8 @@ print 'sm
 
     P { 'child_addr == 0 } Ret |
 
-    P { parent_addr == 0 } | case_not_root
+    @case_root ...
+        P { parent_addr == 0 } | case_not_root
         child_val = '(child_addr + 1)
         Pg bst_set_value { node_addr, child_val }
         Pg bst_find_children { child_addr, left, right }
