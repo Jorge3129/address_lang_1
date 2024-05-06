@@ -97,21 +97,6 @@ compileStmt :: Statement -> CompState -> IO ()
 compileStmt Stop cs = do
   emitOpCode OP_RETURN cs
 --
--- compileStmt (Send valEx (Var name)) cs = do
---   compileExpr valEx cs
---   compileExpr (Var name) cs
---   emitOpCode OP_SEND cs
---   arg <- addConstantToCs (StringVal name) cs
---   emitOpCode OP_MAKE_VAR_POINTER cs
---   emitByte arg cs
---
--- compileStmt (Send valEx (Deref innerExpr)) cs = do
---   compileExpr valEx cs
---   compileExpr innerExpr cs
---   emitOpCode OP_MAKE_POINTER cs
---   emitOpCode OP_DEREF cs
---   emitOpCode OP_SEND cs
---
 compileStmt (Send valEx addrEx) cs = do
   compileExpr valEx cs
   compileExpr addrEx cs

@@ -59,7 +59,6 @@ disassembleInstruction chunk offset = do
     OP_DEREF -> simpleInstruction "OP_DEREF" offset
     OP_MUL_DEREF -> simpleInstruction "OP_MUL_DEREF" offset
     OP_MIN_DEREF -> simpleInstruction "OP_MIN_DEREF" offset
-    OP_MAKE_POINTER -> simpleInstruction "OP_MAKE_POINTER" offset
     OP_EXCHANGE -> simpleInstruction "OP_EXCHANGE" offset
     --
     OP_ALLOC -> simpleInstruction "OP_ALLOC" offset
@@ -71,7 +70,6 @@ disassembleInstruction chunk offset = do
     OP_DEFINE_VAR -> constantInstruction "OP_DEFINE_VAR" chunk offset
     OP_GET_VAR -> constantInstruction "OP_GET_VAR" chunk offset
     OP_SET_VAR -> constantInstruction "OP_SET_VAR" chunk offset
-    OP_MAKE_VAR_POINTER -> constantInstruction "OP_MAKE_VAR_POINTER" chunk offset
     OP_CALL -> jumpInstruction "OP_CALL" chunk offset
     OP_CALL_PROC -> constantInstruction "OP_CALL_PROC" chunk offset
     OP_CALL_FN -> constantInstruction "OP_CALL_FN" chunk offset

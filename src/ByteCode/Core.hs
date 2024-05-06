@@ -33,8 +33,6 @@ data OpCode
   | OP_SET_VAR
   | OP_GET_VAR
   | OP_ALLOC
-  | OP_MAKE_VAR_POINTER
-  | OP_MAKE_POINTER
   | OP_CALL
   | OP_CALL_PROC
   | OP_CALL_FN

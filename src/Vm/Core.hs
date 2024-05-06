@@ -67,15 +67,6 @@ execInstruction OP_OR vm = logInstr (||) vm
 --
 execInstruction OP_PTR_ADD vm = binaryInstr ptrAdd vm
 --
-execInstruction OP_SEND vm = do
-  addr <- asInt <$> pop vm
-  val <- pop vm
-  let destAddr = checkAddrForSend addr
-  oldVal <- memRead addr vm
-  let castVal = castAsType oldVal val
-  castVal `seq` memWrite destAddr castVal vm
-  return'
---
 execInstruction OP_DEREF vm = do
   addr <- asInt <$> pop vm
   val <- memRead addr vm
@@ -94,6 +85,12 @@ execInstruction OP_MIN_DEREF vm = do
   count <- asInt <$> pop vm
   listHead <- minDeref count addrVal vm
   push vm listHead
+  return'
+--
+execInstruction OP_SEND vm = do
+  addr <- asInt <$> pop vm
+  val <- pop vm
+  memWrite (checkAddrForSend addr) val vm
   return'
 --
 execInstruction OP_EXCHANGE vm = do
@@ -151,19 +148,6 @@ execInstruction OP_SET_VAR vm = do
   val <- pop vm
   let castVal = castAsType oldVal val
   memWrite addr castVal vm
-  return'
---
-execInstruction OP_MAKE_VAR_POINTER vm = do
-  name <- readStr vm
-  addr <- getVarAddr name vm
-  oldVal <- memRead addr vm
-  memWrite addr (asPointer oldVal) vm
-  return'
---
-execInstruction OP_MAKE_POINTER vm = do
-  addr <- asInt <$> peek 0 vm
-  oldVal <- memRead addr vm
-  memWrite addr (asPointer oldVal) vm
   return'
 --
 execInstruction OP_ALLOC vm = do
