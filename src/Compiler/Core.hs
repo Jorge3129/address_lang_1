@@ -131,8 +131,6 @@ compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
 --
 compileStmt st@(LoopSimple {}) cs = compileStmt (desugarStmt st) cs
 --
-compileStmt st@(LoopComplex {}) cs = compileStmt (desugarStmt st) cs
---
 compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
   -- initialize
   compileStmt initStmt cs

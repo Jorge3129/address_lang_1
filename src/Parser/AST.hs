@@ -32,6 +32,11 @@ data Expr
   | LabelRef String Bool
   deriving (Eq, Show)
 
+data LoopStep
+  = LoopStepValue Expr
+  | LoopStepExpr Expr
+  deriving (Eq, Show)
+
 data LoopEnd
   = LoopEndValue Expr
   | LoopEndCondition Expr
@@ -49,8 +54,7 @@ data Statement
   | Exchange Expr Expr
   | Predicate Expr [Statement] [Statement]
   | --           start step end             counter scope-lbl   next-lbl
-    LoopSimple Expr Expr LoopEnd Expr (Maybe String) (Maybe String)
-  | LoopComplex Expr Expr LoopEnd Expr (Maybe String) (Maybe String)
+    LoopSimple Expr LoopStep LoopEnd Expr (Maybe String) (Maybe String)
   | LoopCommon Statement Statement Expr Expr (Maybe String) (Maybe String)
   | Replace [Replacement] String String
   | SubprogramCall Expr [Expr] (Maybe String)

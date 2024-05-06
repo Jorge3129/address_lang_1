@@ -98,7 +98,6 @@ stmt : '!'                                      { Stop }
     | exchangeSt                                { $1 }
     | predicateSt                               { $1 }
     | loopStSimple                              { $1 }
-    | loopStComplex                             { $1 }
     | assignSt                                  { $1 }
     | sendSt                                    { $1 }
     | Ret                                       { Ret }
@@ -126,9 +125,10 @@ exchangeSt : Exp "<=>" Exp                      { Exchange $1 $3 }
 
 predicateSt : P '{' Exp '}' stmts '|' stmts     { Predicate $3 $5 $7 }
 
-loopStSimple : L '{' Exp '(' Exp ')' loopEnd "=>" Exp '}' loopScope loopNext  { LoopSimple $3 $5 $7 $9 $11 $12 }
+loopStSimple : L '{' Exp loopStep loopEnd "=>" Exp '}' loopScope loopNext  { LoopSimple $3 $4 $5 $7 $9 $10 }
 
-loopStComplex : L '{' Exp ',' Exp ',' loopEnd "=>" Exp '}' loopScope loopNext { LoopComplex $3 $5 $7 $9 $11 $12 }
+loopStep : '(' Exp ')'                          { LoopStepValue $2 }
+      | ',' Exp ','                             { LoopStepExpr $2 }
 
 loopEnd : P '{' Exp '}'                         { LoopEndCondition $3 }
       | Exp                                     { LoopEndValue $1 }

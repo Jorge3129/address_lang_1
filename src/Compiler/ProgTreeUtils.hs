@@ -2,30 +2,20 @@ module Compiler.ProgTreeUtils where
 
 import Parser.AST
 
-loopStepValToStmt :: Expr -> Expr -> Statement
-loopStepValToStmt step counter = Send (BinOpApp Add (Deref counter) step) counter
-
-loopStepExprToStmt :: Expr -> Expr -> Statement
-loopStepExprToStmt stepExpr counter = Send (replaceNil stepExpr (Deref counter)) counter
-
 desugarStmt :: Statement -> Statement
-desugarStmt (LoopSimple initVal stepVal end counter scope next) =
+desugarStmt (LoopSimple initVal step end counter scope next) =
   LoopCommon
     (Send initVal counter)
-    (loopStepValToStmt stepVal counter)
-    (getLoopEndExpr end counter)
-    counter
-    scope
-    next
-desugarStmt (LoopComplex initVal stepExpr end counter scope next) =
-  LoopCommon
-    (Send initVal counter)
-    (loopStepExprToStmt stepExpr counter)
+    (getLoopStepStmt step counter)
     (getLoopEndExpr end counter)
     counter
     scope
     next
 desugarStmt s = s
+
+getLoopStepStmt :: LoopStep -> Expr -> Statement
+getLoopStepStmt (LoopStepValue stepVal) counter = Send (BinOpApp Add (Deref counter) stepVal) counter
+getLoopStepStmt (LoopStepExpr stepExpr) counter = Send (replaceNil stepExpr (Deref counter)) counter
 
 getLoopEndExpr :: LoopEnd -> Expr -> Expr
 getLoopEndExpr (LoopEndValue val) counter = BinOpApp LessEqual (Deref counter) val
@@ -43,7 +33,6 @@ stmtExprs (Predicate cond thenSts elseSts) =
     ++ concatMap stmtExprs thenSts
     ++ concatMap stmtExprs elseSts
 stmtExprs st@(LoopSimple {}) = stmtExprs (desugarStmt st)
-stmtExprs st@(LoopComplex {}) = stmtExprs (desugarStmt st)
 stmtExprs (LoopCommon initSt stepSt endExpr cntExpr _ _) =
   stmtExprs initSt ++ stmtExprs stepSt ++ [endExpr] ++ [cntExpr]
 stmtExprs (BuiltinProc _ exs) = exs
@@ -68,7 +57,6 @@ replaceOpStmt (Predicate cond thenSts elseSts) r =
     (map (`replaceOpStmt` r) thenSts)
     (map (`replaceOpStmt` r) elseSts)
 replaceOpStmt st@(LoopSimple {}) r = replaceOpStmt (desugarStmt st) r
-replaceOpStmt st@(LoopComplex {}) r = replaceOpStmt (desugarStmt st) r
 replaceOpStmt (LoopCommon initSt stepSt endExpr cntExpr a b) r =
   LoopCommon
     (replaceOpStmt initSt r)
@@ -102,7 +90,6 @@ replaceExprStmt (Predicate cond thenSts elseSts) r =
     (map (`replaceExprStmt` r) thenSts)
     (map (`replaceExprStmt` r) elseSts)
 replaceExprStmt st@(LoopSimple {}) r = replaceExprStmt (desugarStmt st) r
-replaceExprStmt st@(LoopComplex {}) r = replaceExprStmt (desugarStmt st) r
 replaceExprStmt (LoopCommon initSt stepSt endExpr cntExpr a b) r =
   LoopCommon
     (replaceExprStmt initSt r)
@@ -138,7 +125,6 @@ replaceStmtStmt st r@(StmtReplace stSrc stDst)
           (map (`replaceStmtStmt` r) thenSts)
           (map (`replaceStmtStmt` r) elseSts)
       st1@(LoopSimple {}) -> replaceStmtStmt (desugarStmt st1) r
-      st1@(LoopComplex {}) -> replaceStmtStmt (desugarStmt st1) r
       LoopCommon initSt stepSt endExpr cntExpr a b ->
         LoopCommon
           (replaceStmtStmt initSt r)
