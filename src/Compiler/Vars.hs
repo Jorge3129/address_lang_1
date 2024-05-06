@@ -14,9 +14,9 @@ import Value.Core
 
 collectProgVars :: [ProgLine] -> FnVarMap
 collectProgVars pLines = snd $ collectVars pLines ("", Map.singleton "" [])
-
-collectVars :: [ProgLine] -> (String, FnVarMap) -> (String, FnVarMap)
-collectVars = foldr ((>>>) . collectLineVars) id
+  where
+    collectVars :: [ProgLine] -> (String, FnVarMap) -> (String, FnVarMap)
+    collectVars = foldr ((>>>) . collectLineVars) id
 
 collectLineVars :: ProgLine -> (String, FnVarMap) -> (String, FnVarMap)
 collectLineVars (ProgLine {labels = (fnName : _), stmts = args@(Send Nil (Var _) : _)}) (_, varMap) =
@@ -33,9 +33,9 @@ collectLineVars (ProgLine {stmts}) (fnName, varMap) =
 
 collectProgFns :: [ProgLine] -> LineFnMap
 collectProgFns pLines = snd $ collectFns pLines ("", Map.empty)
-
-collectFns :: [ProgLine] -> (String, LineFnMap) -> (String, LineFnMap)
-collectFns = foldr ((>>>) . collectLineFns) id
+  where
+    collectFns :: [ProgLine] -> (String, LineFnMap) -> (String, LineFnMap)
+    collectFns = foldr ((>>>) . collectLineFns) id
 
 collectLineFns :: ProgLine -> (String, LineFnMap) -> (String, LineFnMap)
 collectLineFns (ProgLine {lineNum, labels = (fnName : _), stmts = (Send Nil (Var _) : _)}) (prevFnName, fnMap) =

@@ -34,7 +34,7 @@ runVm vm = do
           putStrLn msg
           return $ Just RUNTIME_ERR
 
-execReturn :: [(String, Int)] -> VM -> IO (Maybe InterpretResult)
+execReturn :: [VmCallFrame] -> VM -> IO (Maybe InterpretResult)
 execReturn [] _ = returnOk
 execReturn ((_, ret) : _) vm = do
   freeVars vm
@@ -159,7 +159,7 @@ execInstruction OP_CALL vm = do
   argCount <- readByte vm
   fnOffset <- asInt <$> peek argCount vm
   curIp <- readIp vm
-  pushCall ("", curIp) vm -- TODO fix fnName here
+  pushCall (fnOffset, curIp) vm
   setIp fnOffset vm
   return'
 --

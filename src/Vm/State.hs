@@ -19,7 +19,9 @@ type VmStack = Stack.Stack Value
 
 type VmVarsMap = IORef (Map String Int)
 
-type VmCalls = IORef [(String, Int)]
+type VmCallFrame = (Int, Int)
+
+type VmCalls = IORef [VmCallFrame]
 
 data VmChunk = VmChunk
   { vmcCode :: A.Array Int Int,
@@ -91,10 +93,10 @@ setIp val vm = writeIORef (ip vm) val
 readIp :: VM -> IO Int
 readIp vm = readIORef (ip vm)
 
-readCalls :: VM -> IO [(String, Int)]
+readCalls :: VM -> IO [VmCallFrame]
 readCalls vm = readIORef (vmCalls vm)
 
-pushCall :: (String, Int) -> VM -> IO ()
+pushCall :: VmCallFrame -> VM -> IO ()
 pushCall call vm = modifyIORef (vmCalls vm) (call :)
 
 popCall :: VM -> IO ()
