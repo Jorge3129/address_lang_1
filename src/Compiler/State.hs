@@ -37,8 +37,8 @@ data CompState = CompState
     csRepls :: IORef [Int]
   }
 
-initCs :: Program -> IO CompState
-initCs prog = do
+initCs :: Program -> FnVarMap -> LineFnMap -> IO CompState
+initCs prog fnVars fnMap = do
   initCurLine <- newIORef 0
   initCurChunk <- newIORef initChunk
   initLoopPatches <- newIORef []
@@ -54,8 +54,8 @@ initCs prog = do
         jumpPatches = initJumpPatches,
         loopPatches = initLoopPatches,
         labelRefPatches = initLabelPatches,
-        csFnVars = Map.empty,
-        csFnMap = Map.empty,
+        csFnVars = fnVars,
+        csFnMap = fnMap,
         csProg = prog,
         csRepls = initRepls
       }

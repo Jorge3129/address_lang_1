@@ -28,16 +28,16 @@ compileSrc src = Exc.catch
 compileProg :: Program -> IO Chunk
 compileProg pg1 = do
   let pg@(Program {pLines}) = numerateLines pg1
-      fnVars = collectProgVars pg
-  let fnMap = collectProgFns pg
-  inCs <- initCs pg
-  let cs = inCs {csFnVars = fnVars, csFnMap = fnMap}
-  compileVars (fnVars Map.! "") cs
+  cs <- initCs pg (collectProgVars pLines) (collectProgFns pLines)
+  compileGlobalVars cs
   compileLines pLines cs
   patchJumps cs
   patchLabelRefs cs
   ch <- getCurChunk cs
   return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch
+
+compileGlobalVars :: CompState -> IO ()
+compileGlobalVars cs = compileVars (csFnVars cs Map.! "") cs
 
 numerateLines :: Program -> Program
 numerateLines pg@(Program {pLines}) =

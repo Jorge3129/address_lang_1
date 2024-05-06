@@ -12,12 +12,11 @@ import qualified Data.Map as Map
 import Parser.AST
 import Value.Core
 
-collectProgVars :: Program -> FnVarMap
-collectProgVars pg = snd $ collectVars (pLines pg) ("", Map.singleton "" [])
+collectProgVars :: [ProgLine] -> FnVarMap
+collectProgVars pLines = snd $ collectVars pLines ("", Map.singleton "" [])
 
 collectVars :: [ProgLine] -> (String, FnVarMap) -> (String, FnVarMap)
-collectVars (l : ls) = collectLineVars l >>> collectVars ls
-collectVars [] = id
+collectVars = foldr ((>>>) . collectLineVars) id
 
 collectLineVars :: ProgLine -> (String, FnVarMap) -> (String, FnVarMap)
 collectLineVars (ProgLine {labels = (fnName : _), stmts = args@(Send Nil (Var _) : _)}) (_, varMap) =
@@ -32,12 +31,11 @@ collectLineVars (ProgLine {stmts}) (fnName, varMap) =
       newSet = nub $ oldSet ++ newVars
    in (fnName, Map.insert fnName newSet varMap)
 
-collectProgFns :: Program -> LineFnMap
-collectProgFns pg = snd $ collectFns (pLines pg) ("", Map.empty)
+collectProgFns :: [ProgLine] -> LineFnMap
+collectProgFns pLines = snd $ collectFns pLines ("", Map.empty)
 
 collectFns :: [ProgLine] -> (String, LineFnMap) -> (String, LineFnMap)
-collectFns (l : ls) = collectLineFns l >>> collectFns ls
-collectFns [] = id
+collectFns = foldr ((>>>) . collectLineFns) id
 
 collectLineFns :: ProgLine -> (String, LineFnMap) -> (String, LineFnMap)
 collectLineFns (ProgLine {lineNum, labels = (fnName : _), stmts = (Send Nil (Var _) : _)}) (prevFnName, fnMap) =
