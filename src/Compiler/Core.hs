@@ -264,10 +264,13 @@ patchJump offset cs = do
   patchChunkCode offset jump cs
 
 patchLoop :: LoopPatch -> CompState -> IO ()
-patchLoop (LoopPatch {stepStart, exitJump}) cs = do
+patchLoop (LoopPatch {stepStart, exitJump, nextLabel}) cs = do
   emitLoop stepStart cs
   patchJump exitJump cs
   emitOpCode OP_POP cs
+  case nextLabel of
+    Just next -> compileStmt (Jump next) cs
+    Nothing -> return ()
 
 patchJumps :: CompState -> IO ()
 patchJumps cs = do
@@ -275,7 +278,7 @@ patchJumps cs = do
   jumps <- getJumpPatches cs
   forM_ jumps $ \(curOffset, lbl) -> do
     let jumpToInstr = curLblMap Map.! lbl
-        jumpOffset = jumpToInstr - curOffset - 2
+    let jumpOffset = jumpToInstr - curOffset - 2
     patchChunkCode (curOffset + 1) jumpOffset cs
 
 patchLabelRefs :: CompState -> IO ()

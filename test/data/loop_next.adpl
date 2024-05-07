@@ -1,0 +1,6 @@
+L { 0(1)5 => i } l1, next
+    print 'i
+@l1 ...
+print 1000
+@next ...
+print 2000
