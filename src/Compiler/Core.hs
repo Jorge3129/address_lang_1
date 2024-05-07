@@ -3,7 +3,7 @@
 module Compiler.Core where
 
 import ByteCode.Core
-import Compiler.ProgTreeUtils (desugarStmt)
+import Compiler.ProgTreeUtils (getLoopRange)
 import Compiler.Replace
 import Compiler.State
 import Compiler.Vars
@@ -26,27 +26,28 @@ compileSrc src = Exc.catch
   $ \(Exc.ErrorCallWithLocation msg _) -> return $ Left msg
 
 compileProg :: Program -> IO Chunk
-compileProg pg1 = do
-  let pg@(Program {pLines}) = numerateLines pg1
-  cs <- initCs pg (collectProgVars pLines) (collectProgFns pLines)
+compileProg (Program {pLines = pLines1}) = do
+  let pLines = numerateLines pLines1
+  cs <- initCs pLines (collectProgVars pLines) (collectProgFns pLines)
   compileGlobalVars cs
   compileLines pLines cs
   patchJumps cs
   patchLabelRefs cs
-  ch <- getCurChunk cs
-  return $ writeChunk (fromEnum OP_RETURN) (length pLines) ch
+  compileEof (length pLines) cs
+  getCurChunk cs
 
 compileGlobalVars :: CompState -> IO ()
 compileGlobalVars cs = compileVars (csFnVars cs Map.! "") cs
 
-numerateLines :: Program -> Program
-numerateLines pg@(Program {pLines}) =
-  let numLines = zipWith (\pl i -> pl {lineNum = i}) pLines [0 :: Int ..]
-   in pg {pLines = numLines}
+compileEof :: Int -> CompState -> IO ()
+compileEof lineCount cs = do
+  updateChunk (writeChunk (fromEnum OP_RETURN) lineCount) cs
+
+numerateLines :: [ProgLine] -> [ProgLine]
+numerateLines pLines = zipWith (\pl i -> pl {lineNum = i}) pLines [0 :: Int ..]
 
 compileLines :: [ProgLine] -> CompState -> IO ()
-compileLines (l : ls) cs = compileLine l cs >> compileLines ls cs
-compileLines [] _ = return ()
+compileLines ls cs = forM_ ls (`compileLine` cs)
 
 compileLine :: ProgLine -> CompState -> IO ()
 compileLine (ProgLine lbls@(fnName : _) args@(Send Nil (Var _) : _) lineNum) cs = do
@@ -78,20 +79,15 @@ compileLineLabels :: [String] -> CompState -> IO ()
 compileLineLabels lbls cs = do
   offset <- curChunkCount cs
   curLblMap <- getLabelOffsetMap cs
-  newLblMap <-
-    foldM
-      ( \lblMap lbl ->
-          do
-            scopedLabel <- toScopedLabel lbl cs
-            return $ Map.insert scopedLabel offset lblMap
-      )
-      curLblMap
-      lbls
+  newLblMap <- foldM (step offset) curLblMap lbls
   setLabelOffsetMap newLblMap cs
+  where
+    step offset lblMap lbl = do
+      scopedLabel <- toScopedLabel lbl cs
+      return $ Map.insert scopedLabel offset lblMap
 
 compileStmts :: [Statement] -> CompState -> IO ()
-compileStmts (st : stmts) cs = compileStmt st cs >> compileStmts stmts cs
-compileStmts [] _ = return ()
+compileStmts stmts cs = forM_ stmts (`compileStmt` cs)
 
 compileStmt :: Statement -> CompState -> IO ()
 compileStmt Stop cs = do
@@ -129,9 +125,9 @@ compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   -- end
   patchJump toEndJump cs
 --
-compileStmt st@(LoopSimple {}) cs = compileStmt (desugarStmt st) cs
 --
-compileStmt (LoopCommon initStmt stepStmt endCondition _ scope next) cs = do
+compileStmt st@(LoopSimple _ _ _ _ scope next) cs = do
+  let (initStmt, stepStmt, endCondition) = getLoopRange st
   -- initialize
   compileStmt initStmt cs
   -- condition
@@ -192,8 +188,7 @@ compileStmt Ret cs = do
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 
 compileExprs :: [Expr] -> CompState -> IO ()
-compileExprs (ex : exs) cs = compileExpr ex cs >> compileExprs exs cs
-compileExprs [] _ = return ()
+compileExprs exprs cs = forM_ exprs (`compileExpr` cs)
 
 compileExpr :: Expr -> CompState -> IO ()
 compileExpr (Lit val) cs = do

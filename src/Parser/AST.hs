@@ -53,9 +53,8 @@ data Statement
   | Send Expr Expr
   | Exchange Expr Expr
   | Predicate Expr [Statement] [Statement]
-  | --           start step end             counter scope-lbl   next-lbl
+  | --        |start|step   |end   |counter|scope-lbl    |next-lbl
     LoopSimple Expr LoopStep LoopEnd Expr (Maybe String) (Maybe String)
-  | LoopCommon Statement Statement Expr Expr (Maybe String) (Maybe String)
   | Replace [Replacement] String String
   | SubprogramCall Expr [Expr] (Maybe String)
   | BuiltinProc String [Expr]

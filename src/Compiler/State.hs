@@ -5,7 +5,7 @@ import Control.Monad (forM_)
 import Data.IORef (IORef, modifyIORef, newIORef, readIORef, writeIORef)
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Parser.AST (Program)
+import Parser.AST (ProgLine)
 import Utils.Core (replace)
 import Value.Core
 
@@ -33,11 +33,11 @@ data CompState = CompState
     labelRefPatches :: IORef [(Int, String)],
     csFnVars :: FnVarMap,
     csFnMap :: LineFnMap,
-    csProg :: Program,
+    csProgLines :: [ProgLine],
     csRepls :: IORef [Int]
   }
 
-initCs :: Program -> FnVarMap -> LineFnMap -> IO CompState
+initCs :: [ProgLine] -> FnVarMap -> LineFnMap -> IO CompState
 initCs prog fnVars fnMap = do
   initCurLine <- newIORef 0
   initCurChunk <- newIORef initChunk
@@ -56,7 +56,7 @@ initCs prog fnVars fnMap = do
         labelRefPatches = initLabelPatches,
         csFnVars = fnVars,
         csFnMap = fnMap,
-        csProg = prog,
+        csProgLines = prog,
         csRepls = initRepls
       }
 

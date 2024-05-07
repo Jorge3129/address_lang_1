@@ -2,16 +2,14 @@ module Compiler.ProgTreeUtils where
 
 import Parser.AST
 
-desugarStmt :: Statement -> Statement
-desugarStmt (LoopSimple initVal step end counter scope next) =
-  LoopCommon
-    (Send initVal counter)
-    (getLoopStepStmt step counter)
-    (getLoopEndExpr end counter)
-    counter
-    scope
-    next
-desugarStmt s = s
+-- Loops
+getLoopRange :: Statement -> (Statement, Statement, Expr)
+getLoopRange (LoopSimple initVal step end counter _ _) =
+  ( Send initVal counter,
+    getLoopStepStmt step counter,
+    getLoopEndExpr end counter
+  )
+getLoopRange _ = undefined
 
 getLoopStepStmt :: LoopStep -> Expr -> Statement
 getLoopStepStmt (LoopStepValue stepVal) counter = Send (BinOpApp Add (Deref counter) stepVal) counter
@@ -21,9 +19,15 @@ getLoopEndExpr :: LoopEnd -> Expr -> Expr
 getLoopEndExpr (LoopEndValue val) counter = BinOpApp LessEqual (Deref counter) val
 getLoopEndExpr (LoopEndCondition ex) _ = ex
 
-replaceNil :: Expr -> Expr -> Expr
-replaceNil srcExpr r = replaceExprExpr srcExpr (ExprReplace Nil r)
+loopStepExpr :: LoopStep -> Expr
+loopStepExpr (LoopStepValue val) = val
+loopStepExpr (LoopStepExpr ex) = ex
 
+loopEndExpr :: LoopEnd -> Expr
+loopEndExpr (LoopEndValue val) = val
+loopEndExpr (LoopEndCondition ex) = ex
+
+-- Vars
 stmtExprs :: Statement -> [Expr]
 stmtExprs (Assignment a b) = [a, b]
 stmtExprs (Send a b) = [a, b]
@@ -32,9 +36,8 @@ stmtExprs (Predicate cond thenSts elseSts) =
   [cond]
     ++ concatMap stmtExprs thenSts
     ++ concatMap stmtExprs elseSts
-stmtExprs st@(LoopSimple {}) = stmtExprs (desugarStmt st)
-stmtExprs (LoopCommon initSt stepSt endExpr cntExpr _ _) =
-  stmtExprs initSt ++ stmtExprs stepSt ++ [endExpr] ++ [cntExpr]
+stmtExprs (LoopSimple initVal step end counter _ _) =
+  [initVal, loopStepExpr step, loopEndExpr end, counter]
 stmtExprs (BuiltinProc _ exs) = exs
 stmtExprs (SubprogramCall _ exs _) = exs
 stmtExprs _ = []
@@ -46,6 +49,10 @@ exprVars (Deref a) = exprVars a
 exprVars (MulDeref a b) = exprVars a ++ exprVars b
 exprVars _ = []
 
+-- Replace
+replaceNil :: Expr -> Expr -> Expr
+replaceNil srcExpr r = replaceExprExpr srcExpr (ExprReplace Nil r)
+
 -- BinOpReplace
 replaceOpStmt :: Statement -> Replacement -> Statement
 replaceOpStmt (Assignment a b) r = Assignment (replaceOpExpr a r) (replaceOpExpr b r)
@@ -56,12 +63,11 @@ replaceOpStmt (Predicate cond thenSts elseSts) r =
     (replaceOpExpr cond r)
     (map (`replaceOpStmt` r) thenSts)
     (map (`replaceOpStmt` r) elseSts)
-replaceOpStmt st@(LoopSimple {}) r = replaceOpStmt (desugarStmt st) r
-replaceOpStmt (LoopCommon initSt stepSt endExpr cntExpr a b) r =
-  LoopCommon
-    (replaceOpStmt initSt r)
-    (replaceOpStmt stepSt r)
-    (replaceOpExpr endExpr r)
+replaceOpStmt (LoopSimple initVal step end cntExpr a b) r =
+  LoopSimple
+    (replaceOpExpr initVal r)
+    (replaceOpLoopStep step r)
+    (replaceOpLoopEnd end r)
     (replaceOpExpr cntExpr r)
     a
     b
@@ -79,6 +85,14 @@ replaceOpExpr (Negate a) r = Negate $ replaceOpExpr a r
 replaceOpExpr (BuiltinFn nm args) r = BuiltinFn nm (map (`replaceOpExpr` r) args)
 replaceOpExpr ex _ = ex
 
+replaceOpLoopStep :: LoopStep -> Replacement -> LoopStep
+replaceOpLoopStep (LoopStepValue val) r = LoopStepValue $ replaceOpExpr val r
+replaceOpLoopStep (LoopStepExpr ex) r = LoopStepExpr $ replaceOpExpr ex r
+
+replaceOpLoopEnd :: LoopEnd -> Replacement -> LoopEnd
+replaceOpLoopEnd (LoopEndValue val) r = LoopEndValue $ replaceOpExpr val r
+replaceOpLoopEnd (LoopEndCondition ex) r = LoopEndCondition $ replaceOpExpr ex r
+
 -- ExprReplace
 replaceExprStmt :: Statement -> Replacement -> Statement
 replaceExprStmt (Assignment a b) r = Assignment (replaceExprExpr a r) (replaceExprExpr b r)
@@ -89,12 +103,11 @@ replaceExprStmt (Predicate cond thenSts elseSts) r =
     (replaceExprExpr cond r)
     (map (`replaceExprStmt` r) thenSts)
     (map (`replaceExprStmt` r) elseSts)
-replaceExprStmt st@(LoopSimple {}) r = replaceExprStmt (desugarStmt st) r
-replaceExprStmt (LoopCommon initSt stepSt endExpr cntExpr a b) r =
-  LoopCommon
-    (replaceExprStmt initSt r)
-    (replaceExprStmt stepSt r)
-    (replaceExprExpr endExpr r)
+replaceExprStmt (LoopSimple initVal step end cntExpr a b) r =
+  LoopSimple
+    (replaceExprExpr initVal r)
+    (replaceExprLoopStep step r)
+    (replaceExprLoopEnd end r)
     (replaceExprExpr cntExpr r)
     a
     b
@@ -114,6 +127,14 @@ replaceExprExpr ex r@(ExprReplace exSrc exDst)
       _ -> ex
 replaceExprExpr ex _ = ex
 
+replaceExprLoopStep :: LoopStep -> Replacement -> LoopStep
+replaceExprLoopStep (LoopStepValue val) r = LoopStepValue $ replaceExprExpr val r
+replaceExprLoopStep (LoopStepExpr ex) r = LoopStepExpr $ replaceExprExpr ex r
+
+replaceExprLoopEnd :: LoopEnd -> Replacement -> LoopEnd
+replaceExprLoopEnd (LoopEndValue val) r = LoopEndValue $ replaceExprExpr val r
+replaceExprLoopEnd (LoopEndCondition ex) r = LoopEndCondition $ replaceExprExpr ex r
+
 -- StmtReplace
 replaceStmtStmt :: Statement -> Replacement -> Statement
 replaceStmtStmt st r@(StmtReplace stSrc stDst)
@@ -124,14 +145,5 @@ replaceStmtStmt st r@(StmtReplace stSrc stDst)
           cond
           (map (`replaceStmtStmt` r) thenSts)
           (map (`replaceStmtStmt` r) elseSts)
-      st1@(LoopSimple {}) -> replaceStmtStmt (desugarStmt st1) r
-      LoopCommon initSt stepSt endExpr cntExpr a b ->
-        LoopCommon
-          (replaceStmtStmt initSt r)
-          (replaceStmtStmt stepSt r)
-          endExpr
-          cntExpr
-          a
-          b
       st1 -> st1
 replaceStmtStmt st _ = st

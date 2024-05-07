@@ -19,7 +19,7 @@ stmtReplacement st r@(BinOpReplace {}) = replaceOpStmt st r
 
 findReplaceRange :: String -> String -> CompState -> IO [ProgLine]
 findReplaceRange start end cs = do
-  let progLines = pLines (csProg cs)
+  let progLines = csProgLines cs
   let startLine = find (\ln -> start `elem` labels ln) progLines
   let endLine = find (\ln -> end `elem` labels ln) progLines
   let (startLn, endLn) = case (startLine, endLine) of
