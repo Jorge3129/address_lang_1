@@ -155,7 +155,7 @@ compileStmt st@(LoopSimple _ _ _ _ scope next) cs = do
     )
     cs
 --
-compileStmt (Assignment (Var name) lhs) cs = do
+compileStmt (Assign (Var name) lhs) cs = do
   compileExpr lhs cs
   arg <- addConstantToCs (StringVal name) cs
   emitOpCode OP_SET_VAR cs

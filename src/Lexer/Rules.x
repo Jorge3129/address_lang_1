@@ -6,13 +6,13 @@ import Data.Char (isAlphaNum)
 
 %wrapper "posn"
 
-$letter    = [a-zA-Z]
+$alpha    = [a-zA-Z]
 $digit     = 0-9
 $white_no_nl = [\ \t]
 $lf = \n
 $cr = \r
 @eol_pattern = $lf | $cr $lf | $cr $lf
-@id = $letter ($letter | $digit | _)*
+@identifier = $alpha ($alpha | $digit | _)*
 @decimal = $digit+
 @kw = (P|L|R|Pg|Nil|Ret|Cj|not|and|or)
 @builtinProc = (print|printList|printRefs)
@@ -21,102 +21,104 @@ $cr = \r
 tokens :-
   $white_no_nl+ ;
   "//".*        ;
-  @eol_pattern      { tok (\_ -> TokenNewLine) }
-  "("               { tok (\_ -> TokenLeftParen) }
-  ")"               { tok (\_ -> TokenRightParen) }
-  "{"               { tok (\_ -> TokenLeftCurly) }
-  "}"               { tok (\_ -> TokenRightCurly) }
-  "["               { tok (\_ -> TokenLeftBracket) }
-  "]"               { tok (\_ -> TokenRightBracket) }
-  "|"               { tok (\_ -> TokenVerticalBar) }
-  ";"               { tok (\_ -> TokenSemi) }
-  ","               { tok (\_ -> TokenComma) }
-  "+"               { tok (\_ -> TokenPlus) }
-  "<+>"             { tok (\_ -> TokenLessPlusGreater) }
-  "-"               { tok (\_ -> TokenMinus) }
-  "*"               { tok (\_ -> TokenStar) }
-  "/"               { tok (\_ -> TokenSlash) }
-  "%"               { tok (\_ -> TokenPercent) }
-  "=="              { tok (\_ -> TokenEqualEqual) }
-  "/="              { tok (\_ -> TokenSlashEqual) }
-  ">"               { tok (\_ -> TokenGreater) }
-  ">="              { tok (\_ -> TokenGreaterEqual) }
-  "<"               { tok (\_ -> TokenLess) }
-  "<="              { tok (\_ -> TokenLessEqual) }
-  "'"               { tok (\_ -> TokenSingleQuote) }
-  "`"               { tok (\_ -> TokenBackTick) }
-  "m`"              { tok (\_ -> TokenMBackTick) }
-  "&"               { tok (\_ -> TokenAnd) }
-  "->"              { tok (\_ -> TokenMinusGreater) }
-  "=>"              { tok (\_ -> TokenEqualGreater) }
-  "<=>"             { tok (\_ -> TokenLessEqualGreater) }
-  "!"               { tok (\_ -> TokenBang) }
-  "="               { tok (\_ -> TokenEqual) }
-  "@" @id $white_no_nl* "..." { tok (\s -> TokenLabel (getLabelName s)) }
-  @kw                   { tok (\s -> TokenKeyword s) }
-  @builtinProc          { tok (\s -> TokenBuiltinProc s) }
-  @builtinFn            { tok (\s -> TokenBuiltinFn s) }
-  @id                   { tok (\s -> TokenIdentifier s) }
-  @decimal              { tok (\s -> TokenInt (read s)) }
-  @decimal \. @decimal  { tok (\s -> TokenFloat (read s)) }
-  _                     { tok (\_ -> TokenError) }
+  @eol_pattern      { tok' TNewLine }
+  "("               { tok' TLPar }
+  ")"               { tok' TRPar }
+  "{"               { tok' TLCurly }
+  "}"               { tok' TRCurly }
+  "["               { tok' TLBrack }
+  "]"               { tok' TRBrack }
+  "|"               { tok' TBar }
+  ";"               { tok' TSemi }
+  ","               { tok' TComma }
+  "+"               { tok' TPlus }
+  "<+>"             { tok' TCirclePlus }
+  "-"               { tok' TMinus }
+  "*"               { tok' TTimes }
+  "/"               { tok' TDiv }
+  "%"               { tok' TMod }
+  "=="              { tok' TEq }
+  "/="              { tok' TNeq }
+  ">"               { tok' TGt }
+  ">="              { tok' TGe }
+  "<"               { tok' TLt }
+  "<="              { tok' TLe }
+  "'"               { tok' TSQuote }
+  "`"               { tok' TBackTick }
+  "m`"              { tok' TMBackTick }
+  "&"               { tok' TAnd }
+  "->"              { tok' TSArrow }
+  "=>"              { tok' TDArrow }
+  "<=>"             { tok' TExchange }
+  "!"               { tok' TStop }
+  "="               { tok' TAssign }
+  "@" @identifier $white_no_nl* "..." { tok (\s -> TLabel (getLabelName s)) }
+  @kw                   { tok (\s -> TKeyword s) }
+  @builtinProc          { tok (\s -> TProc s) }
+  @builtinFn            { tok (\s -> TFn s) }
+  @identifier                   { tok (\s -> TIdentifier s) }
+  @decimal              { tok (\s -> TInt (read s)) }
+  @decimal \. @decimal  { tok (\s -> TFloat (read s)) }
+  _                     { tok' TError }
 
 {
 
-data Token = 
-    TokenNewLine
-  | TokenAnd
-  | TokenVerticalBar
-  | TokenSemi
-  | TokenComma
-  | TokenPlus
-  | TokenLessPlusGreater
-  | TokenMinus
-  | TokenStar
-  | TokenSlash
-  | TokenPercent
-  | TokenLeftParen
-  | TokenRightParen
-  | TokenLeftCurly
-  | TokenRightCurly
-  | TokenLeftBracket
-  | TokenRightBracket
-  | TokenHorizontal
-  | TokenBang
-  | TokenEqual
-  | TokenEqualEqual
-  | TokenSlashEqual
-  | TokenGreater
-  | TokenMinusGreater
-  | TokenGreaterEqual
-  | TokenLess
-  | TokenLessEqual
-  | TokenSingleQuote
-  | TokenBackTick
-  | TokenMBackTick
-  | TokenEqualGreater
-  | TokenLessEqualGreater
-  | TokenLabel String
-  | TokenIdentifier String
-  | TokenKeyword String
-  | TokenBuiltinProc String
-  | TokenBuiltinFn String
-  | TokenInt Int
-  | TokenFloat Double
-  | TokenError
+data TokenType = 
+    TNewLine
+  | TAnd
+  | TBar
+  | TSemi
+  | TComma
+  | TPlus
+  | TCirclePlus
+  | TMinus
+  | TTimes
+  | TDiv
+  | TMod
+  | TLPar
+  | TRPar
+  | TLCurly
+  | TRCurly
+  | TLBrack
+  | TRBrack
+  | TStop
+  | TAssign
+  | TEq
+  | TNeq
+  | TGt
+  | TGe
+  | TLt
+  | TLe
+  | TSQuote
+  | TBackTick
+  | TMBackTick
+  | TSArrow
+  | TDArrow
+  | TExchange
+  | TLabel String
+  | TIdentifier String
+  | TKeyword String
+  | TProc String
+  | TFn String
+  | TInt Int
+  | TFloat Double
+  | TError
   deriving (Show, Eq)
 
 getLabelName :: String -> String
 getLabelName s = takeWhile (\c -> isAlphaNum c || c `elem` "_") (tail s)
 
-data TokenInfo  = TokenInfo { 
+data Token  = Token { 
   tokenPos :: AlexPosn, 
   tokenStr :: String, 
-  tokenType :: Token
+  tokenType :: TokenType
 } deriving (Eq, Show)
 
-tok :: (String -> Token) -> AlexPosn -> String -> TokenInfo
-tok f p s = TokenInfo p s (f s)
+tok :: (String -> TokenType) -> AlexPosn -> String -> Token
+tok f p s = Token p s (f s)
+
+tok' :: TokenType -> AlexPosn -> String -> Token
+tok' t p s = Token p s t
 
 scanTokens = alexScanTokens
 

@@ -49,12 +49,11 @@ data Replacement
   deriving (Eq, Show)
 
 data Statement
-  = Assignment Expr Expr
+  = Assign Expr Expr
   | Send Expr Expr
   | Exchange Expr Expr
   | Predicate Expr [Statement] [Statement]
-  | --        |start|step   |end   |counter|scope-lbl    |next-lbl
-    LoopSimple Expr LoopStep LoopEnd Expr (Maybe String) (Maybe String)
+  | LoopSimple Expr LoopStep LoopEnd Expr (Maybe String) (Maybe String)
   | Replace [Replacement] String String
   | SubprogramCall Expr [Expr] (Maybe String)
   | BuiltinProc String [Expr]

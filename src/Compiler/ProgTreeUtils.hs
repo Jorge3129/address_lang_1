@@ -29,7 +29,7 @@ loopEndExpr (LoopEndCondition ex) = ex
 
 -- Vars
 stmtExprs :: Statement -> [Expr]
-stmtExprs (Assignment a b) = [a, b]
+stmtExprs (Assign a b) = [a, b]
 stmtExprs (Send a b) = [a, b]
 stmtExprs (Exchange a b) = [a, b]
 stmtExprs (Predicate cond thenSts elseSts) =
@@ -55,7 +55,7 @@ replaceNil srcExpr r = replaceExprExpr srcExpr (ExprReplace Nil r)
 
 -- BinOpReplace
 replaceOpStmt :: Statement -> Replacement -> Statement
-replaceOpStmt (Assignment a b) r = Assignment (replaceOpExpr a r) (replaceOpExpr b r)
+replaceOpStmt (Assign a b) r = Assign (replaceOpExpr a r) (replaceOpExpr b r)
 replaceOpStmt (Send a b) r = Send (replaceOpExpr a r) (replaceOpExpr b r)
 replaceOpStmt (Exchange a b) r = Exchange (replaceOpExpr a r) (replaceOpExpr b r)
 replaceOpStmt (Predicate cond thenSts elseSts) r =
@@ -95,7 +95,7 @@ replaceOpLoopEnd (LoopEndCondition ex) r = LoopEndCondition $ replaceOpExpr ex r
 
 -- ExprReplace
 replaceExprStmt :: Statement -> Replacement -> Statement
-replaceExprStmt (Assignment a b) r = Assignment (replaceExprExpr a r) (replaceExprExpr b r)
+replaceExprStmt (Assign a b) r = Assign (replaceExprExpr a r) (replaceExprExpr b r)
 replaceExprStmt (Send a b) r = Send (replaceExprExpr a r) (replaceExprExpr b r)
 replaceExprStmt (Exchange a b) r = Exchange (replaceExprExpr a r) (replaceExprExpr b r)
 replaceExprStmt (Predicate cond thenSts elseSts) r =
