@@ -32,6 +32,7 @@ library
       Compiler.ProgTreeUtils
       Compiler.Replace
       Compiler.State
+      Compiler.Utils
       Compiler.Vars
       Debug
       Lexer.Rules

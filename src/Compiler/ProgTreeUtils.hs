@@ -2,6 +2,14 @@ module Compiler.ProgTreeUtils where
 
 import Parser.AST
 
+numerateLines :: [ProgLine] -> [ProgLine]
+numerateLines pgLines = zipWith (\pl i -> pl {lineNum = i}) pgLines [0 :: Int ..]
+
+-- Predicate helpers
+isSubprogramHead :: ProgLine -> Bool
+isSubprogramHead (ProgLine (_ : _) (Send Nil (Var _) : _) _) = True
+isSubprogramHead _ = False
+
 -- Loops
 getLoopRange :: Statement -> (Statement, Statement, Expr)
 getLoopRange (LoopSimple initVal step end counter _ _) =

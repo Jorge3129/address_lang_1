@@ -121,6 +121,17 @@ pushReplacement r cs = modifyIORef (csRepls cs) (r :)
 popReplacement :: CompState -> IO ()
 popReplacement cs = modifyIORef (csRepls cs) tail
 
+-- Chunk utils
+curChunkCount :: CompState -> IO Int
+curChunkCount cs = length . code <$> getCurChunk cs
+
+addConstantToCs :: Value -> CompState -> IO Int
+addConstantToCs val cs = do
+  ch <- getCurChunk cs
+  let (newCh, constant) = addConstant val ch
+  writeIORef (curChunk cs) newCh
+  return constant
+
 emitByte :: Int -> CompState -> IO ()
 emitByte byte cs = do
   curLn <- getCurLine cs
@@ -132,12 +143,16 @@ emitOpCode op = emitByte (fromEnum op)
 emitOpCodes :: [OpCode] -> CompState -> IO ()
 emitOpCodes ops cs = forM_ ops (`emitOpCode` cs)
 
-addConstantToCs :: Value -> CompState -> IO Int
-addConstantToCs val cs = do
-  ch <- getCurChunk cs
-  let (newCh, constant) = addConstant val ch
-  writeIORef (curChunk cs) newCh
-  return constant
+emitJump :: OpCode -> CompState -> IO Int
+emitJump op cs = do
+  emitOpCode op cs
+  emitByte 0 cs
+  chunkCount <- curChunkCount cs
+  return $ chunkCount - 1
 
-curChunkCount :: CompState -> IO Int
-curChunkCount cs = length . code <$> getCurChunk cs
+emitLoop :: Int -> CompState -> IO ()
+emitLoop jumpToInstr cs = do
+  chunkCount <- curChunkCount cs
+  let jumpOffset = jumpToInstr - chunkCount - 2
+  emitOpCode OP_JUMP cs
+  emitByte jumpOffset cs

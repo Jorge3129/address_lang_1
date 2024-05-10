@@ -3,9 +3,10 @@
 module Compiler.Core where
 
 import ByteCode.Core
-import Compiler.ProgTreeUtils (getLoopRange)
+import Compiler.ProgTreeUtils (getLoopRange, isSubprogramHead, numerateLines)
 import Compiler.Replace
 import Compiler.State
+import Compiler.Utils
 import Compiler.Vars
 import Control.Exception
 import Control.Monad (foldM, forM_, when)
@@ -32,44 +33,30 @@ compileProg (Program {pLines = pLines1}) = do
   compileEof (length pLines) cs
   getCurChunk cs
 
-compileGlobalVars :: CompState -> IO ()
-compileGlobalVars cs = compileVars (csFnVars cs Map.! "") cs
-
 compileEof :: Int -> CompState -> IO ()
 compileEof lineCount cs = do
   updateChunk (writeChunk (fromEnum OP_RETURN) lineCount) cs
-
-numerateLines :: [ProgLine] -> [ProgLine]
-numerateLines pLines = zipWith (\pl i -> pl {lineNum = i}) pLines [0 :: Int ..]
 
 compileLines :: [ProgLine] -> CompState -> IO ()
 compileLines ls cs = forM_ ls (`compileLine` cs)
 
 compileLine :: ProgLine -> CompState -> IO ()
-compileLine (ProgLine lbls@(fnName : _) args@(Send Nil (Var _) : _) lineNum) cs = do
+compileLine pl@(ProgLine lbls _ lineNum) cs = do
   setCurLine lineNum cs
   compileLineLabels lbls cs
+  if isSubprogramHead pl
+    then compileSubprogramHead pl cs
+    else do
+      lps <- getLoopPatches cs
+      patchLoops lps pl cs
+      compileStmts (stmts pl) cs
+
+compileSubprogramHead :: ProgLine -> CompState -> IO ()
+compileSubprogramHead (ProgLine lbls args _) cs = do
+  let fnName = head lbls
   compileVars (csFnVars cs Map.! fnName) cs
   compileStmts (reverse args) cs
   emitOpCode OP_POP cs
---
-compileLine pl@(ProgLine {labels, stmts, lineNum}) cs = do
-  setCurLine lineNum cs
-  compileLineLabels labels cs
-  lps <- getLoopPatches cs
-  patchLoops lps pl cs
-  compileStmts stmts cs
-
-patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO ()
-patchLoops (lp : lps) pl cs = do
-  scopedLabel <- toScopedLabel (fromMaybe "" (endLabel lp)) cs
-  lineScopedLabels <- mapM (`toScopedLabel` cs) (labels pl)
-  let shouldPatch = scopedLabel `elem` lineScopedLabels
-  Control.Monad.when shouldPatch $ do
-    setLoopPatches lps cs
-    patchLoop lp cs
-    patchLoops lps pl cs
-patchLoops [] _ _ = return ()
 
 compileLineLabels :: [String] -> CompState -> IO ()
 compileLineLabels lbls cs = do
@@ -239,25 +226,23 @@ compileExpr (LabelRef lblName scoped) cs = do
 --
 compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
-emitJump :: OpCode -> CompState -> IO Int
-emitJump op cs = do
-  emitOpCode op cs
-  emitByte 0 cs
-  chunkCount <- curChunkCount cs
-  return $ chunkCount - 1
-
-emitLoop :: Int -> CompState -> IO ()
-emitLoop jumpToInstr cs = do
-  chunkCount <- curChunkCount cs
-  let jumpOffset = jumpToInstr - chunkCount - 2
-  emitOpCode OP_JUMP cs
-  emitByte jumpOffset cs
-
+-- Patches
 patchJump :: Int -> CompState -> IO ()
 patchJump offset cs = do
   chunkCount <- curChunkCount cs
   let jump = chunkCount - offset - 1
   patchChunkCode offset jump cs
+
+patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO ()
+patchLoops (lp : lps) pl cs = do
+  scopedLabel <- toScopedLabel (fromMaybe "" (endLabel lp)) cs
+  lineScopedLabels <- mapM (`toScopedLabel` cs) (labels pl)
+  let shouldPatch = scopedLabel `elem` lineScopedLabels
+  Control.Monad.when shouldPatch $ do
+    setLoopPatches lps cs
+    patchLoop lp cs
+    patchLoops lps pl cs
+patchLoops [] _ _ = return ()
 
 patchLoop :: LoopPatch -> CompState -> IO ()
 patchLoop (LoopPatch {stepStart, exitJump, nextLabel}) cs = do
@@ -284,20 +269,3 @@ patchLabelRefs cs = do
   forM_ labelRefs $ \(curOffset, lbl) -> do
     let labelOffset = curLblMap Map.! lbl
     patchChunkConstant curOffset (IntVal labelOffset) cs
-
-binOpToOpCode :: BinOp -> [OpCode]
-binOpToOpCode Add = [OP_ADD]
-binOpToOpCode Sub = [OP_SUB]
-binOpToOpCode Mul = [OP_MUL]
-binOpToOpCode Div = [OP_DIV]
-binOpToOpCode Mod = [OP_MOD]
-binOpToOpCode Equal = [OP_EQUAL]
-binOpToOpCode Greater = [OP_GREATER]
-binOpToOpCode Less = [OP_LESS]
-binOpToOpCode NotEqual = [OP_EQUAL, OP_NOT]
-binOpToOpCode GreaterEqual = [OP_LESS, OP_NOT]
-binOpToOpCode LessEqual = [OP_GREATER, OP_NOT]
-binOpToOpCode And = [OP_AND]
-binOpToOpCode Or = [OP_OR]
-binOpToOpCode PtrAdd = [OP_PTR_ADD]
-binOpToOpCode _ = error "binary operation not implemented"

@@ -12,6 +12,9 @@ import qualified Data.Map as Map
 import Parser.AST
 import Value.Core
 
+compileGlobalVars :: CompState -> IO ()
+compileGlobalVars cs = compileVars (csFnVars cs Map.! "") cs
+
 collectProgVars :: [ProgLine] -> FnVarMap
 collectProgVars pLines = snd $ collectVars pLines ("", Map.singleton "" [])
   where
