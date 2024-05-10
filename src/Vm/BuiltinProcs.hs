@@ -36,7 +36,7 @@ execBuiltinFn "ptr" _ vm = do
   push vm $ asPointer oldVal
   return'
 --
-execBuiltinFn "id" _ vm = return'
+execBuiltinFn "id" _ _ = return'
 --
 execBuiltinFn "alloc" _ vm = do
   n <- asInt <$> pop vm

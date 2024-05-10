@@ -57,15 +57,7 @@ initVM ch = do
   varsMap <- newIORef Map.empty
   vmCalls <- newIORef []
   let chunk = newChunk ch
-  return
-    VM
-      { chunk = chunk,
-        ip = ip,
-        stack = stack,
-        memory = mem,
-        varsMap = varsMap,
-        vmCalls = vmCalls
-      }
+  return $ VM chunk ip stack mem varsMap vmCalls
 
 -- TODO change arg order
 push :: VM -> Value -> IO ()
@@ -107,11 +99,7 @@ newChunk ch =
   let chCode = A.listArray (0, length (code ch) - 1) (code ch)
       chCodeLines = A.listArray (0, length (codeLines ch) - 1) (codeLines ch)
       chConstants = A.listArray (0, length (constants ch) - 1) (constants ch)
-   in VmChunk
-        { vmcCode = chCode,
-          vmcCodeLines = chCodeLines,
-          vmcConstants = chConstants
-        }
+   in VmChunk chCode chCodeLines chConstants
 
 readChunk :: VmChunk -> Int -> IO Int
 readChunk ch i = return $ vmcCode ch A.! i
