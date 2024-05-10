@@ -10,10 +10,11 @@ import Control.Monad (forM_)
 import Data.List (intercalate, nub)
 import qualified Data.Map as Map
 import Parser.AST
+import Utils.Core
 import Value.Core
 
 compileGlobalVars :: CompState -> IO ()
-compileGlobalVars cs = compileVars (csFnVars cs Map.! "") cs
+compileGlobalVars cs = compileVars (csFnVars cs `readMap` "") cs
 
 collectProgVars :: [ProgLine] -> FnVarMap
 collectProgVars pLines = snd $ collectVars pLines ("", Map.singleton "" [])
@@ -29,7 +30,7 @@ collectLineVars (ProgLine {labels = (fnName : _), stmts = args@(Send Nil (Var _)
 collectLineVars (ProgLine {stmts = [Ret]}) (_, varMap) = ("", varMap)
 --
 collectLineVars (ProgLine {stmts}) (fnName, varMap) =
-  let oldSet = varMap Map.! fnName
+  let oldSet = varMap `readMap` fnName
       newVars = nub $ concatMap exprVars (concatMap stmtExprs stmts)
       newSet = nub $ oldSet ++ newVars
    in (fnName, Map.insert fnName newSet varMap)
@@ -74,5 +75,5 @@ getCurScopes :: CompState -> IO [String]
 getCurScopes cs = do
   curLn <- getCurLine cs
   replacements <- reverse <$> getReplacements cs
-  let curFn = csFnMap cs Map.! curLn
+  let curFn = csFnMap cs `readMap` curLn
   return $ [curFn | not (null curFn)] ++ map (("$r_" ++) . show) (reverse replacements)

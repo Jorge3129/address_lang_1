@@ -208,6 +208,6 @@ parseError ((Token (AlexPn _ ln col) tokStr _) : xs) =
       ++ show ln
       ++ ", column "
       ++ show col
-parseError [] = error $ "Parse error at the end of file"
+parseError [] = error $ "Parse error: unexpected end of file"
 
 }

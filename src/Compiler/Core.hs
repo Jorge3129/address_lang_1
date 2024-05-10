@@ -15,12 +15,13 @@ import Data.Maybe (fromMaybe)
 import Lexer.Rules (scanTokens)
 import Parser.AST
 import Parser.Rules
+import Utils.Core (readMap)
 import Value.Core
 
 compileSrc :: String -> IO (Either String Chunk)
 compileSrc src = (Right <$> compileProg ((parseProg . scanTokens) src)) `catch` handler
   where
-    handler (ErrorCallWithLocation msg _) = return $ Left msg
+    handler (ErrorCallWithLocation msg _) = return $ Left $ "Compilation error: \n" ++ msg
 
 compileProg :: Program -> IO Chunk
 compileProg (Program {pLines = pLines1}) = do
@@ -54,7 +55,7 @@ compileLine pl@(ProgLine lbls _ lineNum) cs = do
 compileSubprogramHead :: ProgLine -> CompState -> IO ()
 compileSubprogramHead (ProgLine lbls args _) cs = do
   let fnName = head lbls
-  compileVars (csFnVars cs Map.! fnName) cs
+  compileVars (csFnVars cs `readMap` fnName) cs
   compileStmts (reverse args) cs
   emitOpCode OP_POP cs
 
@@ -224,9 +225,10 @@ patchJumps cs = do
   labelMap <- getLabelOffsetMap cs
   jumps <- getJumpPatches cs
   forM_ jumps $ \(curOffset, label) -> do
-    let jumpToInstr = labelMap Map.! label
+    let jumpToInstr = labelMap `readMap` label
     let jumpOffset = jumpToInstr - curOffset - 2
-    patchChunkCode (curOffset + 1) jumpOffset cs
+    jumpOffset `seq`
+      patchChunkCode (curOffset + 1) jumpOffset cs
 
 patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO ()
 patchLoops (lp : lps) pl cs = do
@@ -253,5 +255,6 @@ patchLabelRefs cs = do
   labelMap <- getLabelOffsetMap cs
   labelRefs <- getLabelRefPatches cs
   forM_ labelRefs $ \(curOffset, label) -> do
-    let labelOffset = labelMap Map.! label
-    patchChunkConstant curOffset (IntVal labelOffset) cs
+    let labelOffset = labelMap `readMap` label
+    labelOffset `seq`
+      patchChunkConstant curOffset (IntVal labelOffset) cs

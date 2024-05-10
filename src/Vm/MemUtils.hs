@@ -4,7 +4,7 @@ import Control.Monad (forM, forM_)
 import qualified Data.Array.IO as IA
 import Data.IORef
 import qualified Data.Map as Map
-import Utils.Core (lpad)
+import Utils.Core
 import Value.Core
 import Vm.State
 
@@ -51,7 +51,7 @@ defineVar nm addr vm = do
 getVarAddr :: String -> VM -> IO Int
 getVarAddr name vm = do
   curScope <- length <$> readCalls vm
-  (Map.! scopedVar curScope name) <$> readIORef (varsMap vm)
+  (`readMap` scopedVar curScope name) <$> readIORef (varsMap vm)
 
 readVar :: String -> VM -> IO Value
 readVar name vm = do
