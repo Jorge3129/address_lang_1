@@ -5,6 +5,19 @@ import Parser.AST
 numerateLines :: [ProgLine] -> [ProgLine]
 numerateLines pgLines = zipWith (\pl i -> pl {lineNum = i}) pgLines [0 :: Int ..]
 
+-- Util Operators
+(<+>) :: Expr -> Expr -> Expr
+(<+>) = BinOpApp Add
+
+(|<=|) :: Expr -> Expr -> Expr
+(|<=|) = BinOpApp LessEqual
+
+(|=>) :: Expr -> Expr -> Statement
+(|=>) = Send
+
+df :: Expr -> Expr
+df = UnOpApp Deref
+
 -- Predicate helpers
 isSubprogramHead :: ProgLine -> Bool
 isSubprogramHead (ProgLine (_ : _) (Send Nil (Var _) : _) _) = True
@@ -13,18 +26,18 @@ isSubprogramHead _ = False
 -- Loops
 getLoopRange :: Statement -> (Statement, Statement, Expr)
 getLoopRange (LoopSimple initVal step end counter _ _) =
-  ( Send initVal counter,
+  ( initVal |=> counter,
     getLoopStepStmt step counter,
     getLoopEndExpr end counter
   )
 getLoopRange _ = undefined
 
 getLoopStepStmt :: LoopStep -> Expr -> Statement
-getLoopStepStmt (LoopStepValue stepVal) counter = Send (BinOpApp Add (Deref counter) stepVal) counter
-getLoopStepStmt (LoopStepExpr stepExpr) counter = Send (replaceNil stepExpr (Deref counter)) counter
+getLoopStepStmt (LoopStepValue stepVal) counter = (df counter <+> stepVal) |=> counter
+getLoopStepStmt (LoopStepExpr stepExpr) counter = replaceNil stepExpr (df counter) |=> counter
 
 getLoopEndExpr :: LoopEnd -> Expr -> Expr
-getLoopEndExpr (LoopEndValue val) counter = BinOpApp LessEqual (Deref counter) val
+getLoopEndExpr (LoopEndValue val) counter = df counter |<=| val
 getLoopEndExpr (LoopEndCondition ex) _ = ex
 
 loopStepExpr :: LoopStep -> Expr
@@ -53,8 +66,7 @@ stmtExprs _ = []
 exprVars :: Expr -> [String]
 exprVars (Var name) = [name]
 exprVars (BinOpApp _ a b) = exprVars a ++ exprVars b
-exprVars (Deref a) = exprVars a
-exprVars (MulDeref a b) = exprVars a ++ exprVars b
+exprVars (UnOpApp _ a) = exprVars a
 exprVars _ = []
 
 -- Replace
@@ -87,9 +99,7 @@ replaceOpExpr :: Expr -> Replacement -> Expr
 replaceOpExpr (BinOpApp op a b) r@(BinOpReplace opSrc opDst) =
   let newOp = if op == opSrc then opDst else op
    in BinOpApp newOp (replaceOpExpr a r) (replaceOpExpr b r)
-replaceOpExpr (Deref a) r = Deref $ replaceOpExpr a r
-replaceOpExpr (MulDeref a b) r = MulDeref (replaceOpExpr a r) (replaceOpExpr b r)
-replaceOpExpr (Negate a) r = Negate $ replaceOpExpr a r
+replaceOpExpr (UnOpApp op a) r = UnOpApp op $ replaceOpExpr a r
 replaceOpExpr (BuiltinFn nm args) r = BuiltinFn nm (map (`replaceOpExpr` r) args)
 replaceOpExpr ex _ = ex
 
@@ -128,9 +138,7 @@ replaceExprExpr ex r@(ExprReplace exSrc exDst)
   | ex == exSrc = exDst
   | otherwise = case ex of
       BinOpApp op a b -> BinOpApp op (replaceExprExpr a r) (replaceExprExpr b r)
-      Deref a -> Deref $ replaceExprExpr a r
-      MulDeref a b -> MulDeref (replaceExprExpr a r) (replaceExprExpr b r)
-      Negate a -> Negate $ replaceExprExpr a r
+      UnOpApp op a -> UnOpApp op $ replaceExprExpr a r
       BuiltinFn nm args -> BuiltinFn nm (map (`replaceExprExpr` r) args)
       _ -> ex
 replaceExprExpr ex _ = ex

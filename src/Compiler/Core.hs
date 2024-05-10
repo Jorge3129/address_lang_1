@@ -166,28 +166,14 @@ compileExpr (Lit val) cs = do
   emitOpCode OP_CONSTANT cs
   emitByte constant cs
 --
+compileExpr (UnOpApp op a) cs = do
+  compileExpr a cs
+  emitOpCodes (unOpToOpcode op) cs
+--
 compileExpr (BinOpApp op a b) cs = do
   compileExpr a cs
   compileExpr b cs
   emitOpCodes (binOpToOpCode op) cs
---
-compileExpr (Negate ex) cs = do
-  compileExpr ex cs
-  emitOpCode OP_NEGATE cs
---
-compileExpr (Deref ex) cs = do
-  compileExpr ex cs
-  emitOpCode OP_DEREF cs
---
-compileExpr (MulDeref countEx innerEx) cs = do
-  compileExpr countEx cs
-  compileExpr innerEx cs
-  emitOpCode OP_MUL_DEREF cs
---
-compileExpr (MinDeref countEx innerEx) cs = do
-  compileExpr countEx cs
-  compileExpr innerEx cs
-  emitOpCode OP_MIN_DEREF cs
 --
 compileExpr (Var name) cs = do
   constant <- addConstantToCs (StringVal name) cs

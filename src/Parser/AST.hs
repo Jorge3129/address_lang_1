@@ -17,17 +17,22 @@ data BinOp
   | LessEqual
   | And
   | Or
+  | MulDeref
+  | MinDeref
+  deriving (Eq, Show)
+
+data UnOp
+  = Negate
+  | Deref
+  | Not
   deriving (Eq, Show)
 
 data Expr
   = Lit Value
   | Nil
   | Var String
+  | UnOpApp UnOp Expr
   | BinOpApp BinOp Expr Expr
-  | Negate Expr
-  | Deref Expr
-  | MulDeref Expr Expr
-  | MinDeref Expr Expr
   | BuiltinFn String [Expr]
   | LabelRef String Bool
   deriving (Eq, Show)

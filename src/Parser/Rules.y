@@ -105,8 +105,8 @@ stmt : "!"                                      { Stop }
 assignSt : assignLhs "=" Exp                    { Assign $1 $3 }
 
 assignLhs : identifier                          { Var $1 }
-      | "'" Exp %prec DEREF                     { Deref $2 }
-      | "`" Exp "`" Exp %prec DEREF             { MulDeref $2 $4 }
+      | "'" Exp %prec DEREF                     { UnOpApp Deref $2 }
+      | "`" Exp "`" Exp %prec DEREF             { BinOpApp MulDeref $2 $4 }
 
 sendSt : Exp "=>" Exp                           { Send $1 $3 }
 
@@ -172,10 +172,10 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | Exp "/" Exp                               { BinOpApp Div $1 $3 }
     | Exp "%" Exp                               { BinOpApp Mod $1 $3 }
     | Exp "<+>" Exp                             { BinOpApp PtrAdd $1 $3 }
-    | "-" Exp %prec NEG                         { Negate $2 }
-    | "'" Exp %prec DEREF                       { Deref $2 }
-    | "`" Exp "`" Exp %prec DEREF               { MulDeref $2 $4 }
-    | "m`" Exp "`" Exp %prec DEREF              { MinDeref $2 $4 }
+    | "-" Exp %prec NEG                         { UnOpApp Negate $2 }
+    | "'" Exp %prec DEREF                       { UnOpApp Deref $2 }
+    | "`" Exp "`" Exp %prec DEREF               { BinOpApp MulDeref $2 $4 }
+    | "m`" Exp "`" Exp %prec DEREF              { BinOpApp MinDeref $2 $4 }
     |  "&" identifier                           { LabelRef $2 True }
     | intConst                                  { Lit (IntVal $1) }
     | floatConst                                { Lit (DoubleVal $1) }

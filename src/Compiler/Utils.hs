@@ -21,4 +21,10 @@ binOpToOpCode LessEqual = [OP_GREATER, OP_NOT]
 --
 binOpToOpCode And = [OP_AND]
 binOpToOpCode Or = [OP_OR]
-binOpToOpCode _ = error "binary operation not implemented"
+binOpToOpCode MulDeref = [OP_MUL_DEREF]
+binOpToOpCode MinDeref = [OP_MIN_DEREF]
+
+unOpToOpcode :: UnOp -> [OpCode]
+unOpToOpcode Negate = [OP_NEGATE]
+unOpToOpcode Deref = [OP_DEREF]
+unOpToOpcode Not = [OP_NOT]
