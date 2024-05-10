@@ -1,7 +1,7 @@
 module Vm.Core where
 
 import ByteCode.Core
-import Control.Exception as Exc
+import Control.Exception
 import qualified Control.Monad as CM
 import Data.Maybe (isJust)
 import Utils.Core
@@ -24,29 +24,17 @@ runVm vm = do
   where
     runStep :: Maybe InterpretResult -> IO (Maybe InterpretResult)
     runStep _ = do
-      lineNum <- getCurrentLine vm
-      instruction <- readByte vm
-      Exc.catch (execInstruction (toEnum instruction) vm) (handler lineNum)
+      instr <- toEnum <$> readByte vm
+      execInstruction instr vm `catch` handler
       where
-        handler :: Int -> ErrorCall -> IO (Maybe InterpretResult)
-        handler lineNum (ErrorCallWithLocation msg _) = do
+        handler :: ErrorCall -> IO (Maybe InterpretResult)
+        handler (ErrorCallWithLocation msg _) = do
+          lineNum <- getCurrentLine vm
           putStrLn $ "Runtime error at line " ++ show lineNum
           putStrLn msg
           return $ Just RUNTIME_ERR
 
-execReturn :: [VmCallFrame] -> VM -> IO (Maybe InterpretResult)
-execReturn [] _ = returnOk
-execReturn ((_, ret) : _) vm = do
-  freeVars vm
-  popCall vm
-  setIp ret vm
-  return'
-
 execInstruction :: OpCode -> VM -> IO (Maybe InterpretResult)
-execInstruction OP_RETURN vm = do
-  curVmCalls <- readCalls vm
-  execReturn curVmCalls vm
---
 execInstruction OP_CONSTANT vm = do
   val <- readConst vm
   val `seq` push vm val
@@ -56,7 +44,8 @@ execInstruction OP_ADD vm = binaryInstr (+) vm
 execInstruction OP_SUB vm = binaryInstr (-) vm
 execInstruction OP_MUL vm = binaryInstr (*) vm
 execInstruction OP_DIV vm = binaryInstr (/) vm
-execInstruction OP_MOD vm = binaryInstr (\a b -> IntVal $ asInt a `mod` asInt b) vm
+execInstruction OP_MOD vm = binaryInstr valueMod vm
+execInstruction OP_PTR_ADD vm = binaryInstr ptrAdd vm
 --
 execInstruction OP_GREATER vm = compInstr (>) vm
 execInstruction OP_LESS vm = compInstr (<) vm
@@ -65,7 +54,8 @@ execInstruction OP_EQUAL vm = compInstr (==) vm
 execInstruction OP_AND vm = logInstr (&&) vm
 execInstruction OP_OR vm = logInstr (||) vm
 --
-execInstruction OP_PTR_ADD vm = binaryInstr ptrAdd vm
+execInstruction OP_NOT vm = unaryInstr valueNot vm
+execInstruction OP_NEGATE vm = unaryInstr negate vm
 --
 execInstruction OP_DEREF vm = do
   addr <- asInt <$> pop vm
@@ -100,18 +90,6 @@ execInstruction OP_EXCHANGE vm = do
   valB <- memRead addrB vm
   memWrite addrA valB vm
   memWrite addrB valA vm
-  return'
---
-execInstruction OP_NOT vm = do
-  val <- pop vm
-  let newVal = IntVal $ if isFalsy val then 1 else 0
-  newVal `seq` push vm newVal
-  return'
---
-execInstruction OP_NEGATE vm = do
-  val <- pop vm
-  let newVal = negate val
-  newVal `seq` push vm newVal
   return'
 --
 execInstruction OP_POP vm = do
@@ -172,13 +150,31 @@ execInstruction OP_CALL_PROC vm = do
   fnName <- readStr vm
   execBuiltinProc fnName vm
 --
+execInstruction OP_RETURN vm = do
+  curVmCalls <- readCalls vm
+  execReturn curVmCalls vm
 execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
+
+execReturn :: [VmCallFrame] -> VM -> IO (Maybe InterpretResult)
+execReturn [] _ = returnOk
+execReturn ((_, returnAddr) : _) vm = do
+  freeVars vm
+  popCall vm
+  setIp returnAddr vm
+  return'
 
 binaryInstr :: (Value -> Value -> Value) -> VM -> IO (Maybe InterpretResult)
 binaryInstr op vm = do
   b <- pop vm
   a <- pop vm
   let res = op a b
+  res `seq` push vm res
+  return'
+
+unaryInstr :: (Value -> Value) -> VM -> IO (Maybe InterpretResult)
+unaryInstr op vm = do
+  a <- pop vm
+  let res = op a
   res `seq` push vm res
   return'
 

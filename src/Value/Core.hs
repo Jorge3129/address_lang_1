@@ -98,6 +98,12 @@ instance Fractional Value where
   (/) :: Value -> Value -> Value
   (/) = divV
 
+valueNot :: Value -> Value
+valueNot val = IntVal $ if isFalsy val then 1 else 0
+
+valueMod :: Value -> Value -> Value
+valueMod a b = IntVal $ asInt a `mod` asInt b
+
 asInt :: Value -> Int
 asInt (IntVal v) = v
 asInt (PointerVal v _ _) = v
