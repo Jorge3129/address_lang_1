@@ -4,7 +4,7 @@ import Compiler.ProgTreeUtils
 import Compiler.State
 import Data.List (find, foldl')
 import Parser.AST
-import Utils.Core (slice)
+import Utils.Core (bimap', slice)
 
 lineReplacements :: ProgLine -> [Replacement] -> ProgLine
 lineReplacements = foldl' lineReplacement
@@ -20,11 +20,12 @@ stmtReplacement st r@(BinOpReplace {}) = replaceOpStmt st r
 findReplaceRange :: String -> String -> CompState -> IO [ProgLine]
 findReplaceRange start end cs = do
   let progLines = csProgLines cs
-  let startLine = find (\ln -> start `elem` labels ln) progLines
-  let endLine = find (\ln -> end `elem` labels ln) progLines
-  let (startLn, endLn) = case (startLine, endLine) of
-        (Just s, Just e) -> (lineNum s, lineNum e)
+  let (startLn, endLn) = case bimap' (findLn progLines) (start, end) of
+        (Just s, Just e) -> bimap' lineNum (s, e)
         (_, _) -> error $ "Invalid replacement range: " ++ start ++ ", " ++ end
   let replaceLines = slice startLn endLn progLines
   let finalLine = ProgLine {lineNum = endLn, labels = [end], stmts = []}
   return $ replaceLines ++ [finalLine]
+
+findLn :: [ProgLine] -> String -> Maybe ProgLine
+findLn progLines lab = find (\ln -> lab `elem` labels ln) progLines

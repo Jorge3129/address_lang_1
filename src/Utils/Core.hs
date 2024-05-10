@@ -23,3 +23,6 @@ readMap :: (Ord k, Show k) => Map k v -> k -> v
 readMap m k = case Map.lookup k m of
   Nothing -> error $ "key " ++ show k ++ " not found in Map"
   Just x -> x
+
+bimap' :: (a -> b) -> (a, a) -> (b, b)
+bimap' f (a, b) = (f a, f b)
