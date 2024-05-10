@@ -89,8 +89,8 @@ compileStmt (Exchange a b) cs = do
   compileExpr b cs
   emitOpCode OP_EXCHANGE cs
 --
-compileStmt (Jump lbl) cs = do
-  scopedLabel <- toScopedLabel lbl cs
+compileStmt (Jump label) cs = do
+  scopedLabel <- toScopedLabel label cs
   chunkCount <- curChunkCount cs
   addJumpPatch chunkCount scopedLabel cs
   emitOpCode OP_JUMP cs
@@ -219,6 +219,15 @@ patchJump offset cs = do
   let jump = chunkCount - offset - 1
   patchChunkCode offset jump cs
 
+patchJumps :: CompState -> IO ()
+patchJumps cs = do
+  labelMap <- getLabelOffsetMap cs
+  jumps <- getJumpPatches cs
+  forM_ jumps $ \(curOffset, label) -> do
+    let jumpToInstr = labelMap Map.! label
+    let jumpOffset = jumpToInstr - curOffset - 2
+    patchChunkCode (curOffset + 1) jumpOffset cs
+
 patchLoops :: [LoopPatch] -> ProgLine -> CompState -> IO ()
 patchLoops (lp : lps) pl cs = do
   scopedLabel <- toScopedLabel (fromMaybe "" (endLabel lp)) cs
@@ -239,19 +248,10 @@ patchLoop (LoopPatch {stepStart, exitJump, nextLabel}) cs = do
     Just next -> compileStmt (Jump next) cs
     Nothing -> return ()
 
-patchJumps :: CompState -> IO ()
-patchJumps cs = do
-  curLblMap <- getLabelOffsetMap cs
-  jumps <- getJumpPatches cs
-  forM_ jumps $ \(curOffset, lbl) -> do
-    let jumpToInstr = curLblMap Map.! lbl
-    let jumpOffset = jumpToInstr - curOffset - 2
-    patchChunkCode (curOffset + 1) jumpOffset cs
-
 patchLabelRefs :: CompState -> IO ()
 patchLabelRefs cs = do
-  curLblMap <- getLabelOffsetMap cs
+  labelMap <- getLabelOffsetMap cs
   labelRefs <- getLabelRefPatches cs
-  forM_ labelRefs $ \(curOffset, lbl) -> do
-    let labelOffset = curLblMap Map.! lbl
+  forM_ labelRefs $ \(curOffset, label) -> do
+    let labelOffset = labelMap Map.! label
     patchChunkConstant curOffset (IntVal labelOffset) cs

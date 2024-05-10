@@ -2,8 +2,6 @@
 
 module ByteCode.Core where
 
-import Data.Map (Map)
-import qualified Data.Map as Map
 import Value.Core
 
 data OpCode
