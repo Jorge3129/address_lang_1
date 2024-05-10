@@ -25,7 +25,7 @@ isSubprogramHead _ = False
 
 -- Loops
 getLoopRange :: Statement -> (Statement, Statement, Expr)
-getLoopRange (LoopSimple initVal step end counter _ _) =
+getLoopRange (Loop initVal step end counter _ _) =
   ( initVal |=> counter,
     getLoopStepStmt step counter,
     getLoopEndExpr end counter
@@ -57,7 +57,7 @@ stmtExprs (Predicate cond thenSts elseSts) =
   [cond]
     ++ concatMap stmtExprs thenSts
     ++ concatMap stmtExprs elseSts
-stmtExprs (LoopSimple initVal step end counter _ _) =
+stmtExprs (Loop initVal step end counter _ _) =
   [initVal, loopStepExpr step, loopEndExpr end, counter]
 stmtExprs (BuiltinProc _ exs) = exs
 stmtExprs (SubprogramCall _ exs _) = exs
@@ -83,8 +83,8 @@ replaceOpStmt (Predicate cond thenSts elseSts) r =
     (replaceOpExpr cond r)
     (map (`replaceOpStmt` r) thenSts)
     (map (`replaceOpStmt` r) elseSts)
-replaceOpStmt (LoopSimple initVal step end cntExpr a b) r =
-  LoopSimple
+replaceOpStmt (Loop initVal step end cntExpr a b) r =
+  Loop
     (replaceOpExpr initVal r)
     (replaceOpLoopStep step r)
     (replaceOpLoopEnd end r)
@@ -121,8 +121,8 @@ replaceExprStmt (Predicate cond thenSts elseSts) r =
     (replaceExprExpr cond r)
     (map (`replaceExprStmt` r) thenSts)
     (map (`replaceExprStmt` r) elseSts)
-replaceExprStmt (LoopSimple initVal step end cntExpr a b) r =
-  LoopSimple
+replaceExprStmt (Loop initVal step end cntExpr a b) r =
+  Loop
     (replaceExprExpr initVal r)
     (replaceExprLoopStep step r)
     (replaceExprLoopEnd end r)

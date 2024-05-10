@@ -58,7 +58,7 @@ data Statement
   | Send Expr Expr
   | Exchange Expr Expr
   | Predicate Expr [Statement] [Statement]
-  | LoopSimple Expr LoopStep LoopEnd Expr (Maybe String) (Maybe String)
+  | Loop Expr LoopStep LoopEnd Expr (Maybe String) (Maybe String)
   | Replace [Replacement] String String
   | SubprogramCall Expr [Expr] (Maybe String)
   | BuiltinProc String [Expr]

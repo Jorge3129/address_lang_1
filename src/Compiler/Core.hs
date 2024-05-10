@@ -112,7 +112,7 @@ compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   -- end
   patchJump toEndJump cs
 --
-compileStmt st@(LoopSimple _ _ _ _ scope next) cs = do
+compileStmt st@(Loop _ _ _ _ scope next) cs = do
   let (initStmt, stepStmt, endCondition) = getLoopRange st
   -- initialize
   compileStmt initStmt cs

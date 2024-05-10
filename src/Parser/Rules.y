@@ -116,7 +116,7 @@ exchangeSt : Exp "<=>" Exp                      { Exchange $1 $3 }
 predicateSt : "P" "{" Exp "}" stmts "|" stmts   { Predicate $3 $5 $7 }
 
 -- Loops
-loopStSimple : "L" "{" Exp loopStep loopEnd "=>" Exp "}" loopScope loopNext  { LoopSimple $3 $4 $5 $7 $9 $10 }
+loopStSimple : "L" "{" Exp loopStep loopEnd "=>" Exp "}" loopScope loopNext  { Loop $3 $4 $5 $7 $9 $10 }
 
 loopStep : "(" Exp ")"                          { LoopStepValue $2 }
       | "," Exp ","                             { LoopStepExpr $2 }
