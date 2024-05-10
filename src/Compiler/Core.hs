@@ -7,7 +7,7 @@ import Compiler.ProgTreeUtils (getLoopRange)
 import Compiler.Replace
 import Compiler.State
 import Compiler.Vars
-import qualified Control.Exception as Exc
+import Control.Exception
 import Control.Monad (foldM, forM_, when)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
@@ -17,13 +17,9 @@ import Parser.Rules
 import Value.Core
 
 compileSrc :: String -> IO (Either String Chunk)
-compileSrc src = Exc.catch
-  ( do
-      let tokens = scanTokens src
-      let progAst = parseProg tokens
-      Right <$> compileProg progAst
-  )
-  $ \(Exc.ErrorCallWithLocation msg _) -> return $ Left msg
+compileSrc src = (Right <$> compileProg ((parseProg . scanTokens) src)) `catch` handler
+  where
+    handler (ErrorCallWithLocation msg _) = return $ Left msg
 
 compileProg :: Program -> IO Chunk
 compileProg (Program {pLines = pLines1}) = do

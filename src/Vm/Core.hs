@@ -22,12 +22,10 @@ runVm vm = do
   (Just intRes) <- untilM isJust runStep Nothing
   return intRes
   where
-    runStep :: Maybe InterpretResult -> IO (Maybe InterpretResult)
     runStep _ = do
       instr <- toEnum <$> readByte vm
       execInstruction instr vm `catch` handler
       where
-        handler :: ErrorCall -> IO (Maybe InterpretResult)
         handler (ErrorCallWithLocation msg _) = do
           lineNum <- getCurrentLine vm
           putStrLn $ "Runtime error at line " ++ show lineNum
