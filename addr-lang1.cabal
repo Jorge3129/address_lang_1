@@ -59,6 +59,7 @@ library
     , containers
     , deepseq
     , directory
+    , filepath
     , monad-loops
   default-language: Haskell2010
 
@@ -78,6 +79,7 @@ executable addr-lang1-exe
     , containers
     , deepseq
     , directory
+    , filepath
     , monad-loops
   default-language: Haskell2010
 
@@ -98,5 +100,6 @@ test-suite addr-lang1-test
     , containers
     , deepseq
     , directory
+    , filepath
     , monad-loops
   default-language: Haskell2010

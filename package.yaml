@@ -28,6 +28,7 @@ dependencies:
   - containers
   - directory
   - deepseq
+  - filepath
 
 ghc-options:
   - -Wall
