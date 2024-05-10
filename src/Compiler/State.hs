@@ -33,7 +33,7 @@ data CompState = CompState
     csFnVars :: FnVarMap,
     csFnMap :: LineFnMap,
     csProgLines :: [ProgLine],
-    csRepls :: IORef [Int]
+    csReps :: IORef [Int]
   }
 
 initCs :: [ProgLine] -> FnVarMap -> LineFnMap -> IO CompState
@@ -56,7 +56,7 @@ initCs prog fnVars fnMap = do
         csFnVars = fnVars,
         csFnMap = fnMap,
         csProgLines = prog,
-        csRepls = initRepls
+        csReps = initRepls
       }
 
 getCurLine :: CompState -> IO Int
@@ -112,13 +112,13 @@ addLabelRefPatch curOffset lbl cs = do
   modifyIORef (labelRefPatches cs) (++ [(curOffset, lbl)])
 
 getReplacements :: CompState -> IO [Int]
-getReplacements cs = readIORef (csRepls cs)
+getReplacements cs = readIORef (csReps cs)
 
 pushReplacement :: Int -> CompState -> IO ()
-pushReplacement r cs = modifyIORef (csRepls cs) (r :)
+pushReplacement r cs = modifyIORef (csReps cs) (r :)
 
 popReplacement :: CompState -> IO ()
-popReplacement cs = modifyIORef (csRepls cs) tail
+popReplacement cs = modifyIORef (csReps cs) tail
 
 -- Chunk utils
 curChunkCount :: CompState -> IO Int

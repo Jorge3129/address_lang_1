@@ -42,9 +42,9 @@ compileLines :: [ProgLine] -> CompState -> IO ()
 compileLines ls cs = forM_ ls (`compileLine` cs)
 
 compileLine :: ProgLine -> CompState -> IO ()
-compileLine pl@(ProgLine lbls _ lineNum) cs = do
+compileLine pl@(ProgLine labs _ lineNum) cs = do
   setCurLine lineNum cs
-  compileLineLabels lbls cs
+  compileLineLabels labs cs
   if isSubprogramHead pl
     then compileSubprogramHead pl cs
     else do
@@ -53,17 +53,17 @@ compileLine pl@(ProgLine lbls _ lineNum) cs = do
       compileStmts (stmts pl) cs
 
 compileSubprogramHead :: ProgLine -> CompState -> IO ()
-compileSubprogramHead (ProgLine lbls args _) cs = do
-  let fnName = head lbls
+compileSubprogramHead (ProgLine labs args _) cs = do
+  let fnName = head labs
   compileVars (csFnVars cs `readMap` fnName) cs
   compileStmts (reverse args) cs
   emitOpCode OP_POP cs
 
 compileLineLabels :: [String] -> CompState -> IO ()
-compileLineLabels lbls cs = do
+compileLineLabels labs cs = do
   offset <- curChunkCount cs
   curLblMap <- getLabelOffsetMap cs
-  newLblMap <- foldM (step offset) curLblMap lbls
+  newLblMap <- foldM (step offset) curLblMap labs
   setLabelOffsetMap newLblMap cs
   where
     step offset lblMap lbl = do
@@ -144,9 +144,9 @@ compileStmt (BuiltinProc name args) cs = do
   emitOpCode OP_CALL_PROC cs
   emitByte constant cs
 --
-compileStmt (Replace repls start end) cs = do
+compileStmt (Replace reps start end) cs = do
   srcLines <- findReplaceRange start end cs
-  let newLines = map (`lineReplacements` repls) srcLines
+  let newLines = map (`lineReplacements` reps) srcLines
   curLn <- getCurLine cs
   pushReplacement curLn cs
   compileLines newLines cs
