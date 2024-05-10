@@ -18,7 +18,6 @@ type LineFnMap = Map Int String
 data LoopPatch = LoopPatch
   { endLabel :: Maybe String,
     nextLabel :: Maybe String,
-    loopLine :: Int,
     stepStart :: Int,
     exitJump :: Int
   }

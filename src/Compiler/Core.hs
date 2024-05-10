@@ -73,8 +73,11 @@ compileStmts :: [Statement] -> CompState -> IO ()
 compileStmts stmts cs = forM_ stmts (`compileStmt` cs)
 
 compileStmt :: Statement -> CompState -> IO ()
-compileStmt Stop cs = do
-  emitOpCode OP_RETURN cs
+compileStmt (Assign (Var name) lhs) cs = do
+  compileExpr lhs cs
+  arg <- addConstantToCs (StringVal name) cs
+  emitOpCode OP_SET_VAR cs
+  emitByte arg cs
 --
 compileStmt (Send valEx addrEx) cs = do
   compileExpr valEx cs
@@ -108,7 +111,6 @@ compileStmt (Predicate ifExp thenStmts elseStmts) cs = do
   -- end
   patchJump toEndJump cs
 --
---
 compileStmt st@(LoopSimple _ _ _ _ scope next) cs = do
   let (initStmt, stepStmt, endCondition) = getLoopRange st
   -- initialize
@@ -126,23 +128,7 @@ compileStmt st@(LoopSimple _ _ _ _ scope next) cs = do
   emitLoop loopStart cs
   --
   patchJump bodyJump cs
-  curLn <- getCurLine cs
-  addLoopPatch
-    ( LoopPatch
-        { endLabel = scope,
-          nextLabel = next,
-          stepStart = stepStart,
-          exitJump = exitJump,
-          loopLine = curLn
-        }
-    )
-    cs
---
-compileStmt (Assign (Var name) lhs) cs = do
-  compileExpr lhs cs
-  arg <- addConstantToCs (StringVal name) cs
-  emitOpCode OP_SET_VAR cs
-  emitByte arg cs
+  addLoopPatch (LoopPatch scope next stepStart exitJump) cs
 --
 compileStmt (SubprogramCall callValue args _) cs = do
   let argCount = length args
@@ -165,8 +151,8 @@ compileStmt (Replace repls start end) cs = do
   compileLines newLines cs
   popReplacement cs
 --
-compileStmt Ret cs = do
-  emitOpCode OP_RETURN cs
+compileStmt Ret cs = emitOpCode OP_RETURN cs
+compileStmt Stop cs = emitOpCode OP_RETURN cs
 --
 compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 

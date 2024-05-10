@@ -64,49 +64,15 @@ tokens :-
 {
 
 data TokenType = 
-    TNewLine
-  | TAnd
-  | TBar
-  | TSemi
-  | TComma
-  | TPlus
-  | TCirclePlus
-  | TMinus
-  | TTimes
-  | TDiv
-  | TMod
-  | TLPar
-  | TRPar
-  | TLCurly
-  | TRCurly
-  | TLBrack
-  | TRBrack
-  | TStop
-  | TAssign
-  | TEq
-  | TNeq
-  | TGt
-  | TGe
-  | TLt
-  | TLe
-  | TSQuote
-  | TBackTick
-  | TMBackTick
-  | TSArrow
-  | TDArrow
-  | TExchange
-  | TLabel String
-  | TIdentifier String
-  | TKeyword String
-  | TProc String
-  | TFn String
-  | TInt Int
-  | TFloat Double
-  | TError
+    TNewLine | TAnd | TBar | TSemi | TComma 
+    | TPlus | TCirclePlus | TMinus | TTimes | TDiv | TMod 
+    | TLPar | TRPar | TLCurly | TRCurly | TLBrack | TRBrack 
+    | TStop | TAssign | TEq | TNeq | TGt | TGe | TLt | TLe 
+    | TSQuote | TBackTick | TMBackTick | TSArrow | TDArrow | TExchange 
+    | TLabel String | TIdentifier String | TKeyword String 
+    | TProc String | TFn String | TInt Int | TFloat Double 
+    | TError
   deriving (Show, Eq)
-
-getLabelName :: String -> String
-getLabelName s = takeWhile (\c -> isAlphaNum c || c `elem` "_") (tail s)
 
 data Token  = Token { 
   tokenPos :: AlexPosn, 
@@ -119,6 +85,9 @@ tok f p s = Token p s (f s)
 
 tok' :: TokenType -> AlexPosn -> String -> Token
 tok' t p s = Token p s t
+
+getLabelName :: String -> String
+getLabelName s = takeWhile (\c -> isAlphaNum c || c `elem` "_") (tail s)
 
 scanTokens = alexScanTokens
 
