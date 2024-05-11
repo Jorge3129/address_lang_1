@@ -4,35 +4,21 @@ module Value.Core where
 
 data Value
   = IntVal !Int
-  | PointerVal !Int !Int !Int
   | FloatVal !Double
+  | PointerVal !Int !Int !Int
   | StringVal !String
   | NilVal
 
-newPtr :: Int -> Value
-newPtr v = PointerVal v 1 1
-
-newPtrWithSize :: Int -> Int -> Value
-newPtrWithSize v s = PointerVal v s 1
-
-mapPtr :: (Int -> Int) -> Value -> Value
-mapPtr f (PointerVal v s c) = PointerVal (f v) s c
-mapPtr _ v = v
-
-ptrAdd :: Value -> Value -> Value
-ptrAdd (PointerVal v s c) b = PointerVal (v + s * asInt b) s (c - asInt b)
-ptrAdd a b = error $ "cannot apply pointer addition to " ++ show a ++ " and " ++ show b
-
 instance Show Value where
   show (IntVal v) = show v
-  show (PointerVal v 1 1) = "(Ptr " ++ show v ++ ")"
-  show (PointerVal v size count) = "(Ptr[" ++ show size ++ "*" ++ show count ++ "] " ++ show v ++ ")"
   show (FloatVal v) = show v
+  show (PointerVal v 1 1) = "(Ptr " ++ show v ++ ")"
+  show (PointerVal v s c) =
+    "(Ptr[" ++ show s ++ "*" ++ show c ++ "] " ++ show v ++ ")"
   show (StringVal s) = s
   show NilVal = "N"
 
 instance Eq Value where
-  (==) :: Value -> Value -> Bool
   -- a + a
   (==) (IntVal a) (IntVal b) = a == b
   (==) (FloatVal a) (FloatVal b) = a == b
@@ -70,23 +56,17 @@ instance Ord Value where
   compare a b = error $ "cannot compare " ++ show a ++ " and " ++ show b
 
 instance Num Value where
-  (+) :: Value -> Value -> Value
   (+) = addV
-  (*) :: Value -> Value -> Value
   (*) = mulV
-  abs :: Value -> Value
   abs (IntVal v) = IntVal $ abs v
   abs p@(PointerVal {}) = mapPtr abs p
   abs (FloatVal v) = FloatVal $ abs v
   abs _ = undefined
-  signum :: Value -> Value
   signum (IntVal v) = IntVal $ signum v
   signum p@(PointerVal {}) = mapPtr signum p
   signum (FloatVal v) = FloatVal $ signum v
   signum _ = undefined
-  fromInteger :: Integer -> Value
   fromInteger v = IntVal $ fromInteger v
-  negate :: Value -> Value
   negate (IntVal v) = IntVal $ -1 * v
   negate p@(PointerVal {}) = mapPtr negate p
   negate (FloatVal v) = FloatVal $ -1 * v
@@ -98,6 +78,7 @@ instance Fractional Value where
   (/) :: Value -> Value -> Value
   (/) = divV
 
+-- Value utils
 valueNot :: Value -> Value
 valueNot val = IntVal $ if isFalsy val then 1 else 0
 
@@ -108,15 +89,6 @@ asInt :: Value -> Int
 asInt (IntVal v) = v
 asInt (PointerVal v _ _) = v
 asInt v = error $ "the value " ++ show v ++ " is not an integer"
-
-isPointer :: Value -> Bool
-isPointer (PointerVal {}) = True
-isPointer _ = False
-
-asPointer :: Value -> Value
-asPointer p@(PointerVal {}) = p
-asPointer (IntVal v) = newPtr v
-asPointer v = error $ "cannot convert value " ++ show v ++ " to pointer"
 
 asStr :: Value -> String
 asStr (StringVal v) = v
@@ -134,6 +106,31 @@ isTruthy (PointerVal v _ _) = v /= 0
 isTruthy (FloatVal v) = v /= 0
 isTruthy _ = error "isTruthy not implemented"
 
+-- Pointer utils
+newPtr :: Int -> Value
+newPtr v = PointerVal v 1 1
+
+newPtrWithSize :: Int -> Int -> Value
+newPtrWithSize v s = PointerVal v s 1
+
+mapPtr :: (Int -> Int) -> Value -> Value
+mapPtr f (PointerVal v s c) = PointerVal (f v) s c
+mapPtr _ v = v
+
+ptrAdd :: Value -> Value -> Value
+ptrAdd (PointerVal v s c) b = PointerVal (v + s * asInt b) s (c - asInt b)
+ptrAdd a b = error $ "cannot apply pointer addition to " ++ show a ++ " and " ++ show b
+
+isPointer :: Value -> Bool
+isPointer (PointerVal {}) = True
+isPointer _ = False
+
+asPointer :: Value -> Value
+asPointer p@(PointerVal {}) = p
+asPointer (IntVal v) = newPtr v
+asPointer v = error $ "cannot convert value " ++ show v ++ " to pointer"
+
+-- Arithmetic
 addV :: Value -> Value -> Value
 addV (IntVal a) (IntVal b) = IntVal $ a + b
 addV (FloatVal a) (FloatVal b) = FloatVal $ a + b
@@ -146,14 +143,6 @@ addV (IntVal a) (PointerVal b _ _) = IntVal $ a + b
 addV (PointerVal a _ _) (IntVal b) = IntVal $ a + b
 --
 addV a b = error $ "cannot add " ++ show a ++ " and " ++ show b
-
-subV :: Value -> Value -> Value
-subV (IntVal a) (IntVal b) = IntVal $ a - b
-subV (FloatVal a) (FloatVal b) = FloatVal $ a - b
---
-subV (IntVal a) (FloatVal b) = FloatVal $ fromIntegral a - b
-subV (FloatVal a) (IntVal b) = FloatVal $ a - fromIntegral b
-subV a b = error $ "cannot subtract " ++ show a ++ " and " ++ show b
 
 mulV :: Value -> Value -> Value
 mulV (IntVal a) (IntVal b) = IntVal $ a * b

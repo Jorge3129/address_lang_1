@@ -24,6 +24,7 @@ data OpCode
   | OP_JUMP
   | OP_JUMP_IF_FALSE
   | OP_SEND
+  | OP_EXCHANGE
   | OP_DEREF
   | OP_MUL_DEREF
   | OP_MIN_DEREF
@@ -34,7 +35,6 @@ data OpCode
   | OP_CALL
   | OP_CALL_PROC
   | OP_CALL_FN
-  | OP_EXCHANGE
   deriving (Eq, Show, Enum)
 
 data Chunk = Chunk
