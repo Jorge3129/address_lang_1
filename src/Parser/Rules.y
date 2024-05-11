@@ -178,7 +178,7 @@ Exp :  Exp "or" Exp                             { BinOpApp Or $1 $3 }
     | "m`" Exp "`" Exp %prec DEREF              { BinOpApp MinDeref $2 $4 }
     |  "&" identifier                           { LabelRef $2 True }
     | intConst                                  { Lit (IntVal $1) }
-    | floatConst                                { Lit (DoubleVal $1) }
+    | floatConst                                { Lit (FloatVal $1) }
     | identifier                                { Var $1 }
     | "Nil"                                     { Nil }
     | builtinFnExp                              { $1 }

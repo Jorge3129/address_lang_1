@@ -89,6 +89,7 @@ tok' t p s = Token p s t
 getLabelName :: String -> String
 getLabelName s = takeWhile (\c -> isAlphaNum c || c `elem` "_") (tail s)
 
+scanTokens :: String -> [Token]
 scanTokens = alexScanTokens
 
 }
