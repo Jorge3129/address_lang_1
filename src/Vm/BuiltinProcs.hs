@@ -31,10 +31,11 @@ execBuiltinFn "constrList" len vm = do
   push vm listHead
   return'
 --
-execBuiltinFn "ptr" _ vm = do
-  oldVal <- pop vm
-  push vm $ asPointer oldVal
-  return'
+execBuiltinFn "ptr" _ vm = unaryFn asPointer vm
+--
+execBuiltinFn "abs" _ vm = unaryFn abs vm
+--
+execBuiltinFn "signum" _ vm = unaryFn signum vm
 --
 execBuiltinFn "id" _ _ = return'
 --
@@ -52,3 +53,10 @@ execBuiltinFn "mulalloc" _ vm = do
   return'
 --
 execBuiltinFn name _ _ = error $ "function " ++ name ++ " is not defined"
+
+unaryFn :: (Value -> Value) -> VM -> IO (Maybe InterpretResult)
+unaryFn fn vm = do
+  oldVal <- pop vm
+  let res = fn oldVal
+  res `seq` push vm res
+  return'

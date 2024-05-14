@@ -73,9 +73,7 @@ instance Num Value where
   negate _ = undefined
 
 instance Fractional Value where
-  fromRational :: Rational -> Value
   fromRational v = FloatVal $ fromRational v
-  (/) :: Value -> Value -> Value
   (/) = divV
 
 -- Value utils

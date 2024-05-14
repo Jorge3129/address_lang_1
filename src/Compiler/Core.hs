@@ -31,11 +31,12 @@ compileProg (Program {pLines = pLines1}) = do
   compileLines pLines cs
   patchJumps cs
   patchLabelRefs cs
-  compileEof (length pLines) cs
+  compileEof cs
   getCurChunk cs
 
-compileEof :: Int -> CompState -> IO ()
-compileEof lineCount cs = do
+compileEof :: CompState -> IO ()
+compileEof cs = do
+  let lineCount = length (csProgLines cs) - 1
   updateChunk (writeChunk (fromEnum OP_RETURN) lineCount) cs
 
 compileLines :: [ProgLine] -> CompState -> IO ()
