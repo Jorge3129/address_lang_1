@@ -71,6 +71,7 @@ compileLineLabels labs cs = do
       scopedLabel <- toScopedLabel lbl cs
       return $ Map.insert scopedLabel offset lblMap
 
+-- Statements
 compileStmts :: [Statement] -> CompState -> IO ()
 compileStmts stmts cs = forM_ stmts (`compileStmt` cs)
 
@@ -80,6 +81,8 @@ compileStmt (Assign (Var name) lhs) cs = do
   arg <- addConstantToCs (StringVal name) cs
   emitOpCode OP_SET_VAR cs
   emitByte arg cs
+--
+compileStmt (Assign rhs _) _ = error $ "Invalid assignment rhs: " ++ show rhs
 --
 compileStmt (Send valEx addrEx) cs = do
   compileExpr valEx cs
@@ -155,9 +158,8 @@ compileStmt (Replace reps start end) cs = do
 --
 compileStmt Ret cs = emitOpCode OP_RETURN cs
 compileStmt Stop cs = emitOpCode OP_RETURN cs
---
-compileStmt st _ = error $ "cannot compile statement `" ++ show st ++ "` yet"
 
+-- Expressions
 compileExprs :: [Expr] -> CompState -> IO ()
 compileExprs exprs cs = forM_ exprs (`compileExpr` cs)
 
@@ -197,8 +199,6 @@ compileExpr (LabelRef lblName scoped) cs = do
   chunkCount <- curChunkCount cs
   addLabelRefPatch chunkCount scopedLabel cs
   emitByte constant cs
---
-compileExpr ex _ = error $ "cannot compile expression `" ++ show ex ++ "` yet"
 
 -- Patches
 patchJump :: Int -> CompState -> IO ()

@@ -151,7 +151,6 @@ execInstruction OP_CALL_PROC vm = do
 execInstruction OP_RETURN vm = do
   curVmCalls <- readCalls vm
   execReturn curVmCalls vm
-execInstruction instr _ = error $ "cannot run instruction " ++ show instr ++ " yet"
 
 execReturn :: [VmCallFrame] -> VM -> IO (Maybe InterpretResult)
 execReturn [] _ = returnOk

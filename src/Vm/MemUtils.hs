@@ -12,12 +12,12 @@ import Vm.State
 memRead :: Int -> VM -> IO Value
 memRead addr vm
   | addr > 0 = IA.readArray (memory vm) addr
-  | otherwise = error $ "Cannot access memory at " ++ show addr
+  | otherwise = memReadError addr
 
 memWrite :: Int -> Value -> VM -> IO ()
 memWrite addr val vm
   | addr > 0 = IA.writeArray (memory vm) addr val
-  | otherwise = error $ "Cannot write to memory at address " ++ show addr
+  | otherwise = memWriteError addr
 
 -- Memory allocation
 allocN :: Int -> VmMemory -> IO Int
@@ -27,7 +27,7 @@ allocN n vmMemory = do
   where
     allocHelper :: Int -> Int -> Int -> IO Int
     allocHelper count currentIndex endIndex
-      | currentIndex > endIndex = error $ "Cound not allocate " ++ show n ++ " cells of memory"
+      | currentIndex > endIndex = allocationError n
       | count >= n = return $ currentIndex - count
       | otherwise = do
           curVal <- IA.readArray vmMemory currentIndex
@@ -82,7 +82,7 @@ getVarScope s = read $ take 8 s
 -- Dereference operations
 mulDeref :: Int -> Value -> VM -> IO Value
 mulDeref count addr vm
-  | count < 0 = error $ "Cannot execute multiple dereference operation for a negative number " ++ show count
+  | count < 0 = mulDerefError count
   | count == 0 = return addr
   | otherwise = do
       nextAddr <- memRead (asInt addr) vm
@@ -90,7 +90,7 @@ mulDeref count addr vm
 
 minDeref :: Int -> Value -> VM -> IO Value
 minDeref count startAddrVal vm
-  | count <= 0 = error $ "Cannot execute minus dereference operation for a non-positive number " ++ show count
+  | count <= 0 = minDerefError count
   | otherwise = do
       refs <- minDeref' count [asInt startAddrVal] vm
       constructList (map IntVal refs) vm
@@ -115,7 +115,7 @@ getRefsToAddr addr vm = do
 checkAddrForSend :: Int -> Int
 checkAddrForSend addr
   | addr > 0 = addr
-  | otherwise = error $ "Cannot send to memory at " ++ show addr
+  | otherwise = sendError addr
 
 castAsType :: Value -> Value -> Value
 castAsType oldVal val
@@ -153,3 +153,22 @@ constructList vals vm = do
       memWrite (newAddr + 1) x vm
       consList' newAddr xs
     consList' _ [] = return ()
+
+-- errors
+memReadError :: Int -> a
+memReadError addr = error $ "Cannot access memory at " ++ show addr
+
+memWriteError :: Int -> a
+memWriteError addr = error $ "Cannot write to memory at address " ++ show addr
+
+sendError :: Int -> a
+sendError addr = error $ "Cannot send to memory at " ++ show addr
+
+allocationError :: Int -> a
+allocationError n = error $ "Cound not allocate " ++ show n ++ " cells of memory"
+
+mulDerefError :: Int -> a
+mulDerefError count = error $ "Cannot execute multiple dereference operation for a negative number " ++ show count
+
+minDerefError :: Int -> a
+minDerefError count = error $ "Cannot execute minus dereference operation for a non-positive number " ++ show count
