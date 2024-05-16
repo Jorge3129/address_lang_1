@@ -88,19 +88,19 @@ mulDeref count addr vm
       nextAddr <- memRead (asInt addr) vm
       mulDeref (count - 1) nextAddr vm
 
-minDeref :: Int -> Value -> VM -> IO Value
-minDeref count startAddrVal vm
+minDeref :: Int -> Int -> VM -> IO Value
+minDeref count startAddr vm
   | count <= 0 = minDerefError count
   | otherwise = do
-      refs <- minDeref' count [asInt startAddrVal] vm
+      refs <- minDeref' count [startAddr]
       constructList (map IntVal refs) vm
-
-minDeref' :: Int -> [Int] -> VM -> IO [Int]
-minDeref' count addrs vm
-  | count <= 0 = return addrs
-  | otherwise = do
-      refs <- concat <$> mapM (`getRefsToAddr` vm) addrs
-      minDeref' (count - 1) refs vm
+  where
+    minDeref' :: Int -> [Int] -> IO [Int]
+    minDeref' cnt addrs
+      | cnt <= 0 = return addrs
+      | otherwise = do
+          refs <- concat <$> mapM (`getRefsToAddr` vm) addrs
+          minDeref' (cnt - 1) refs
 
 getRefsToAddr :: Int -> VM -> IO [Int]
 getRefsToAddr addr vm = do

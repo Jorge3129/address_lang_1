@@ -69,7 +69,7 @@ execInstruction OP_MUL_DEREF vm = do
   return'
 --
 execInstruction OP_MIN_DEREF vm = do
-  addrVal <- pop vm
+  addrVal <- asInt <$> pop vm
   count <- asInt <$> pop vm
   listHead <- minDeref count addrVal vm
   push vm listHead
