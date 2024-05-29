@@ -56,6 +56,7 @@ data Replacement
 data Statement
   = Assign Expr Expr
   | Send Expr Expr
+  | ArgReplace Expr Expr
   | Exchange Expr Expr
   | Predicate Expr [Statement] [Statement]
   | Loop Expr LoopStep LoopEnd Expr (Maybe String) (Maybe String)

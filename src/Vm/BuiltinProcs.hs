@@ -33,6 +33,8 @@ execBuiltinFn "constrList" len vm = do
 --
 execBuiltinFn "ptr" _ vm = unaryFn asPointer vm
 --
+execBuiltinFn "int" _ vm = unaryFn (IntVal . asInt) vm
+--
 execBuiltinFn "abs" _ vm = unaryFn abs vm
 --
 execBuiltinFn "signum" _ vm = unaryFn signum vm

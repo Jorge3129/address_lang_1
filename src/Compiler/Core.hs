@@ -3,7 +3,7 @@
 module Compiler.Core where
 
 import ByteCode.Core
-import Compiler.ProgTreeUtils (getLoopRange, isSubprogramHead, numerateLines)
+import Compiler.ProgTreeUtils (getLoopRange, isFnHead, numerateLines)
 import Compiler.Replace
 import Compiler.State
 import Compiler.Utils
@@ -46,15 +46,15 @@ compileLine :: ProgLine -> CompState -> IO ()
 compileLine pl@(ProgLine labs _ lineNum) cs = do
   setCurLine lineNum cs
   compileLineLabels labs cs
-  if isSubprogramHead pl
-    then compileSubprogramHead pl cs
+  if isFnHead pl
+    then compileFnHead pl cs
     else do
       lps <- getLoopPatches cs
       patchLoops lps pl cs
       compileStmts (stmts pl) cs
 
-compileSubprogramHead :: ProgLine -> CompState -> IO ()
-compileSubprogramHead (ProgLine labs args _) cs = do
+compileFnHead :: ProgLine -> CompState -> IO ()
+compileFnHead (ProgLine labs args _) cs = do
   let fnName = head labs
   compileVars (csFnVars cs `readMap` fnName) cs
   compileStmts (reverse args) cs
@@ -88,6 +88,8 @@ compileStmt (Send valEx addrEx) cs = do
   compileExpr valEx cs
   compileExpr addrEx cs
   emitOpCode OP_SEND cs
+--
+compileStmt (ArgReplace valEx addrEx) cs = compileStmt (Assign addrEx valEx) cs
 --
 compileStmt (Exchange a b) cs = do
   compileExpr a cs

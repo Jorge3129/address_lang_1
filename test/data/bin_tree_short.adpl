@@ -20,31 +20,31 @@ L { 'list_to_delete, 'Nil, P { 'i /= 0 } => i } l1
 
 !
 
-@bst_create_root ... Nil => val, Nil => res_addr
-    n = (alloc 2) + 0
-    ptr(0) => n + 0
-    'val => n + 1
-    n => 'res_addr
+@bst_create_root ... Nil -> val, Nil -> res_addr
+    n = alloc 2
+    ptr(0) => n
+    val => n + 1
+    int(n) => res_addr
     Ret
 
-@bst_create_child ... Nil => val, Nil => parent_addr, Nil => res_addr
-    n = (alloc 2) + 0
-    ptr('parent_addr) => n + 0
-    'val => n + 1
-    n => 'res_addr
+@bst_create_node ... Nil -> val, Nil -> parent_addr, Nil -> res_addr
+    n = alloc 2
+    ptr(parent_addr) => n
+    val => n + 1
+    int(n) => res_addr
     Ret
 
-@bst_delete ... Nil => val, Nil => node
-    node_addr = 'node
+@bst_delete ... Nil -> val, Nil -> node_addr
     P { node_addr == 0 } Ret |
+
     node_val = '(node_addr + 1)
 
     Pg bst_find_children { node_addr, left, right }
 
-    P { 'val == node_val } case_cur | case_child
+    P { val == node_val } case_cur | case_child
     @case_child ...
-        P { 'val < node_val } child = left | child = right
-        Pg bst_delete { 'val, 'child }
+        P { val < node_val } child = left | child = right
+        Pg bst_delete { val, 'child }
         end
     @case_cur ...
         parent_addr = 'node_addr
@@ -67,12 +67,10 @@ L { 'list_to_delete, 'Nil, P { 'i /= 0 } => i } l1
     @end ...
     Ret
 
-@bst_shift_child ... Nil => node, Nil => child
-    node_addr = 'node
-    child_addr = 'child
-    parent_addr = 'node_addr
-
+@bst_shift_child ... Nil -> node_addr, Nil -> child_addr
     P { 'child_addr == 0 } Ret |
+
+    parent_addr = 'node_addr
 
     @case_root ...
         P { parent_addr == 0 } | case_not_root
@@ -90,12 +88,12 @@ L { 'list_to_delete, 'Nil, P { 'i /= 0 } => i } l1
     @end ...
     Ret
 
-@bst_set_value ... Nil => node, Nil => val
-    'val => 'node + 1
+@bst_set_value ... Nil -> node, Nil -> val
+    val => node + 1
     Ret
 
-@bst_min_value ... Nil => node, Nil => res_addr
-    current = 'node
+@bst_min_value ... Nil -> node, Nil -> res_addr
+    current = node
 
     @loop ...
         Pg bst_find_children { current, left, right }
@@ -103,11 +101,10 @@ L { 'list_to_delete, 'Nil, P { 'i /= 0 } => i } l1
         current = 'left
     loop
 
-    @end ... '(current + 1) => 'res_addr
+    @end ... '(current + 1) => res_addr
     Ret
 
-@bst_find_children ... Nil => node, Nil => left_addr, Nil => right_addr
-    node_addr = 'node
+@bst_find_children ... Nil -> node_addr, Nil -> left_addr, Nil -> right_addr
     node_val = '(node_addr + 1)
 
     children = m`1`(node_addr)
@@ -119,27 +116,26 @@ L { 'list_to_delete, 'Nil, P { 'i /= 0 } => i } l1
         P { child_val < node_val } left = child_addr | right = child_addr
     @b ...
 
-    left => 'left_addr
-    right => 'right_addr
+    left => left_addr
+    right => right_addr
     Ret
 
-@bst_insert ... Nil => val, Nil => node
-    node_addr = 'node
+@bst_insert ... Nil -> val, Nil -> node_addr
     node_val = '(node_addr + 1)
 
-    P { 'val == node_val } Ret |
+    P { val == node_val } Ret |
 
     Pg bst_find_children { node_addr, left, right }
 
-    is_left = 'val < node_val
+    is_left = val < node_val
     P { is_left } cur_child = 'left | cur_child = 'right
 
     P { cur_child == 0 } case_create | case_insert
     @case_create ...
-        Pg bst_create_child { 'val, node_addr, cur_child_new }
+        Pg bst_create_node { val, node_addr, cur_child_new }
         end
     @case_insert ...
-        Pg bst_insert { 'val, cur_child }
+        Pg bst_insert { val, cur_child }
         end
 
     @end ...

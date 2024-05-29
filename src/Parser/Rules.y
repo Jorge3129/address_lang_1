@@ -98,6 +98,7 @@ stmt : "!"                                      { Stop }
     | assignSt                                  { $1 }
     | sendSt                                    { $1 }
     | "Ret"                                     { Ret }
+    | "Nil" "->" identifier                     { ArgReplace Nil (Var $3)}
     | identifier                                { Jump $1 }
     | replaceSt                                 { $1 }
 

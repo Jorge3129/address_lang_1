@@ -19,9 +19,18 @@ df :: Expr -> Expr
 df = UnOpApp Deref
 
 -- Predicate helpers
-isSubprogramHead :: ProgLine -> Bool
-isSubprogramHead (ProgLine (_ : _) (Send Nil (Var _) : _) _) = True
-isSubprogramHead _ = False
+isFnHead :: ProgLine -> Bool
+isFnHead (ProgLine {stmts = (Send Nil (Var _) : _)}) = True
+isFnHead (ProgLine {stmts = (ArgReplace Nil (Var _) : _)}) = True
+isFnHead _ = False
+
+isFnEnd :: ProgLine -> Bool
+isFnEnd (ProgLine {stmts = [Ret]}) = True
+isFnEnd _ = False
+
+getFnName :: ProgLine -> String
+getFnName (ProgLine {labels = (name : _)}) = name
+getFnName _ = undefined
 
 -- Loops
 getLoopRange :: Statement -> (Statement, Statement, Expr)
@@ -51,6 +60,7 @@ loopEndExpr (LoopEndCondition ex) = ex
 -- Vars
 stmtExprs :: Statement -> [Expr]
 stmtExprs (Assign a b) = [a, b]
+stmtExprs (ArgReplace a b) = [a, b]
 stmtExprs (Send a b) = [a, b]
 stmtExprs (Exchange a b) = [a, b]
 stmtExprs (Predicate cond thenSts elseSts) =
