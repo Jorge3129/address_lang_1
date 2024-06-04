@@ -1,4 +1,5 @@
 .stack-work/
 *~
 dist-newstyles
-docs
+docs1
+.idea
