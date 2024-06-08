@@ -253,4 +253,71 @@ so this won't work with a negative step.
 
 ### Subprogram call formula
 
+#### Subprogram declaration
+
+A **subprogram (subroutine) declaration** in the Address programming language consists of 
+a **labelled line** where all statements are of the form `∅ ⇒ <variable>` or `∅ → <variable>`,
+followed by one or more lines that constitute the body of the subprogram. 
+The last line of the body must be a single return formula (`ꓭ`). For example:
+
+```
+f ... ∅ ⇒ a, ∅ → b
+    печать 'a
+    печать b
+ꓭ
+```
+
+Here we declare a subprogram with the name `f`. It takes two parameters, `a` and `b`.  
+The first parameter is passed using the **Send** formula (`⇒`), 
+so the actual value can be accessed with `'a`.  
+The second parameter is passed directly (`→`), so the value can be accessed with just `b`.
+
+In **ADPL** this would be written as follows:
+
+``` 
+@f ... Nil => a, Nil -> b
+    print 'a
+    print b
+Ret
+```
+
+#### Subprogram call
+
+In the original syntax, a subprogram call is written in the form of `П <subprogram-name> { <args> }`. 
+`П` stands for "Подпрограмма" ("subprogram"). Arguments are separated by comma. 
+For example, to call the subprogram declared above, we would write:
+
+```
+П f { 1, 2 }
+```
+
+In **ADPL** the letter `П` is replaced with `Pg`:
+
+```
+Pg f { 1, 2 }
+```
+
+This call would result in
+
+```
+1
+2
+```
+
+printed to the terminal.
+
+There is also a special way to call a subprogram not explicitly described in the original syntax.
+For example, if we wanted to save the address of a subprogram to a variable and later call it,
+we could write:
+
+```
+fv = &f
+Pg [fv] { 1, 2 }
+```
+
+This allows us to pass a subprogram as a parameter to another subprogram.
+
+
+
+
 ### Replace formula
