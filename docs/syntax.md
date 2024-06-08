@@ -36,7 +36,7 @@ Thus, float literals are written using a dot (instead of a comma like in the ori
 
 ### Stroke operation
 
-The "stroke" (pointer dereference) operation is written as a single quote ':
+The "stroke" (pointer dereference) operation is written as a single quote `'`:
 
 ```
 value = 'a
@@ -69,7 +69,7 @@ In ADPL the equivalent for that is `` m`n`a ``, where ``m`` stands for "minus" (
 
 ### Empty set character
 
-In the original syntax, the empty set character ∅ is used to represent a null value, or a placeholder for a value in some expressions.  
+In the original syntax, the empty set character `∅` is used to represent a null value, or a placeholder for a value in some expressions.  
 In ADPL this is represented by the keyword ``Nil``.
 
 ## Formulae
@@ -77,8 +77,8 @@ In ADPL this is represented by the keyword ``Nil``.
 ### Send formula
 
 The **"Send"** formula allows the programmer to modify the value at some address in memory.
-In the original syntax it is written with the special character ⇒.
-For example, the statement **a ⇒ b** means "put the value **a** at the address **b**".
+In the original syntax it is written with the special character `⇒`.
+For example, the statement `a ⇒ b` means "put the value `a` at the address `b`".
 
 In ADPL it is written as ``=>``:
 
@@ -89,7 +89,7 @@ a => b
 ### Exchange formula
 
 The **"Exchange"** formula allows the programmer to exchange the values between two addresses in memory.
-In the original syntax it is written with the special character ⇔.
+In the original syntax it is written with the special character `⇔`.
 
 In ADPL it is written as ``<=>``:
 
