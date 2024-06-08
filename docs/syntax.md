@@ -160,7 +160,7 @@ label_else ...
 label_end ...
 ```
 
-Here in case then condition is true the next line ``1 ⇒ b`` is executed automatically. 
+Here in case the condition is true the next line ``1 ⇒ b`` is executed automatically. 
 Otherwise, we jump to `label_else`.
 
 In **ADPL**, the only thing that actually changes in the **Predicate** formula is the separator: 
@@ -179,6 +179,75 @@ P { a == 1 } | label_else
 ```
 
 ### Loop formula
+
+The **Loop** formula is somewhat similar to the **for** loop statement in C-like languages.
+
+In the original syntax, the basic form for the **Loop** formula is 
+`Ц { a, С∅, P { Lc } ⇒ π } α, l1`,
+where
+  * **a** is the initial value of the loop counter;
+  * **С∅** is the step expression;
+    * **C** is the **Successor** operation (not directly implemented as part of ADPL); the most basic version of Successor operation is **incrementation**;
+    * **∅** is used as a placeholder for the value of the loop counter);
+  * **P { Lc }** is the loop condition, where **Lc** is a boolean expression;
+  * **π** is the identifier for the pointer to loop counter
+  * **α** is the **scope** label of the Loop formula
+  * **l1** is the optional label of the line which should be executed after the loop is finished
+
+The **scope** label is a label of the line which delimits the body of the **Loop** formula. 
+That is, all lines between the **Loop** formula declaration 
+and the line marked with the given label (**α** in the example)
+are considered to be the body of the loop:
+
+```
+Ц { a, С∅, P { Lc } ⇒ π } α, l1
+    <loop-body-1>
+    <loop-body-2>
+α...
+```
+
+In **ADPL** the letter `Ц` is replaced with `L` (since `Ц` stands for **"цикл"**, which means "loop"). 
+The abstract **Successor** operation is replaced with a particular implementation.
+For example, a loop that counts from **1** to **5** with step **1** can be written like this:
+
+```
+L { 1, Nil + 1, P { 'pi <= 5 } => pi } alpha
+    print 'pi
+@alpha ...
+```
+
+Here, the loop starts by placing the initial value **1** at the address **pi** (equivalent to `1 => pi`).  
+In the loop body, we get the actual value of the counter by dereferencing `pi` with the stroke operation (since it's a pointer), and then print it.  
+The loop step is equivalent to the statement `'pi + 1 => pi`. 
+`Nil` is replaced with the expression `'pi` (current counter value), 
+then the new result is written back to the address `pi`.  
+The `'pi` expression is also used in the loop condition to check that the counter is less or equal to 5.
+
+The **Loop** formula also allows several simplifications.  
+
+Firstly, in case the **step expression** is of the form `Nil + b` (where `b` is some scalar value),
+it can be rewritten as just `(b)`. By applying this rule to the previous example, we get:
+
+```
+L { 1 (1) P { 'pi <= 5 } => pi } alpha
+    print 'pi
+@alpha ...
+```
+
+Here we use parentheses instead of commas to indicate that `(1)` is actually the **step value**.
+
+Secondly, we can also use an **end value** instead of the condition:
+
+```
+L { 1 (1) 5 => pi } alpha
+    print 'pi
+@alpha ...
+```
+
+Please note that in the current implementation of ADPL 
+the **end value** is transformed to a condition using the `<=` operator,
+so this won't work with a negative step.
+
 
 ### Subprogram call formula
 
