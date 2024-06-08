@@ -112,6 +112,18 @@ These are not available in the current ADPL implementation, but might be impleme
 
 ### Halt formula
 
+In Address programming language, there are two **"Halt"** formulas: absolute and relative.
+
+The **absolute halt formula** (the **stop** formula) is written as `!`. 
+It stops the program immediately regardless of where it occurs (including inside subprograms).
+
+The **relative halt formula** (the **return** formula) `ꓭ` is similar to the `return;` statement in the C-like languages. 
+If it occurs inside a subprogram, it ends the current subprogram call. 
+If it occurs on the top level, it stops the program just like `!`.
+
+In **ADPL** the absolute halt formula is written as `!`, the same way as in the original syntax.  
+On the other hand, the relative halt formula `ꓭ` is replaced with the keyword `Ret`.
+
 ### Predicate formula
 
 The **Predicate** formula is used for control flow, similar to the **if/else** statement in the C-like languages.
