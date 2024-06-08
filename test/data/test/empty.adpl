@@ -1,9 +1,9 @@
-Pg f { 1 }
-
+n = 10
+R { - -> +; n -> 100 } alpha, beta
 !
-
-@f ... Nil -> a
-    print 1
-    !
-    print 2
-    Ret
+@alpha ...
+    print 10 - 1
+    print 10 - 2
+    print 10 - 3
+    print n
+@beta ...

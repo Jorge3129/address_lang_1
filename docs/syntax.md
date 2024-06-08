@@ -195,16 +195,15 @@ P { a == 1 } | label_else
 The **Loop** formula is somewhat similar to the `for` loop statement in the C-like languages.
 
 In the original syntax, the basic form for the **Loop** formula is 
-`Ц { a, С∅, P { Lc } ⇒ π } α, l1`,
+`Ц { a, С∅, P { Lc } ⇒ π } α`,
 where
   * **a** is the initial value of the loop counter;
   * **С∅** is the step expression;
     * **C** is the **Successor** operation (not directly implemented as part of ADPL); the most basic version of Successor operation is **incrementation**;
     * **∅** is used as a placeholder for the value of the loop counter;
   * **P { Lc }** is the loop condition, where **Lc** is a boolean expression;
-  * **π** an the identifier for the pointer to the loop counter
+  * **π** is an the identifier for the pointer to the loop counter
   * **α** is the **scope** label of the Loop formula
-  * **l1** is the optional label of the line which should be executed after the loop is finished
 
 The **scope** label is a label of the line which delimits the body of the **Loop** formula. 
 That is, all lines between the **Loop** formula declaration 
@@ -212,7 +211,7 @@ and the line marked with the given label (**α** in the example)
 are considered to be the body of the loop:
 
 ```
-Ц { a, С∅, P { Lc } ⇒ π } α, l1
+Ц { a, С∅, P { Lc } ⇒ π } α
     <loop-body-1>
     <loop-body-2>
 α...
@@ -348,3 +347,65 @@ Ret
 This program should print `4`.
 
 ### Replace formula
+
+The **"Replace"** formula is used in Address Programming Language for metaprogramming. 
+It is somewhat similar to macros in C/C++.  
+The basic form in the original syntax is `З { a1 → c1, an → cn } α, β`. 
+
+Here the labels `α, β` represent the scope of the formula. 
+That is, the formula is applied to the lines that are between the line marked with the label `α` (inclusive)
+and the line marked with the label`β` (exclusive).
+
+The expression `a1 → c1, an → cn` is a list of replacement rules.
+A single replacement rule `a → c` consists  of a pattern to match (`a`) 
+and a replacement for that pattern (`c`).
+
+Here's an example in the original syntax:
+
+```
+n = 10
+З { - → +, n → 100 } α, β
+!
+α ...
+    печать 10 - 1
+    печать 10 - 2
+    печать 10 - 3
+    печать n
+β ...
+```
+
+Without the replacement, this would print
+
+``` 
+9
+8
+7
+10
+```
+
+With the replacement, it prints the following instead:
+
+```
+11
+12
+13
+100
+```
+
+In **ADPL** the letter `З` is replaced with the keyword `R`. 
+Also, replacement rules are separated with `;` instead of `,`.
+Thus, the above example would be written as:
+
+```
+n = 10
+R { - -> +; n -> 100 } alpha, beta
+!
+@alpha ...
+    print 10 - 1
+    print 10 - 2
+    print 10 - 3
+    print n
+@beta ...
+```
+
+In the **ADPL** implementation it is also possible to replace entire statements.
