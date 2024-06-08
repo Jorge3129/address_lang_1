@@ -4,19 +4,25 @@ A simple Haskell implementation of an interpreter for the Address Programming La
 
 ## Introduction
 
-The syntax of ADPL is described in [this file](docs/syntax.md).
+### Syntax
+
+The syntax of ADPL is described [here](docs/syntax.md).
+
+Also, some `.adpl` files in the `test/data` folder 
+have their original syntax equivalents in `.txt` files with the same name.
 
 ## Usage
 
 ### Dependencies
 
 To use the interpreter, it is necessary to have a version of
-**[stack](https://docs.haskellstack.org/en/stable/)** installed locally.
+**[Stack](https://docs.haskellstack.org/en/stable/)** installed locally.
 **Stack** is a popular build tool for Haskell.
 
 ### Run
 
-To run an ADPL file, run the ``stack run`` command in the terminal:
+To execute an ADPL file, run the ``stack run`` command in the terminal with a path to the file as an argument.
+For example, to execute the file `./test/data/fact.adpl`, run the following command:
 
 ```shell
 stack run ./test/data/fact.adpl
