@@ -116,6 +116,68 @@ These are not available in the current ADPL implementation, but might be impleme
 
 The **Predicate** formula is used for control flow, similar to the **if/else** statement in C-like languages.
 
+In the original syntax, the basic form for **Predicate** formula is 
+``P { <conditionExpr> } <thenStatements> ↓ <elseStatements>``, 
+where the special character `↓` acts as a separator between the execution branches.
+
+For example, the statement ``P { 'a < 5 } 'a + 1 ⇒ a ↓ k`` means 
+"if the value at the address **a** is less than 5, increment it; 
+otherwise, jump to the label **k**".
+
+It is possible to use multiple statements in both branches:
+
+```
+P { a = 1 } 1 ⇒ b; 2 ⇒ c ↓ 3 ⇒ b; 4 ⇒ c
+```
+
+To improve readability we can rewrite this with unconditional jumps to labels `label_then` and `label_else`:
+
+```
+P { a = 1 } label_then ↓ label_else
+label_then ...
+    1 ⇒ b
+    2 ⇒ c
+    label_end
+label_else ...
+    3 ⇒ b
+    4 ⇒ c
+label_end ...
+```
+
+Please note how we need an additional label `label_end` to jump over the `else` branch.
+
+Since it is possible to leave a branch of a **Predicate** formula empty, 
+we can also rewrite without using `label_then`:
+
+```
+P { a = 1 } ↓ label_else
+    1 ⇒ b
+    2 ⇒ c
+    label_end
+label_else ...
+    3 ⇒ b
+    4 ⇒ c
+label_end ...
+```
+
+Here in case then condition is true the next line ``1 ⇒ b`` is executed automatically. 
+Otherwise, we jump to `label_else`.
+
+In **ADPL**, the only thing that actually changes in the **Predicate** formula is the separator: 
+`↓` is represented with the vertical bar `|`. 
+Thus, we can rewrite the example above in the ADPL syntax like this:
+
+```
+P { a == 1 } | label_else
+    1 => b
+    2 => c
+    label_end
+@label_else ...
+    3 => b
+    4 => c
+@label_end ...
+```
+
 ### Loop formula
 
 ### Subprogram call formula

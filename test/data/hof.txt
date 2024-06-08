@@ -27,7 +27,7 @@ printList list2_1
 map ...
     П list_empty { r }
 
-    P { 'h == 0 } map_end |
+    P { 'h == 0 } map_end ↓
 
     Ц { 'h, '∅, P { 'i ≠ 0 } ⇒ i } l1
         v = '('i + 1)
@@ -39,12 +39,12 @@ map_end ...
 filter ...
     П list_empty { r }
 
-    P { 'h == 0 } filter_end |
+    P { 'h == 0 } filter_end ↓
 
     Ц { 'h, '∅, P { 'i ≠ 0 } ⇒ i } l1
         v = '('i + 1)
         id(v) ⇒ nv
-        P { 'nv } | continue
+        P { 'nv } ↓ continue
         П list_add { v, r }
         
         continue ...
@@ -54,7 +54,7 @@ filter_end ...
 fold ...
     init_val ⇒ acc
 
-    P { 'h == 0 } fold_end |
+    P { 'h == 0 } fold_end ↓
 
     Ц { 'h, '∅, P { 'i ≠ 0 } ⇒ i } l1
         v = '('i + 1)
@@ -74,7 +74,7 @@ list_add ... ∅ ⇒ val, ∅ ⇒ list_addr
     h = 'list_addr
     last_node = h
 
-    P { 'h ≠ 0 } | go
+    P { 'h ≠ 0 } ↓ go
         Ц { 'h, '∅, P { ''i ≠ 0 } ⇒ i } l1
         l1 ...
         last_node = 'i;
