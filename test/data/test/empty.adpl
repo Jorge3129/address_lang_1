@@ -1,1 +1,9 @@
-R {
+Pg f { 1 }
+
+!
+
+@f ... Nil -> a
+    print 1
+    !
+    print 2
+    Ret

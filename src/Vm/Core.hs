@@ -148,6 +148,8 @@ execInstruction OP_CALL_PROC vm = do
   fnName <- readStr vm
   execBuiltinProc fnName vm
 --
+execInstruction OP_HALT _ = returnOk
+--
 execInstruction OP_RETURN vm = do
   curVmCalls <- readCalls vm
   execReturn curVmCalls vm

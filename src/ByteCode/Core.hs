@@ -35,6 +35,7 @@ data OpCode
   | OP_CALL
   | OP_CALL_PROC
   | OP_CALL_FN
+  | OP_HALT
   deriving (Eq, Show, Enum)
 
 data Chunk = Chunk

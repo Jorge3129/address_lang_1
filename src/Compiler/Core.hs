@@ -159,7 +159,7 @@ compileStmt (Replace reps start end) cs = do
   popReplacement cs
 --
 compileStmt Ret cs = emitOpCode OP_RETURN cs
-compileStmt Stop cs = emitOpCode OP_RETURN cs
+compileStmt Stop cs = emitOpCode OP_HALT cs
 
 -- Expressions
 compileExprs :: [Expr] -> CompState -> IO ()

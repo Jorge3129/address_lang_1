@@ -37,6 +37,7 @@ disassembleInstruction chunk offset = do
   let instruction = code chunk !! offset
   case toEnum instruction :: OpCode of
     OP_RETURN -> simpleInstruction "OP_RETURN" offset
+    OP_HALT -> simpleInstruction "OP_HALT" offset
     --
     OP_ADD -> simpleInstruction "OP_ADD" offset
     OP_PTR_ADD -> simpleInstruction "OP_PTR_ADD" offset
