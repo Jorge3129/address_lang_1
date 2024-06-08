@@ -114,7 +114,7 @@ These are not available in the current ADPL implementation, but might be impleme
 
 ### Predicate formula
 
-The **Predicate** formula is used for control flow, similar to the **if/else** statement in C-like languages.
+The **Predicate** formula is used for control flow, similar to the **if/else** statement in the C-like languages.
 
 In the original syntax, the basic form for **Predicate** formula is 
 ``P { <conditionExpr> } <thenStatements> ↓ <elseStatements>``, 
@@ -180,7 +180,7 @@ P { a == 1 } | label_else
 
 ### Loop formula
 
-The **Loop** formula is somewhat similar to the **for** loop statement in C-like languages.
+The **Loop** formula is somewhat similar to the `for` loop statement in the C-like languages.
 
 In the original syntax, the basic form for the **Loop** formula is 
 `Ц { a, С∅, P { Lc } ⇒ π } α, l1`,
@@ -317,7 +317,22 @@ Pg [fv] { 1, 2 }
 
 This allows us to pass a subprogram as a parameter to another subprogram.
 
+#### Returning values
 
+In **ADPL** there is no direct equivalent for the `return` statement in the C-like languages.
+Instead, one or more "output" parameters are passed to the subprogram, 
+which are used as addresses to store the results. For example:
 
+```
+Pg double { 2, res }
+print 'res
+
+!
+@double ... Nil -> value, Nil -> result
+    value * 2 => result
+Ret 
+```
+
+This program should print `4`.
 
 ### Replace formula
