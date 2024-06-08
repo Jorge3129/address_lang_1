@@ -188,7 +188,7 @@ where
   * **a** is the initial value of the loop counter;
   * **С∅** is the step expression;
     * **C** is the **Successor** operation (not directly implemented as part of ADPL); the most basic version of Successor operation is **incrementation**;
-    * **∅** is used as a placeholder for the value of the loop counter);
+    * **∅** is used as a placeholder for the value of the loop counter;
   * **P { Lc }** is the loop condition, where **Lc** is a boolean expression;
   * **π** an the identifier for the pointer to the loop counter
   * **α** is the **scope** label of the Loop formula
