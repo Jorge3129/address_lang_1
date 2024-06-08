@@ -190,7 +190,7 @@ where
     * **C** is the **Successor** operation (not directly implemented as part of ADPL); the most basic version of Successor operation is **incrementation**;
     * **∅** is used as a placeholder for the value of the loop counter);
   * **P { Lc }** is the loop condition, where **Lc** is a boolean expression;
-  * **π** is the identifier for the pointer to loop counter
+  * **π** an the identifier for the pointer to the loop counter
   * **α** is the **scope** label of the Loop formula
   * **l1** is the optional label of the line which should be executed after the loop is finished
 
@@ -222,6 +222,8 @@ The loop step is equivalent to the statement `'pi + 1 => pi`.
 `Nil` is replaced with the expression `'pi` (current counter value), 
 then the new result is written back to the address `pi`.  
 The `'pi` expression is also used in the loop condition to check that the counter is less or equal to 5.
+
+#### Loop formula simplifications
 
 The **Loop** formula also allows several simplifications.  
 
