@@ -1,0 +1,86 @@
+list1 = [1,2,3,4,5]
+printList list1
+З { h → list1; id(v) ⇒ nv → П double { v, nv }; r → list1_1 } map, map_end
+printList list1_1
+
+З { h → list1; id(v) → v × 2; r → list1_1 } map, map_end
+printList list1_1
+
+З { h → list1_1; id(v) → v > 5 and v < 9; r → list1_2 } filter, filter_end
+printList list1_2
+
+З { h → list1; id(v) → v % 2 ≠ 0; r → list1_3 } filter, filter_end
+printList list1_3
+
+З { h → list1_1; id(v) → 'acc + v; init_val → 0 } fold, fold_end
+печать 'acc
+
+З { h → list1_1; id(v) → 'acc × v; init_val → 1 } fold, fold_end
+печать 'acc
+
+list2 = []
+printList list2
+З { h → list2; v ⇒ nv → П double { v, nv }; r → list2_1 } map, map_end
+printList list2_1
+
+!
+map ...
+    П list_empty { r }
+
+    P { 'h == 0 } map_end |
+
+    Ц { 'h, '∅, P { 'i ≠ 0 } ⇒ i } l1
+        v = '('i + 1)
+        id(v) ⇒ nv
+        П list_add { 'nv, r }
+    l1 ...
+map_end ...
+
+filter ...
+    П list_empty { r }
+
+    P { 'h == 0 } filter_end |
+
+    Ц { 'h, '∅, P { 'i ≠ 0 } ⇒ i } l1
+        v = '('i + 1)
+        id(v) ⇒ nv
+        P { 'nv } | continue
+        П list_add { v, r }
+        
+        continue ...
+    l1 ...
+filter_end ...
+
+fold ...
+    init_val ⇒ acc
+
+    P { 'h == 0 } fold_end |
+
+    Ц { 'h, '∅, P { 'i ≠ 0 } ⇒ i } l1
+        v = '('i + 1)
+        id(v) ⇒ acc
+    l1 ...
+fold_end ...
+
+double ... ∅ ⇒ val, ∅ ⇒ res_addr
+    'val × 2 ⇒ 'res_addr
+    ꓭ
+
+list_empty ... ∅ ⇒ targetAddr
+    0 ⇒ 'targetAddr
+    ꓭ
+
+list_add ... ∅ ⇒ val, ∅ ⇒ list_addr
+    h = 'list_addr
+    last_node = h
+
+    P { 'h ≠ 0 } | go
+        Ц { 'h, '∅, P { ''i ≠ 0 } ⇒ i } l1
+        l1 ...
+        last_node = 'i;
+    go ...
+        new_node = alloc 2;
+        new_node ⇒ last_node
+        ptr(0) ⇒ new_node
+        'val ⇒ new_node + 1
+    ꓭ

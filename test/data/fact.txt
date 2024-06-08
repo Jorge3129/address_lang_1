@@ -1,0 +1,12 @@
+Ц { 0 (1) 20 ⇒ i } l1
+    П fact { 'i, res }
+    печать 'res
+@l1 ...
+
+!
+
+@fact ... ∅ ⇒ n, ∅ ⇒ res
+    P { 'n <= 1 } 1 ⇒ 'res; ꓭ |
+    П fact { 'n - 1, prevFact }
+    'n × 'prevFact ⇒ 'res
+    ꓭ

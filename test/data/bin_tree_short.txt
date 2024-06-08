@@ -1,0 +1,231 @@
+list1 = [10, 5, 15, 2, 8, 12, 20]
+printList list1
+
+П bst_from_list { list1, bst }
+П bst_to_list { 'bst, tree_list }
+printList tree_list
+П bst_size { 'bst, sz }
+печать 'sz
+
+list_to_delete = [10, 12, 15, 5]
+
+Ц { 'list_to_delete, '∅, P { 'i ≠ 0 } ⇒ i } l1
+    val = '('i + 1)
+    П bst_delete { val, 'bst }
+    П bst_to_list { 'bst, tree_list }
+    printList tree_list
+    П bst_size { 'bst, sz }
+    печать 'sz
+l1 ...
+
+!
+
+bst_create_root ... ∅ → val, ∅ → res_addr
+    n = alloc 2
+    ptr(0) ⇒ n
+    val ⇒ n + 1
+    int(n) ⇒ res_addr
+    ꓭ
+
+bst_create_node ... ∅ → val, ∅ → parent_addr, ∅ → res_addr
+    n = alloc 2
+    ptr(parent_addr) ⇒ n
+    val ⇒ n + 1
+    int(n) ⇒ res_addr
+    ꓭ
+
+bst_delete ... ∅ → val, ∅ → node_addr
+    P { node_addr = 0 } ꓭ ↓
+
+    node_val = '(node_addr + 1)
+
+    П bst_find_children { node_addr, left, right }
+
+    P { val = node_val } case_cur ↓ case_child
+    case_child ...
+        P { val < node_val } child = left ↓ child = right
+        П bst_delete { val, 'child }
+        end
+    case_cur ...
+        parent_addr = 'node_addr
+        case_leaf ...
+            P { 'left = 0 and 'right = 0 } ↓ case_no_left
+            0 ⇒ node_addr
+            end
+        case_no_left ...
+            P { 'left = 0 } ↓ case_no_right
+            П bst_shift_child { node_addr, 'right }
+            end
+        case_no_right ...
+            P { 'right = 0 } ↓ case_both
+            П bst_shift_child { node_addr, 'left }
+            end
+        case_both ...
+            П bst_min_value { 'right, min_val }
+            П bst_set_value { node_addr, 'min_val }
+            П bst_delete { 'min_val, 'right }
+    end ...
+    ꓭ
+
+bst_shift_child ... ∅ → node_addr, ∅ → child_addr
+    P { 'child_addr = 0 } ꓭ ↓
+
+    parent_addr = 'node_addr
+
+    case_root ...
+        P { parent_addr = 0 } ↓ case_not_root
+        child_val = '(child_addr + 1)
+        П bst_set_value { node_addr, child_val }
+        П bst_find_children { child_addr, left, right }
+        P { 'left ≠ 0 }   node_addr ⇒ 'left ↓
+        P { 'right ≠ 0 }  node_addr ⇒ 'right ↓
+        0 ⇒ child_addr
+        end
+
+    case_not_root ...
+        parent_addr ⇒ child_addr
+        0 ⇒ node_addr
+    end ...
+    ꓭ
+
+bst_set_value ... ∅ → node, ∅ → val
+    val ⇒ node + 1
+    ꓭ
+
+bst_min_value ... ∅ → node, ∅ → res_addr
+    current = node
+
+    loop ...
+        П bst_find_children { current, left, right }
+        P { 'left = 0 } end ↓
+        current = 'left
+    loop
+
+    end ... '(current + 1) ⇒ res_addr
+    ꓭ
+
+bst_find_children ... ∅ → node_addr, ∅ → left_addr, ∅ → right_addr
+    node_val = '(node_addr + 1)
+
+    children = <sub>1</sub>(node_addr)
+    left = 0; right = 0
+
+    Ц { 'children, '∅, P { 'i ≠ 0 } ⇒ i } b
+        child_addr = '('i + 1)
+        child_val = '(child_addr + 1)
+        P { child_val < node_val } left = child_addr ↓ right = child_addr
+    b ...
+
+    left ⇒ left_addr
+    right ⇒ right_addr
+    ꓭ
+
+bst_insert ... ∅ → val, ∅ → node_addr
+    node_val = '(node_addr + 1)
+
+    P { val = node_val } ꓭ ↓
+
+    П bst_find_children { node_addr, left, right }
+
+    is_left = val < node_val
+    P { is_left } cur_child = 'left ↓ cur_child = 'right
+
+    P { cur_child = 0 } case_create ↓ case_insert
+    case_create ...
+        П bst_create_node { val, node_addr, cur_child_new }
+        end
+    case_insert ...
+        П bst_insert { val, cur_child }
+        end
+
+    end ...
+    ꓭ
+
+bst_traverse ... ∅ ⇒ node
+    P { 'node = 0 } ꓭ ↓
+    П bst_find_children { 'node, left, right }
+
+    П bst_traverse { 'left }
+    node_val = '('node + 1)
+    печать node_val
+    П bst_traverse { 'right }
+    ꓭ
+
+bst_size ... ∅ ⇒ node, ∅ ⇒ res_addr
+    0 ⇒ 'res_addr + 0
+    П bst_size_helper { 'node, 'res_addr }
+    ꓭ
+
+bst_size_helper ... ∅ ⇒ node, ∅ ⇒ res_addr
+    P { 'node = 0 } ꓭ ↓
+    П bst_find_children { 'node, left, right }
+
+    П bst_size_helper { 'left, 'res_addr }
+    ''res_addr + 1 ⇒ 'res_addr
+    П bst_size_helper { 'right, 'res_addr }
+    ꓭ
+
+bst_sum ... ∅ ⇒ node, ∅ ⇒ res_addr
+    0 ⇒ 'res_addr + 0
+    П bst_sum_helper { 'node, 'res_addr }
+    ꓭ
+
+bst_sum_helper ... ∅ ⇒ node, ∅ ⇒ res_addr
+    P { 'node = 0 } ꓭ ↓
+    П bst_find_children { 'node, left, right }
+
+    П bst_sum_helper { 'left, 'res_addr }
+    node_val = '('node + 1)
+    ''res_addr + node_val ⇒ 'res_addr
+    П bst_sum_helper { 'right, 'res_addr }
+    ꓭ
+
+bst_to_list ... ∅ ⇒ node, ∅ ⇒ res_addr
+    П list_empty { 'res_addr }
+    П bst_to_list_helper { 'node, 'res_addr }
+    ꓭ
+
+bst_to_list_helper ... ∅ ⇒ node, ∅ ⇒ list_addr
+    P { 'node = 0 } ꓭ ↓
+    П bst_find_children { 'node, left, right }
+
+    П bst_to_list_helper { 'left, 'list_addr }
+    node_val = '('node + 1)
+    П list_add { node_val, 'list_addr }
+    П bst_to_list_helper { 'right, 'list_addr }
+    ꓭ
+
+bst_from_list ... ∅ ⇒ list_addr, ∅ ⇒ res_addr
+    h = 'list_addr
+    root = 'res_addr
+
+    P { 'h = 0 } 0 ⇒ root; ꓭ ↓
+
+    head = '('h + 1)
+    П bst_create_root { head, root }
+    
+    Ц { ''h, '∅, P { 'i ≠ 0 } ⇒ i } b
+        val = '('i + 1)
+        П bst_insert { val, 'root }
+    b ...
+    ꓭ
+
+// Lists
+list_empty ... ∅ ⇒ targetAddr
+    0 ⇒ 'targetAddr
+    ꓭ
+
+list_add ... ∅ ⇒ val, ∅ ⇒ list_addr
+    h = 'list_addr
+    last_node = h
+
+    P { 'h ≠ 0 } ↓ go
+        Ц { 'h, '∅, P { ''i ≠ 0 } ⇒ i } l1
+        l1 ...
+        last_node = 'i;
+    go ...
+        new_node = alloc 2;
+        new_node ⇒ last_node
+        ptr(0) ⇒ new_node
+        'val ⇒ new_node + 1
+    ꓭ

@@ -80,7 +80,7 @@ The **"Send"** formula allows the programmer to modify the value at some address
 In the original syntax it is written with the special character ⇒.
 For example, the statement **a ⇒ b** means "put the value **a** at the address **b**".
 
-In ADPL it is written as =>:
+In ADPL it is written as ``=>``:
 
 ```
 a => b
@@ -91,7 +91,7 @@ a => b
 The **"Exchange"** formula allows the programmer to exchange the values between two addresses in memory.
 In the original syntax it is written with the special character ⇔.
 
-In ADPL it is written as <=>:
+In ADPL it is written as ``<=>``:
 
 ```
 a <=> b
