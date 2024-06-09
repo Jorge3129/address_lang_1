@@ -99,8 +99,8 @@ should print:
 ```
 
 The helper functions `ptr` and `printList` are explained a little later.
-The key takeaway here is that the negative stroke operations returns the list of addresses (`[2000,3000]`)
-which contain pointers to the given address `1000`.
+The key takeaway here is that the negative stroke operations returns a list of the addresses (`[2000,3000]`)
+that contain pointers to the given address `1000`.
 
 ### Empty set character
 
@@ -309,6 +309,40 @@ L { 1 (1) 5 => pi } alpha
 Please note that in the current implementation of ADPL 
 the **end value** is transformed to a condition using the `<=` operator,
 so this won't work with a negative step.
+
+#### Loop formula for lists
+
+The Loop formula can be used to iterate over linked lists created with the syntax sugar `[1,2,3]`.
+
+For example, the following program
+
+``` 
+list = [1,2,3]
+
+L { 'list, 'Nil, P { 'i /= 0 } => i } l1
+    val = '('i + 1)
+    print val
+@l1 ...
+```
+
+should print
+
+```
+1
+2
+3
+```
+
+In this loop the value of the **loop counter** `'i` points to the address of the current node of the linked list.  
+
+Since the first cell of each node contains the address of the next node,
+the step expression of the loop is `'Nil`, which is equivalent to `'('i) => 'i`, that is, 
+replace the value of the current counter with the value at the address that it points to.
+
+The loop condition is `'i /= 0`, since the last node of the list always points to the `0` address.
+
+The value of each node is always in the next memory cell after the node address itself.
+That's why we use `'('i + 1)` to get the value in each iteration.
 
 
 ### Subprogram call formula

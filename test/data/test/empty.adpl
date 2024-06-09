@@ -1,14 +1,6 @@
-ptr(1000) => 2000
-ptr(1000) => 3000
-printList m`1`(1000)
+list = [1,2,3]
 
-
-n = 10
-R { - -> +; n -> 100 } alpha, beta
-!
-@alpha ...
-    print 10 - 1
-    print 10 - 2
-    print 10 - 3
-    print n
-@beta ...
+L { 'list, 'Nil, P { 'i /= 0 } => i } l1
+    val = '('i + 1)
+    print val
+@l1 ...
