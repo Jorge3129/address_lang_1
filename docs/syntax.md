@@ -5,22 +5,24 @@ to write code using only ASCII characters.
 
 ## General principles
 
-### Line labels
-
 A program in the Address programming language consists of lines. 
 A line can contain one or multiple formulae (i.e. statements). 
-Each line can be marked by **labels**.
+Multiple formulae can be separated with `;` or `,`.
+
+### Line labels
+
+Each line can be marked by one or more **labels**.
 
 In the original syntax, line labels can contain digits, characters and even spaces.  
-In ADPL, a line label can only contain Latin letters, digits and the _ character, and it must start with a letter.
+In **ADPL**, a line label can only contain Latin letters, digits and the _ character, and it must start with a letter.
 
-A line can be marked with one or more labels. In the original syntax an ellipsis must follow after each label:
+In the original syntax an ellipsis must follow after each label:
 
 ```
 lab1 ... lab2 ...  <statements>
 ```
 
-In ADPL, an additional requirement is to put a @ character before each label:
+In ADPL, an additional requirement is to put a `@` character before each label:
 
 ```
 @lab1 ... @lab2 ...  <statements>
@@ -30,9 +32,17 @@ In ADPL, an additional requirement is to put a @ character before each label:
 
 ### Mathematical expressions
 
-In general, most mathematical expressions in ADPL are written in the same way as in other modern programming languages.
+In general, most mathematical expressions in **ADPL** are written in the same way as in other modern programming languages.
 
-Thus, float literals are written using a dot (instead of a comma like in the original syntax).
+Thus, float literals are written using a dot (instead of a comma like in the original syntax). 
+For example, `3,14` becomes `3.14`.
+
+Arithmetic operators `+`, `−`, `×`, `:` are written as `+`, `-`, `*`, `/` in **ADPL**.
+
+Address arithmetic operator `⊕` is written inside angle brackets in **ADPL**:
+`<+>`.
+
+Logical operators `∧`, `∨`, `¬` are replaced with keywords `and`, `or`, `not` in **ADPL**.
 
 ### Stroke operation
 
@@ -71,6 +81,15 @@ In ADPL the equivalent for that is `` m`n`a ``, where ``m`` stands for "minus" (
 
 In the original syntax, the empty set character `∅` is used to represent a null value, or a placeholder for a value in some expressions.  
 In ADPL this is represented by the keyword ``Nil``.
+
+### Additional expressions
+
+**ADPL** introduces some new types of expressions not described in the original syntax.
+
+One of them is the syntax sugar for linked lists: `[1,2,3]`.
+
+Yet another type of expression is `&a`, where `a` is a name of some label. 
+It is useful for passing subprograms as a parameter.
 
 ## Formulae
 
