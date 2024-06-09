@@ -27,3 +27,8 @@ For example, to execute the file `./test/data/fact.adpl`, run the following comm
 ```shell
 stack run ./test/data/fact.adpl
 ```
+
+### IDE support
+
+There is a simple version of ADPL syntax highlighting available for VSCode: 
+**[AddLang](https://marketplace.visualstudio.com/items?itemName=jorg.addlang)**.
