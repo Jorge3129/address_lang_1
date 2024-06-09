@@ -107,7 +107,7 @@ bst_min_value ... ∅ → node, ∅ → res_addr
 bst_find_children ... ∅ → node_addr, ∅ → left_addr, ∅ → right_addr
     node_val = '(node_addr + 1)
 
-    children = <sub>1</sub>(node_addr)
+    children = <sub>1</sub>(node_addr) // this means that the 1 is written in subscript
     left = 0; right = 0
 
     Ц { 'children, '∅, P { 'i ≠ 0 } ⇒ i } b
