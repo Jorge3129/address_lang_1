@@ -4,7 +4,7 @@ list2_len = 5
 
 Ц { 0(1)(list2_len - 1) ⇒ pi } l1
     new_addr = alloc 3
-    prev_addr = `('pi)`list2
+    prev_addr = <sup>('pi)</sup>list2 // this means that ('pi) should be in superscript
     new_addr ⇒ prev_addr
     ptr(0) ⇒ new_addr
     1 ⇒ new_addr + 1
