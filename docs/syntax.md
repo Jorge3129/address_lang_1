@@ -42,7 +42,12 @@ Arithmetic operators `+`, `−`, `×`, `:` are written as `+`, `-`, `*`, `/` in 
 Address arithmetic operator `⊕` is written inside angle brackets in **ADPL**:
 `<+>`.
 
+Equality operators `=` and `≠` are written as `==` and `/=` in **ADPL**,
+while a single `=` is used for assignment only.
+
 Logical operators `∧`, `∨`, `¬` are replaced with keywords `and`, `or`, `not` in **ADPL**.
+
+Functions arguments in **ADPL** are written using spaces, like in Haskell: `max 1 2`.
 
 ### Stroke operation
 
@@ -74,8 +79,28 @@ In ADPL the equivalent for that is `` `n`a ``
 ### Negative stroke operation
 
 The negative stroke operation is written as **<sup>-n</sup>a** or **<sub>n</sub>a**.
+It is used to find addresses that contain references to a given address `a`.
+If `n` is greater than 1 then process is applied repeatedly to intermediate results.
 
-In ADPL the equivalent for that is `` m`n`a ``, where ``m`` stands for "minus" (negative).
+In **ADPL** the equivalent for that is `` m`n`a ``, where ``m`` stands for "minus" (negative).
+
+For example, this program:
+
+``` 
+ptr(1000) => 2000
+ptr(1000) => 3000
+printList m`1`(1000)
+```
+
+should print:
+
+```
+[2000,3000]
+```
+
+The helper functions `ptr` and `printList` are explained a little later.
+The key takeaway here is that the negative stroke operations returns the list of addresses (`[2000,3000]`)
+which contain pointers to the given address `1000`.
 
 ### Empty set character
 
@@ -90,6 +115,11 @@ One of them is the syntax sugar for linked lists: `[1,2,3]`.
 
 Yet another type of expression is `&a`, where `a` is a name of some label. 
 It is useful for passing subprograms as a parameter.
+
+Also, there are some builtin functions in **ADPL**:
+  * `alloc n` allocates `n` free cells of memory
+  * `printList list` pretty-prints a linked list created with the syntax sugar (e.g. `[1,2,3]`).
+  * `ptr x` and `int x` help convert between types `Pointer` and `Int`
 
 ## Formulae
 
