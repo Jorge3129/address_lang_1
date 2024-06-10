@@ -30,6 +30,10 @@ dependencies:
   - deepseq
   - filepath
 
+build-tools:
+  - alex
+  - happy
+
 ghc-options:
   - -Wall
   - -Wcompat
