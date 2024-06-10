@@ -8,7 +8,7 @@ A simple Haskell implementation of an interpreter for the Address Programming La
 
 The syntax of ADPL is described [here](docs/syntax.md).
 
-Also, some `.adpl` files in the `test/data` folder 
+Also, some `.adpl` files in the `test/data` folder
 have their original syntax equivalents in `.txt` files with the same name.
 
 ## Usage
@@ -21,14 +21,21 @@ To use the interpreter, it is necessary to have a version of
 
 ### Run
 
-To execute an ADPL file, run the ``stack run`` command in the terminal with a path to the file as an argument.
+To execute an ADPL file, run the `stack run` command in the terminal with a path to the file as an argument.
 For example, to execute the file `./test/data/fact.adpl`, run the following command:
 
 ```shell
 stack run ./test/data/fact.adpl
 ```
 
+There are currently some warnings displayed when running programs.
+You can suppress them with the option `--silent`:
+
+```shell
+stack run --silent ./test/data/test/empty.adpl
+```
+
 ### IDE support
 
-There is a simple version of ADPL syntax highlighting available for VSCode: 
+There is a simple version of ADPL syntax highlighting available for VSCode:
 **[AddLang](https://marketplace.visualstudio.com/items?itemName=jorg.addlang)**.
