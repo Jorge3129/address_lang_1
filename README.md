@@ -32,7 +32,7 @@ There are currently some warnings displayed when running programs.
 You can suppress them with the option `--silent`:
 
 ```shell
-stack run --silent ./test/data/test/empty.adpl
+stack run --silent ./test/data/fact.adpl
 ```
 
 ### IDE support
