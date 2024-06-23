@@ -1,10 +1,7 @@
 #include <iostream>
 
 unsigned long fact(unsigned long n) {
-    if (n <= 1) {
-        return 1;
-    }
-    
+    if (n <= 1) return 1;
     auto prevFact = fact(n - 1);
     return n * prevFact;
 }

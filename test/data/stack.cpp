@@ -5,6 +5,16 @@ struct node {
     node* next;
 };
 
+// this is a builtin function in ADPL
+void printList(node** head) {
+    std::cout << '[';
+    for (auto cur = *head; cur != nullptr; cur = cur->next) {
+        std::cout << cur->value;
+        if (cur->next != nullptr) std::cout << ',';
+    }
+    std::cout << ']' <<  std::endl;
+}
+
 node** stack_new() {
     auto s = new node*;
     *s = nullptr;
@@ -36,17 +46,6 @@ int stack_pop(node** head) {
 
 bool stack_is_empty(node** head) {
     return *head == nullptr;
-}
-
-void printList(node** head) {
-    std::cout << '[';
-    for (auto cur = *head; cur != nullptr; cur = cur->next) {
-        std::cout << cur->value;
-        if (cur->next != nullptr) {
-             std::cout << ',';
-        }
-    }
-    std::cout << ']' <<  std::endl;
 }
 
 int main() {

@@ -1,10 +1,10 @@
 main
 !
 
-@fact ... Nil => n, Nil => res
-    P { 'n <= 1 } 1 => 'res; Ret |
-    Pg fact { 'n - 1, prevFact }
-    'n * 'prevFact => 'res
+@fact ... Nil -> n, Nil -> res
+    P { n <= 1 } 1 => res; Ret |
+    Pg fact { n - 1, prevFact }
+    n * 'prevFact => res
     Ret
 
 @main ...
