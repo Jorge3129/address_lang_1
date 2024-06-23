@@ -5,7 +5,7 @@
     <th>C++</th>
   </tr>
   <tr>
-<td>
+<td style="vertical-align: top;">
 
 ```
 main
@@ -25,7 +25,8 @@ main ...
 ```
 
 </td>
-<td>
+
+<td style="vertical-align: top;">
 
 ```
 main
@@ -46,7 +47,7 @@ main
 
 </td>
 
-<td>
+<td style="vertical-align: top;">
 
 ```
 #include <iostream>
