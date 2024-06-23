@@ -1,19 +1,4 @@
-Pg stack_new { s }
-printList s
-
-L { 1(1)5 => i } l1
-    Pg stack_push { 'i, s }
-@l1 ...
-printList s
-
-Pg stack_is_empty { s, s_em }
-L { 0(1) P { 's_em /= 1 } => pi } l2
-     Pg stack_pop { s, top_val }
-     print 'top_val
-     printList s
-     Pg stack_is_empty { s, s_em }
-@l2 ...
-
+main
 !
 
 @stack_new ... Nil -> res_addr
@@ -45,3 +30,20 @@ L { 0(1) P { 's_em /= 1 } => pi } l2
 @stack_is_empty ... Nil -> head, Nil -> res_addr
     'head == 0 => res_addr
     Ret
+
+@main ...
+    Pg stack_new { s }
+    printList s
+
+    L { 1(1)5 => i } l1
+        Pg stack_push { 'i, s }
+    @l1 ...
+    printList s
+
+    Pg stack_is_empty { s, s_em }
+    L { 0(1) P { 's_em /= 1 } => pi } l2
+        Pg stack_pop { s, top_val }
+        print 'top_val
+        printList s
+        Pg stack_is_empty { s, s_em }
+    @l2 ...
