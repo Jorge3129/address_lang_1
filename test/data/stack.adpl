@@ -16,35 +16,32 @@ L { 0(1) P { 's_em /= 1 } => pi } l2
 
 !
 
-@stack_new ... Nil => res_addr
-    0 => 'res_addr
+@stack_new ... Nil -> res_addr
+    0 => res_addr
     Ret
 
-@stack_push ... Nil => val, Nil => stack_addr
-    head = 'stack_addr
+@stack_push ... Nil -> val, Nil -> head
     old_addr = 'head
 
     new_addr = alloc 2
 
     new_addr => head
     old_addr => new_addr
-    'val => new_addr + 1
+    val => new_addr + 1
     Ret
 
-@stack_pop ... Nil => stack_addr, Nil => res_addr
-    head = 'stack_addr
+@stack_pop ... Nil -> head, Nil -> res_addr
     old_addr = 'head
     P { old_addr == 0 } Ret |
 
     old_val = '(old_addr + 1)
-    old_val => 'res_addr
 
     next_addr = 'old_addr
     next_addr => head
     0 => old_addr
+    old_val => res_addr
     Ret
 
-@stack_is_empty ... Nil => stack_addr, Nil => res_addr
-    head = 'stack_addr
-    'head == 0 => 'res_addr
+@stack_is_empty ... Nil -> head, Nil -> res_addr
+    'head == 0 => res_addr
     Ret

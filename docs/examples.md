@@ -1,10 +1,11 @@
 <table>
-  <tr>
-    <th>Original Syntax</th>
-    <th>ADPL</th>
-    <th>C++</th>
-  </tr>
-  <tr>
+<tr>
+<th>Original Syntax</th>
+<th>ADPL</th>
+<th>C++</th>
+</tr>
+
+<tr>
 <td style="vertical-align: top;">
 
 ```
@@ -72,5 +73,6 @@ int main() {
 ```
 
 </td>
-  </tr>
+
+</tr>
 </table>
