@@ -1,8 +1,4 @@
-Ц { 0 (1) 20 ⇒ i } l1
-    П fact { 'i, res }
-    печать 'res
-l1 ...
-
+main
 !
 
 fact ... ∅ ⇒ n, ∅ ⇒ res
@@ -10,3 +6,9 @@ fact ... ∅ ⇒ n, ∅ ⇒ res
     П fact { 'n - 1, prevFact }
     'n × 'prevFact ⇒ 'res
     ꓭ
+
+main ...
+    Ц { 0 (1) 20 ⇒ i } l1
+        П fact { 'i, res }
+        печать 'res
+    l1 ...

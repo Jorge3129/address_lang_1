@@ -8,11 +8,7 @@
 <td>
 
 ```
-Ц { 0 (1) 20 ⇒ i } l1
-    П fact { 'i, res }
-    печать 'res
-l1 ...
-
+main
 !
 
 fact ... ∅ ⇒ n, ∅ ⇒ res
@@ -20,17 +16,19 @@ fact ... ∅ ⇒ n, ∅ ⇒ res
     П fact { 'n - 1, prevFact }
     'n × 'prevFact ⇒ 'res
     ꓭ
+
+main ...
+    Ц { 0 (1) 20 ⇒ i } l1
+        П fact { 'i, res }
+        печать 'res
+    l1 ...
 ```
 
 </td>
 <td>
 
 ```
-L { 0 (1) 20 => i } l1
-    Pg fact { 'i, res }
-    print 'res
-@l1 ...
-
+main
 !
 
 @fact ... Nil => n, Nil => res
@@ -38,6 +36,12 @@ L { 0 (1) 20 => i } l1
     Pg fact { 'n - 1, prevFact }
     'n * 'prevFact => 'res
     Ret
+
+@main ...
+    L { 0 (1) 20 => i } l1
+        Pg fact { 'i, res }
+        print 'res
+    @l1 ...
 ```
 
 </td>

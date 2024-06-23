@@ -1,8 +1,4 @@
-L { 0 (1) 20 => i } l1
-    Pg fact { 'i, res }
-    print 'res
-@l1 ...
-
+main
 !
 
 @fact ... Nil => n, Nil => res
@@ -10,3 +6,9 @@ L { 0 (1) 20 => i } l1
     Pg fact { 'n - 1, prevFact }
     'n * 'prevFact => 'res
     Ret
+
+@main ...
+    L { 0 (1) 20 => i } l1
+        Pg fact { 'i, res }
+        print 'res
+    @l1 ...
