@@ -39,3 +39,21 @@ stack run --silent ./test/data/fact.adpl
 
 There is a simple version of ADPL syntax highlighting available for VSCode:
 **[AddLang](https://marketplace.visualstudio.com/items?itemName=jorg.addlang)**.
+
+## Project Structure
+
+This is a quick guide to the project structure:
+
+  * [src](src) - source code for ADPL interpreter
+    * [Lib](src/Lib.hs) - library entry point
+    * [Lexer](src/Lexer) - lexical analyzer for ADPL
+    * [Parser](src/Parser) - parser for ADPL
+    * [Value](src/Value) - data types for representing the values in ADPL
+    * [ByteCode](src/ByteCode) - data types for representing ADPL bytecode
+    * [Compiler](src/Compiler) - core logic for compiling from source code to ADPL bytecode
+    * [Vm](src/Vm) - virtual machine for ADPL bytecode
+    * [Utils](src/Utils) - common utils
+  * [test](test) - contains examples of programs in the original syntax and in ADPL
+  * [docs](docs) - documentation
+    * [syntax](docs/syntax.md) - documentation for the ADPL syntax adaptation
+    * [examples](docs/examples.md) - comparison between programs written in C++, original Address Programming language syntax, and ADPL
