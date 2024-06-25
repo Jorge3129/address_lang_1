@@ -39,7 +39,7 @@ main
 fact ... ∅ → n, ∅ → res
     P { n <= 1 } 1 ⇒ res; ꓭ ↓
     П fact { n - 1, prevFact }
-    n × 'prevFact ⇒ 'res
+    n × 'prevFact ⇒ res
     ꓭ
 
 main ...

@@ -1,7 +1,0 @@
-Pg Markov2 { alpha2, 'zeta1, 'zeta2, alpha1 }
-
-@Markov2 ... Nil => psi1, Nil => psi2, Nil => psi3, Nil => phi1
-    `2`phi1 - 'psi3 => r; 'psi3 - 'psi2 - 'psi1 => Delta, `2`psi1 - 'Delta => 'phi1
-    P { 'Delta == 0 } M1
-    'Delta / abs ('Delta) => delta
-    L { 1 - 'delta } * 
