@@ -3,5 +3,5 @@ import System.FilePath ((<.>), (</>))
 
 main :: IO ()
 main = do
-  let fileName = "bin_tree"
+  let fileName = "bst/bst"
   execFile $ "test" </> "data" </> fileName <.> "adpl"
