@@ -1,16 +1,16 @@
 list1 = [1,2,3,4,5]
-printList list1
+Печать list1
 З { h → list1; id(v) ⇒ nv → П double { v, nv }; r → list1_1 } map, map_end
-printList list1_1
+Печать list1_1
 
 З { h → list1; id(v) → v × 2; r → list1_1 } map, map_end
-printList list1_1
+Печать list1_1
 
 З { h → list1_1; id(v) → v > 5 and v < 9; r → list1_2 } filter, filter_end
-printList list1_2
+Печать list1_2
 
 З { h → list1; id(v) → v % 2 ≠ 0; r → list1_3 } filter, filter_end
-printList list1_3
+Печать list1_3
 
 З { h → list1_1; id(v) → 'acc + v; init_val → 0 } fold, fold_end
 Печать 'acc
@@ -19,9 +19,9 @@ printList list1_3
 Печать 'acc
 
 list2 = []
-printList list2
+Печать list2
 З { h → list2; v ⇒ nv → П double { v, nv }; r → list2_1 } map, map_end
-printList list2_1
+Печать list2_1
 
 !
 map ...

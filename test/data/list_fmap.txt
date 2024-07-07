@@ -12,11 +12,11 @@ list2_len = 5
     f ⇒ new_addr + 2
 l1 ...
 
-printList list2
+Печать list2
 
 П fmap { list2, res2 }
 
-printList res2
+Печать res2
 
 !
 double ... ∅ ⇒ val, ∅ ⇒ res_addr

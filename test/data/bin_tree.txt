@@ -1,9 +1,9 @@
 list1 = [10, 5, 15, 2, 8, 12, 20]
-printList list1
+Печать list1
 
 П bst_from_list { list1, bst }
 П bst_to_list { 'bst, tree_list }
-printList tree_list
+Печать tree_list
 П bst_size { 'bst, sz }
 Печать 'sz
 
@@ -13,7 +13,7 @@ list_to_delete = [10, 12, 15, 5]
     val = '('i + 1)
     П bst_delete { val, 'bst }
     П bst_to_list { 'bst, tree_list }
-    printList tree_list
+    Печать tree_list
     П bst_size { 'bst, sz }
     Печать 'sz
 l1 ...
