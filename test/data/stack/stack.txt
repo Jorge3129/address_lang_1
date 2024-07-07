@@ -5,25 +5,24 @@ stack_new ... ∅ → res_addr
     ꓭ
 
 stack_push ... ∅ → val, ∅ → head
-    old_addr = 'head
+    'head ⇒ old_addr
 
-    new_addr = alloc 2
+    alloc 2 ⇒ new_addr
 
-    new_addr ⇒ head
-    old_addr ⇒ new_addr
-    val ⇒ new_addr + 1
+    'new_addr ⇒ head
+    'old_addr ⇒ 'new_addr
+    val ⇒ 'new_addr + 1
     ꓭ
 
 stack_pop ... ∅ → head, ∅ → res_addr
-    old_addr = 'head
-    P { old_addr = 0 } ꓭ ↓
+    'head ⇒ old_addr
+    P { 'old_addr = 0 } ꓭ ↓
 
-    old_val = '(old_addr + 1)
+    '('old_addr + 1) ⇒ old_val
 
-    next_addr = 'old_addr
-    next_addr ⇒ head
-    0 ⇒ old_addr
-    old_val ⇒ res_addr
+    ''old_addr ⇒ head
+    0 ⇒ 'old_addr
+    'old_val ⇒ res_addr
     ꓭ
 
 stack_is_empty ... ∅ → head, ∅ → res_addr

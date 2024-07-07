@@ -160,25 +160,24 @@ stack_new ... ∅ → res_addr
     ꓭ
 
 stack_push ... ∅ → val, ∅ → head
-    old_addr = 'head
+    'head ⇒ old_addr
 
-    new_addr = alloc 2
+    alloc 2 ⇒ new_addr
 
-    new_addr ⇒ head
-    old_addr ⇒ new_addr
-    val ⇒ new_addr + 1
+    'new_addr ⇒ head
+    'old_addr ⇒ 'new_addr
+    val ⇒ 'new_addr + 1
     ꓭ
 
 stack_pop ... ∅ → head, ∅ → res_addr
-    old_addr = 'head
-    P { old_addr = 0 } ꓭ ↓
+    'head ⇒ old_addr
+    P { 'old_addr = 0 } ꓭ ↓
 
-    old_val = '(old_addr + 1)
+    '('old_addr + 1) ⇒ old_val
 
-    next_addr = 'old_addr
-    next_addr ⇒ head
-    0 ⇒ old_addr
-    old_val ⇒ res_addr
+    ''old_addr ⇒ head
+    0 ⇒ 'old_addr
+    'old_val ⇒ res_addr
     ꓭ
 
 stack_is_empty ... ∅ → head, ∅ → res_addr
@@ -187,18 +186,18 @@ stack_is_empty ... ∅ → head, ∅ → res_addr
 
 M ...
     П stack_new { s }
-    printList s
+    Печать s
 
     Ц { 1(1)5 ⇒ i } l1
         П stack_push { 'i, s }
     l1 ...
-    printList s
+    Печать s
 
     П stack_is_empty { s, s_em }
     Ц { 0(1) P { 's_em ≠ 1 } ⇒ pi } l2
         П stack_pop { s, top_val }
         Печать 'top_val
-        printList s
+        Печать s
         П stack_is_empty { s, s_em }
     l2 ...
 ```
