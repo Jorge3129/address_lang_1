@@ -13,10 +13,10 @@ printList list1_2
 printList list1_3
 
 З { h → list1_1; id(v) → 'acc + v; init_val → 0 } fold, fold_end
-печать 'acc
+Печать 'acc
 
 З { h → list1_1; id(v) → 'acc × v; init_val → 1 } fold, fold_end
-печать 'acc
+Печать 'acc
 
 list2 = []
 printList list2

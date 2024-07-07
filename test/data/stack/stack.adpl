@@ -1,5 +1,4 @@
-main
-!
+M
 
 @stack_new ... Nil -> res_addr
     0 => res_addr
@@ -31,7 +30,7 @@ main
     'head == 0 => res_addr
     Ret
 
-@main ...
+@M ...
     Pg stack_new { s }
     printList s
 

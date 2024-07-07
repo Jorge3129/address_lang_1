@@ -1,5 +1,4 @@
-main
-!
+M
 
 @fact ... Nil -> n, Nil -> res
     P { n <= 1 } 1 => res; Ret |
@@ -7,7 +6,7 @@ main
     n * 'prevFact => res
     Ret
 
-@main ...
+@M ...
     L { 0 (1) 20 => i } l1
         Pg fact { 'i, res }
         print 'res

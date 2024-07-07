@@ -5,7 +5,7 @@ printList list1
 П bst_to_list { 'bst, tree_list }
 printList tree_list
 П bst_size { 'bst, sz }
-печать 'sz
+Печать 'sz
 
 list_to_delete = [10, 12, 15, 5]
 
@@ -15,7 +15,7 @@ list_to_delete = [10, 12, 15, 5]
     П bst_to_list { 'bst, tree_list }
     printList tree_list
     П bst_size { 'bst, sz }
-    печать 'sz
+    Печать 'sz
 l1 ...
 
 !
@@ -147,7 +147,7 @@ bst_traverse ... ∅ ⇒ node
 
     П bst_traverse { 'left }
     node_val = '('node + 1)
-    печать node_val
+    Печать node_val
     П bst_traverse { 'right }
     ꓭ
 

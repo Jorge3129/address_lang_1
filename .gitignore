@@ -3,3 +3,4 @@
 dist-newstyles
 docs1
 .idea
+test/data/**/*.exe

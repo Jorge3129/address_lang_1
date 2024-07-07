@@ -1,5 +1,4 @@
-main
-!
+M
 
 fact ... ∅ → n, ∅ → res
     P { n <= 1 } 1 ⇒ res; ꓭ ↓
@@ -7,8 +6,8 @@ fact ... ∅ → n, ∅ → res
     n × 'prevFact ⇒ res
     ꓭ
 
-main ...
+M ...
     Ц { 0 (1) 20 ⇒ i } l1
         П fact { 'i, res }
-        печать 'res
+        Печать 'res
     l1 ...

@@ -33,8 +33,7 @@ int main() {
 <td style="vertical-align: top;">
 
 ```
-main
-!
+M
 
 fact ... ∅ → n, ∅ → res
     P { n <= 1 } 1 ⇒ res; ꓭ ↓
@@ -42,10 +41,10 @@ fact ... ∅ → n, ∅ → res
     n × 'prevFact ⇒ res
     ꓭ
 
-main ...
+M ...
     Ц { 0 (1) 20 ⇒ i } l1
         П fact { 'i, res }
-        печать 'res
+        Печать 'res
     l1 ...
 ```
 
@@ -54,8 +53,7 @@ main ...
 <td style="vertical-align: top;">
 
 ```
-main
-!
+M
 
 @fact ... Nil -> n, Nil -> res
     P { n <= 1 } 1 => res; Ret |
@@ -63,7 +61,7 @@ main
     n * 'prevFact => res
     Ret
 
-@main ...
+@M ...
     L { 0 (1) 20 => i } l1
         Pg fact { 'i, res }
         print 'res
@@ -155,8 +153,7 @@ int main() {
 <td style="vertical-align: top;">
 
 ```
-main
-!
+M
 
 stack_new ... ∅ → res_addr
     0 ⇒ res_addr
@@ -188,7 +185,7 @@ stack_is_empty ... ∅ → head, ∅ → res_addr
     'head = 0 ⇒ res_addr
     ꓭ
 
-main ...
+M ...
     П stack_new { s }
     printList s
 
@@ -200,7 +197,7 @@ main ...
     П stack_is_empty { s, s_em }
     Ц { 0(1) P { 's_em ≠ 1 } ⇒ pi } l2
         П stack_pop { s, top_val }
-        печать 'top_val
+        Печать 'top_val
         printList s
         П stack_is_empty { s, s_em }
     l2 ...
@@ -211,8 +208,7 @@ main ...
 <td style="vertical-align: top;">
 
 ```
-main
-!
+M
 
 @stack_new ... Nil -> res_addr
     0 => res_addr
@@ -244,7 +240,7 @@ main
     'head == 0 => res_addr
     Ret
 
-@main ...
+@M ...
     Pg stack_new { s }
     printList s
 
