@@ -5,43 +5,51 @@ Pg map { &double, list, new_list }
 
 printList new_list
 
+list1 = []
+printList list1
+
+Pg map { &double, list1, new_list1 }
+
+printList new_list1
+
+list2 = [1]
+printList list2
+
+Pg map { &double, list2, new_list2 }
+
+printList new_list2
+
 !
-@double ... Nil => val, Nil => res_addr
-    'val * 2 => 'res_addr
+@double ... Nil -> val, Nil -> res_addr
+    val * 2 => res_addr
     Ret
 
-@triple ... Nil => val, Nil => res_addr
-    'val * 3 => 'res_addr
-    Ret
-
-@map ... Nil => f, Nil => list_addr, Nil => r
-    head = 'list_addr
-    Pg list_empty { 'r }
+@map ... Nil -> f, Nil -> head, Nil -> r
+    Pg list_empty { r }
 
     P { 'head == 0 } Ret |
 
     L { 'head, 'Nil, P { 'pi /= 0 } => pi } l1
         val = '('pi + 1)
-        Pg ['f] { val, new_val }
-        Pg list_add { 'new_val, 'r }
+        Pg [f] { val, new_val }
+        Pg list_add { 'new_val, r }
     @l1 ...
     Ret
 
-@list_empty ... Nil => targetAddr
-    0 => 'targetAddr
+@list_empty ... Nil -> res_addr
+    0 => res_addr
     Ret
 
-@list_add ... Nil => val, Nil => list_addr
-    h = 'list_addr
-    last_node = h
+@list_add ... Nil -> val, Nil -> head
+    last_node = head
 
-    P { 'h /= 0 } | go
-        L { 'h, 'Nil, P { ''i /= 0 } => i } l1
+    P { 'head /= 0 } | go
+        L { 'head, 'Nil, P { 'i /= 0 } => i } l1
+            last_node = 'i;
         @l1 ...
-        last_node = 'i;
     @go ...
         new_node = alloc 2;
         new_node => last_node
         ptr(0) => new_node
-        'val => new_node + 1
+        val => new_node + 1
     Ret
