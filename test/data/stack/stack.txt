@@ -39,7 +39,7 @@ M ...
     Печать s
 
     П stack_is_empty { s, s_em }
-    Ц { 0(1) P { 's_em ≠ 1 } ⇒ pi } l2
+    Ц { 0(1) P { 's_em ≠ 1 } ⇒ π } l2
         П stack_pop { s, top_val }
         Печать 'top_val
         Печать s

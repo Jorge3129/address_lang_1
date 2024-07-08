@@ -8,8 +8,8 @@ M
     last_node = head
 
     P { 'head /= 0 } | go
-        L { 'head, 'Nil, P { 'i /= 0 } => i } l1
-            last_node = 'i;
+        L { 'head, 'Nil, P { 'pi /= 0 } => pi } l1
+            last_node = 'pi;
         @l1 ...
     @go ...
         new_node = alloc 2;

@@ -1,39 +1,37 @@
 M
 
-list_empty ... ∅ ⇒ targetAddr
-    0 ⇒ 'targetAddr
+list_empty ... ∅ → res_addr
+    0 ⇒ res_addr
     ꓭ
 
-list_add ... ∅ ⇒ val, ∅ ⇒ list_addr
-    h = 'list_addr
-    last_node = h
+list_add ... ∅ → val, ∅ → head
+    last_node = head
 
-    P { 'h ≠ 0 } ↓ go
-        Ц { 'h, '∅, P { ''i ≠ 0 } ⇒ i } l1
+    P { 'head ≠ 0 } ↓ go
+        Ц { 'head, '∅, P { 'π ≠ 0 } ⇒ π } l1
+            last_node = 'π;
         l1 ...
-        last_node = 'i;
     go ...
-        new_node = alloc 2;
-        new_node ⇒ last_node
-        ptr(0) ⇒ new_node
-        'val ⇒ new_node + 1
+        alloc 2 ⇒ new_node;
+        'new_node ⇒ last_node
+        0 ⇒ 'new_node
+        val ⇒ 'new_node + 1
     ꓭ
 
-list_map ... ∅ ⇒ f, ∅ ⇒ list_addr, ∅ ⇒ r
-    head = 'list_addr
-    П list_empty { 'r }
+list_map ... ∅ → f, ∅ → head, ∅ → r
+    П list_empty { r }
 
     P { 'head = 0 } ꓭ ↓
 
-    Ц { 'head, '∅, P { 'pi ≠ 0 } ⇒ pi } l1
-        val = '('pi + 1)
-        П 'f { val, new_val }
-        П list_add { 'new_val, 'r }
+    Ц { 'head, '∅, P { 'π ≠ 0 } ⇒ π } l1
+        val = '('π + 1)
+        П f { val, new_val }
+        П list_add { 'new_val, r }
     l1 ...
     ꓭ
 
-double_val ... ∅ ⇒ val, ∅ ⇒ res_addr
-    'val × 2 ⇒ 'res_addr
+double_val ... ∅ → val, ∅ → res_addr
+    val × 2 ⇒ res_addr
     ꓭ
 
 M ...

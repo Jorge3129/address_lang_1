@@ -6,11 +6,6 @@ struct node {
     node* next;
 };
 
-// TODO rename fn
-int double_(int val) {
-    return val * 2;
-}
-
 node** list_empty() {
     auto s = new node*;
     *s = nullptr;
@@ -53,6 +48,11 @@ node** list_map(int (*f)(int val), node** head) {
     return r;
 }
 
+int double_val(int val) {
+    return val * 2;
+}
+
+// this is done with syntactic sugar in ADPL
 node** create_list(std::vector<int> values) {
     auto list = list_empty();
     auto current_node = *list;
@@ -84,17 +84,15 @@ void printList(node** head) {
 }
 
 int main() {
-    {
-        node** list = create_list({1,2,3});
-        printList(list);
+    node** list = create_list({1,2,3});
+    printList(list);
 
-        auto new_list = list_map(&double_,list);
+    auto new_list = list_map(&double_val,list);
 
-        printList(new_list);
+    printList(new_list);
 
-        delete list;
-        delete new_list;
-    }
+    delete list;
+    delete new_list;
 
     return 0;
 }
