@@ -1,41 +1,4 @@
-0 ⇒ list
-alloc 2 ⇒ node1
-'node1 ⇒ list
-1 ⇒ 'node1 + 1
-
-alloc 2 ⇒ node2
-'node2 ⇒ 'node1
-2 ⇒ 'node2 + 1
-
-alloc 2 ⇒ node3
-'node3 ⇒ 'node2
-3 ⇒ 'node3 + 1
-
-0 ⇒ 'node3
-
-Печать list
-
-П list_map { double, list, new_list }
-
-Печать new_list
-
-!
-double ... ∅ ⇒ val, ∅ ⇒ res_addr
-    'val × 2 ⇒ 'res_addr
-    ꓭ
-
-list_map ... ∅ ⇒ f, ∅ ⇒ list_addr, ∅ ⇒ r
-    head = 'list_addr
-    П list_empty { 'r }
-
-    P { 'head = 0 } ꓭ ↓
-
-    Ц { 'head, '∅, P { 'pi ≠ 0 } ⇒ pi } l1
-        val = '('pi + 1)
-        П 'f { val, new_val }
-        П list_add { 'new_val, 'r }
-    l1 ...
-    ꓭ
+M
 
 list_empty ... ∅ ⇒ targetAddr
     0 ⇒ 'targetAddr
@@ -55,3 +18,42 @@ list_add ... ∅ ⇒ val, ∅ ⇒ list_addr
         ptr(0) ⇒ new_node
         'val ⇒ new_node + 1
     ꓭ
+
+list_map ... ∅ ⇒ f, ∅ ⇒ list_addr, ∅ ⇒ r
+    head = 'list_addr
+    П list_empty { 'r }
+
+    P { 'head = 0 } ꓭ ↓
+
+    Ц { 'head, '∅, P { 'pi ≠ 0 } ⇒ pi } l1
+        val = '('pi + 1)
+        П 'f { val, new_val }
+        П list_add { 'new_val, 'r }
+    l1 ...
+    ꓭ
+
+double_val ... ∅ ⇒ val, ∅ ⇒ res_addr
+    'val × 2 ⇒ 'res_addr
+    ꓭ
+
+M ...
+    0 ⇒ list
+    alloc 2 ⇒ node1
+    'node1 ⇒ list
+    1 ⇒ 'node1 + 1
+
+    alloc 2 ⇒ node2
+    'node2 ⇒ 'node1
+    2 ⇒ 'node2 + 1
+
+    alloc 2 ⇒ node3
+    'node3 ⇒ 'node2
+    3 ⇒ 'node3 + 1
+
+    0 ⇒ 'node3
+
+    Печать list
+
+    П list_map { double_val, list, new_list }
+
+    Печать new_list
