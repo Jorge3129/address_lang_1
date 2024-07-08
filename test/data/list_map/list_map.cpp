@@ -16,8 +16,8 @@ void list_add(int val, node** head) {
     auto last_node = *head;
 
     if (*head != nullptr) {
-        for (auto i = *head; i != nullptr; i = i->next) {
-            last_node = i;
+        for (auto pi = *head; pi != nullptr; pi = pi->next) {
+            last_node = pi;
         }
     }
     auto new_node = new node;
@@ -33,15 +33,11 @@ void list_add(int val, node** head) {
 node** list_map(int (*f)(int val), node** head) {
     auto r = list_empty();
 
-    if (*head == nullptr) {
-        return r;
-    }
+    if (*head == nullptr) return r;
 
-// TODO unify pi
-    for (auto i = *head; i != nullptr; i = i->next) {
-        auto val = i->value;
+    for (auto pi = *head; pi != nullptr; pi = pi->next) {
+        auto val = pi->value;
         auto new_val = (*f)(val);
-
         list_add(new_val, r);
     }
 
