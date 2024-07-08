@@ -1,7 +1,21 @@
-list = [1,2,3,4,5]
+0 ⇒ list
+alloc 2 ⇒ node1
+'node1 ⇒ list
+1 ⇒ 'node1 + 1
+
+alloc 2 ⇒ node2
+'node2 ⇒ 'node1
+2 ⇒ 'node2 + 1
+
+alloc 2 ⇒ node3
+'node3 ⇒ 'node2
+3 ⇒ 'node3 + 1
+
+0 ⇒ 'node3
+
 Печать list
 
-П map { double, list, new_list }
+П list_map { double, list, new_list }
 
 Печать new_list
 
@@ -10,11 +24,7 @@ double ... ∅ ⇒ val, ∅ ⇒ res_addr
     'val × 2 ⇒ 'res_addr
     ꓭ
 
-triple ... ∅ ⇒ val, ∅ ⇒ res_addr
-    'val × 3 ⇒ 'res_addr
-    ꓭ
-
-map ... ∅ ⇒ f, ∅ ⇒ list_addr, ∅ ⇒ r
+list_map ... ∅ ⇒ f, ∅ ⇒ list_addr, ∅ ⇒ r
     head = 'list_addr
     П list_empty { 'r }
 

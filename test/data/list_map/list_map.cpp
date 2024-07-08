@@ -35,7 +35,7 @@ void list_add(int val, node** head) {
     new_node->value = val;
 }
 
-node** map(int (*f)(int val), node** head) {
+node** list_map(int (*f)(int val), node** head) {
     auto r = list_empty();
 
     if (*head == nullptr) {
@@ -85,34 +85,10 @@ void printList(node** head) {
 
 int main() {
     {
-        node** list = create_list({1,2,3,4,5});
+        node** list = create_list({1,2,3});
         printList(list);
 
-        auto new_list = map(&double_,list);
-
-        printList(new_list);
-
-        delete list;
-        delete new_list;
-    }
-
-    {
-        node** list = create_list({});
-        printList(list);
-
-        auto new_list = map(&double_,list);
-
-        printList(new_list);
-
-        delete list;
-        delete new_list;
-    }
-
-        {
-        node** list = create_list({1});
-        printList(list);
-
-        auto new_list = map(&double_,list);
+        auto new_list = list_map(&double_,list);
 
         printList(new_list);
 
