@@ -1,44 +1,44 @@
 M
 
-@list_empty ... Nil -> res_addr
-    0 => res_addr
-    Ret
+@list_new ... Nil -> res_addr
+  0 => res_addr
+  Ret
 
 @list_add ... Nil -> val, Nil -> head
-    head => last_node
+  head => last_node
 
-    P { 'head /= 0 } | go
-        L { 'head, 'Nil, P { 'pi /= 0 } => pi } l1
-            'pi => last_node;
-        @l1 ...
-    @go ...
-        alloc 2 => new_node;
-        'new_node => 'last_node
-        ptr(0) => 'new_node
-        val => 'new_node + 1
-    Ret
+  P { 'head /= 0 } | go
+    L { 'head, 'Nil, P { 'pi /= 0 } => pi } l1
+        'pi => last_node;
+    @l1 ...
+  @go ...
+    alloc 2 => new_node;
+    'new_node => 'last_node
+    ptr(0) => 'new_node
+    val => 'new_node + 1
+  Ret
 
 @list_map ... Nil -> f, Nil -> head, Nil -> r
-    Pg list_empty { r }
+  Pg list_new { r }
 
-    P { 'head == 0 } Ret |
+  P { 'head == 0 } Ret |
 
-    L { 'head, 'Nil, P { 'pi /= 0 } => pi } l1
-        '('pi + 1) => val
-        Pg [f] { 'val, new_val }
-        Pg list_add { 'new_val, r }
-    @l1 ...
-    Ret
+  L { 'head, 'Nil, P { 'pi /= 0 } => pi } l1
+    '('pi + 1) => val
+    Pg [f] { 'val, new_val }
+    Pg list_add { 'new_val, r }
+  @l1 ...
+  Ret
 
 @double_val ... Nil -> val, Nil -> res_addr
-    val * 2 => res_addr
-    Ret
+  val * 2 => res_addr
+  Ret
 
 @M ...
-    list = [1,2,3]
+  list = [1,2,3]
 
-    printList list
+  printList list
 
-    Pg list_map { &double_val, list, new_list }
+  Pg list_map { &double_val, list, new_list }
 
-    printList new_list
+  printList new_list
