@@ -5,11 +5,11 @@ list_empty ... ∅ → res_addr
     ꓭ
 
 list_add ... ∅ → val, ∅ → head
-    last_node = head
+    head ⇒ last_node
 
     P { 'head ≠ 0 } ↓ go
         Ц { 'head, '∅, P { 'π ≠ 0 } ⇒ π } l1
-            last_node = 'π;
+            'π ⇒ last_node;
         l1 ...
     go ...
         alloc 2 ⇒ new_node;
@@ -24,8 +24,8 @@ list_map ... ∅ → f, ∅ → head, ∅ → r
     P { 'head = 0 } ꓭ ↓
 
     Ц { 'head, '∅, P { 'π ≠ 0 } ⇒ π } l1
-        val = '('π + 1)
-        П f { val, new_val }
+        '('π + 1) ⇒ val
+        П f { 'val, new_val }
         П list_add { 'new_val, r }
     l1 ...
     ꓭ
