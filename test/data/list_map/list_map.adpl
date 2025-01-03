@@ -1,9 +1,5 @@
 M
 
-@list_new ... Nil -> res_addr
-  0 => res_addr
-  Ret
-
 @list_add ... Nil -> val, Nil -> head
   head => last_node
 
@@ -19,7 +15,7 @@ M
   Ret
 
 @list_map ... Nil -> f, Nil -> head, Nil -> r
-  Pg list_new { r }
+  0 => r
 
   P { 'head == 0 } Ret |
 

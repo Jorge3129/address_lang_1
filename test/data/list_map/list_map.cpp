@@ -6,12 +6,6 @@ struct node {
   node* next;
 };
 
-node** list_new() {
-  auto s = new node*;
-  *s = nullptr;
-  return s;
-}
-
 void list_add(int val, node** head) {
   auto last_node = *head;
 
@@ -31,7 +25,8 @@ void list_add(int val, node** head) {
 }
 
 node** list_map(int (*f)(int val), node** head) {
-  auto r = list_new();
+  auto r = new node*;
+  *r = nullptr;
 
   if (*head == nullptr) return r;
 
@@ -50,7 +45,8 @@ int double_val(int val) {
 
 // this is done with syntactic sugar in ADPL
 node** create_list(std::vector<int> values) {
-  auto list = list_new();
+  auto list = new node*;
+  *list = nullptr;
   auto current_node = *list;
   
   for (size_t i = 0; i < values.size(); ++i) {

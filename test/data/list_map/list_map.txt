@@ -1,9 +1,5 @@
 M
 
-list_new ... ∅ → res_addr
-  0 ⇒ res_addr
-  ꓭ
-
 list_add ... ∅ → val, ∅ → head
   head ⇒ last_node
 
@@ -19,7 +15,7 @@ list_add ... ∅ → val, ∅ → head
   ꓭ
 
 list_map ... ∅ → f, ∅ → head, ∅ → r
-  П list_new { r }
+  0 ⇒ res_addr
 
   P { 'head = 0 } ꓭ ↓
 
